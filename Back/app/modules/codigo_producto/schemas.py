@@ -1,0 +1,60 @@
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field
+
+
+class CodigoProductoBase(BaseModel):
+    marca_id: int = Field(
+        ...,
+        gt=0,
+        description="ID de la marca"
+    )
+
+    codigo: str = Field(
+        ...,
+        min_length=2,
+        max_length=50,
+        description="Código del producto"
+    )
+
+
+class CodigoProductoCreate(CodigoProductoBase):
+    pass
+
+
+class CodigoProductoUpdate(BaseModel):
+    marca_id: int | None = Field(
+        default=None,
+        gt=0
+    )
+
+    codigo: str | None = Field(
+        default=None,
+        min_length=2,
+        max_length=50
+    )
+
+    estado: bool | None = None
+
+
+class CodigoProductoResponse(CodigoProductoBase):
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+    id: int
+    estado: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class CodigoProductoListResponse(BaseModel):
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+    items: list[CodigoProductoResponse]
+
+    total: int
