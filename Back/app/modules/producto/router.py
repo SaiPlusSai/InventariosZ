@@ -40,6 +40,11 @@ from app.modules.talla.exceptions import (
     TallaNoEncontradaException,
 )
 
+from app.modules.producto.schemas import (
+    ProductoCompletoCreate,
+    ProductoCompletoResponse,
+)
+
 router = APIRouter(
     prefix="/productos",
     tags=["Productos"],
@@ -163,5 +168,42 @@ def delete(
 
         raise HTTPException(
             status_code=404,
+            detail=str(e),
+        )
+@router.post(
+    "/crear-completo",
+    response_model=ProductoCompletoResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_completo(
+    data: ProductoCompletoCreate,
+    db: Session = Depends(get_db),
+):
+
+    try:
+
+        return service.create_completo(
+            db,
+            data,
+        )
+
+    except (
+        MarcaNoEncontradaException,
+        TipoCalzadoNoEncontradoException,
+        MaterialNoEncontradoException,
+        ColorNoEncontradoException,
+        TallaNoEncontradaException,
+        CodigoProductoYaExisteException,
+    ) as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )

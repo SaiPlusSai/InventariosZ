@@ -37,7 +37,17 @@ from app.modules.talla.constants import TALLA_NO_EXISTE
 from app.modules.talla.exceptions import TallaNoEncontradaException
 from app.modules.talla.repository import TallaRepository
 
+from datetime import datetime
 
+from app.modules.producto.schemas import (
+    ProductoCompletoCreate,
+)
+
+from app.modules.codigo_producto.models import CodigoProducto
+
+from app.modules.precio_producto.models import PrecioProducto
+
+from app.modules.producto_imagen.models import ProductoImagen
 class ProductoService:
 
     def __init__(self):
@@ -167,3 +177,159 @@ class ProductoService:
             db,
             producto,
         )
+def create_completo(
+    self,
+    db: Session,
+    data: ProductoCompletoCreate,
+):
+    """
+    Crea un producto completo en una sola transacción.
+    """
+
+    try:
+
+        # ==================================================
+        # VALIDAR CATÁLOGOS
+        # ==================================================
+
+        if not self.marca_repository.get_by_id(
+            db,
+            data.marca_id,
+        ):
+            raise MarcaNoEncontradaException(
+                MARCA_NO_EXISTE
+            )
+
+        if not self.tipo_repository.get_by_id(
+            db,
+            data.tipo_calzado_id,
+        ):
+            raise TipoCalzadoNoEncontradoException(
+                TIPO_CALZADO_NO_EXISTE
+            )
+
+        if not self.material_repository.get_by_id(
+            db,
+            data.material_id,
+        ):
+            raise MaterialNoEncontradoException(
+                MATERIAL_NO_EXISTE
+            )
+
+        for variante in data.variantes:
+
+            if not self.color_repository.get_by_id(
+                db,
+                variante.color_id,
+            ):
+                raise ColorNoEncontradoException(
+                    COLOR_NO_EXISTE
+                )
+
+            if not self.talla_repository.get_by_id(
+                db,
+                variante.talla_id,
+            ):
+                raise TallaNoEncontradaException(
+                    TALLA_NO_EXISTE
+                )
+
+        # ==================================================
+        # VALIDAR CÓDIGO
+        # ==================================================
+
+        if self.codigo_repository.get_by_codigo(
+            db,
+            data.codigo,
+        ):
+            raise CodigoProductoYaExisteException(
+                CODIGO_PRODUCTO_YA_EXISTE
+            )
+
+        # ==================================================
+        # CREAR CÓDIGO PRODUCTO
+        # ==================================================
+
+        codigo_producto = CodigoProducto(
+            marca_id=data.marca_id,
+            codigo=data.codigo,
+            estado=True,
+        )
+
+        db.add(codigo_producto)
+        db.flush()
+
+        productos = []
+
+        # ==================================================
+        # CREAR PRODUCTOS + PRECIOS
+        # ==================================================
+
+        for variante in data.variantes:
+
+            producto = Producto(
+                codigo_producto_id=codigo_producto.id,
+                tipo_calzado_id=data.tipo_calzado_id,
+                material_id=data.material_id,
+                color_id=variante.color_id,
+                talla_id=variante.talla_id,
+                descripcion=data.descripcion,
+                stock_actual=variante.stock_actual,
+                stock_minimo=variante.stock_minimo,
+                stock_maximo=variante.stock_maximo,
+                estado=variante.estado,
+            )
+
+            db.add(producto)
+            db.flush()
+
+            productos.append(producto)
+
+            precio = PrecioProducto(
+                producto_id=producto.id,
+                precio_compra=variante.precio_compra,
+                precio_venta=variante.precio_venta,
+                vigente_desde=datetime.now(),
+                estado=True,
+            )
+
+            db.add(precio)
+
+        # ==================================================
+        # IMÁGENES
+        # ==================================================
+
+        if productos:
+
+            producto_principal = productos[0]
+
+            for imagen in data.imagenes:
+
+                db.add(
+                    ProductoImagen(
+                        producto_id=producto_principal.id,
+                        bucket=imagen.bucket,
+                        ruta=imagen.ruta,
+                        nombre_archivo=imagen.nombre_archivo,
+                        es_principal=imagen.es_principal,
+                        orden=imagen.orden,
+                    )
+                )
+
+        db.commit()
+
+        return {
+            "codigo_producto_id": codigo_producto.id,
+            "variantes_creadas": len(productos),
+            "precios_creados": len(productos),
+            "imagenes_creadas": len(data.imagenes),
+            "success": True,
+            "message": "Producto creado correctamente.",
+            "created_at": datetime.now(),
+        }
+
+    except Exception:
+
+        db.rollback()
+
+        raise
