@@ -1,82 +1,82 @@
-
 Front/package-lock.json
+
 # ==========================
 # Python
 # ==========================
 
-__pycache__/
-*.py[cod]
-*$py.class
+Back/__pycache__/
+Back/*.py[cod]
+Back/*$py.class
 
 # ==========================
 # Virtual Environment
 # ==========================
 
-.venv/
-venv/
-env/
+Back/.venv/
+Back/venv/
+Back/env/
 
 # ==========================
 # Environment Variables
 # ==========================
 
-.env
+Back/.env
 
 # ==========================
 # VS Code
 # ==========================
 
-.vscode/
+Back/.vscode/
 
 # ==========================
 # PyCharm
 # ==========================
 
-.idea/
+Back/.idea/
 
 # ==========================
 # pytest
 # ==========================
 
-.pytest_cache/
+Back/.pytest_cache/
 
 # ==========================
 # mypy
 # ==========================
 
-.mypy_cache/
+Back/.mypy_cache/
 
 # ==========================
 # Ruff
 # ==========================
 
-.ruff_cache/
+Back/.ruff_cache/
 
 # ==========================
 # Coverage
 # ==========================
 
-.coverage
-htmlcov/
+Back/.coverage
+Back/htmlcov/
 
 # ==========================
 # Alembic
 # (se ignora solo la caché, NO las migraciones)
 # ==========================
 
-alembic/__pycache__/
+Back/alembic/__pycache__/
 
 # ==========================
 # Logs
 # ==========================
 
-*.log
+Back/*.log
 
 # ==========================
 # SQLite
 # ==========================
 
-*.sqlite3
+Back/*.sqlite3
 
 # ==========================
 # macOS
@@ -95,17 +95,17 @@ Desktop.ini
 # Build
 # ==========================
 
-dist/
-build/
+Back/dist/
+Back/build/
 
 # ==========================
 # Python packaging
 # ==========================
 
-*.egg-info/
+Back/*.egg-info/
 
 # ==========================
 # Cache
 # ==========================
 
-.cache/
+Back/.cache/
