@@ -2,19 +2,19 @@ import axiosInstance from './axios'
 
 export const codigoProductoService = {
   getAll: (params = {}) =>
-    axiosInstance.get('/codigo-producto', { params }),
+    axiosInstance.get('/codigos-producto/', { params }),
 
   getById: (id) =>
-    axiosInstance.get(`/codigo-producto/${id}`),
+    axiosInstance.get(`/codigos-producto/${id}`),
 
   create: (data) =>
-    axiosInstance.post('/codigo-producto', data),
+    axiosInstance.post('/codigos-producto/', data),
 
   update: (id, data) =>
-    axiosInstance.put(`/codigo-producto/${id}`, data),
+    axiosInstance.put(`/codigos-producto/${id}`, data),
 
   delete: (id) =>
-    axiosInstance.delete(`/codigo-producto/${id}`),
+    axiosInstance.delete(`/codigos-producto/${id}`),
 }
 
 export default codigoProductoService

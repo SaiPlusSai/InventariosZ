@@ -1,0 +1,100 @@
+.
+|-- README.md
+|-- dist
+|   |-- assets
+|   |   |-- index-BpcFnzOH.css
+|   |   `-- index-DkycDD9V.js
+|   `-- index.html
+|-- estructura.txt
+|-- index.html
+|-- package-lock.json
+|-- package.json
+|-- postcss.config.js
+|-- src
+|   |-- App.jsx
+|   |-- assets
+|   |-- components
+|   |   |-- common
+|   |   |-- layout
+|   |   |   |-- Header.jsx
+|   |   |   `-- Sidebar.jsx
+|   |   `-- ui
+|   |       |-- Button.jsx
+|   |       |-- Card.jsx
+|   |       |-- Input.jsx
+|   |       `-- index.js
+|   |-- constants
+|   |   `-- index.js
+|   |-- hooks
+|   |   |-- index.js
+|   |   |-- useAsync.js
+|   |   `-- useForm.js
+|   |-- index.css
+|   |-- layouts
+|   |   |-- AuthLayout.jsx
+|   |   `-- DashboardLayout.jsx
+|   |-- main.jsx
+|   |-- pages
+|   |   |-- auth
+|   |   |-- codigoProducto
+|   |   |   `-- index.jsx
+|   |   |-- colores
+|   |   |   `-- index.jsx
+|   |   |-- dashboard
+|   |   |   `-- index.jsx
+|   |   |-- marcas
+|   |   |   `-- index.jsx
+|   |   |-- materiales
+|   |   |   `-- index.jsx
+|   |   |-- productos
+|   |   |   |-- ProductoDetalle.jsx
+|   |   |   |-- detalle
+|   |   |   |   |-- GaleriaTab.jsx
+|   |   |   |   |-- GeneralTab.jsx
+|   |   |   |   |-- HeaderDetalle.jsx
+|   |   |   |   |-- ImageGallery.jsx
+|   |   |   |   |-- InfoCard.jsx
+|   |   |   |   |-- InventarioTab.jsx
+|   |   |   |   |-- MetricCard.jsx
+|   |   |   |   |-- PreciosTab.jsx
+|   |   |   |   |-- ProgressStock.jsx
+|   |   |   |   |-- StatusBadge.jsx
+|   |   |   |   `-- TabsDetalle.jsx
+|   |   |   |-- index.jsx
+|   |   |   `-- wizard
+|   |   |       |-- ProductoWizard.jsx
+|   |   |       |-- Step1InformacionGeneral.jsx
+|   |   |       |-- Step2Colores.jsx
+|   |   |       |-- Step3Tallas.jsx
+|   |   |       |-- Step4Variantes.jsx
+|   |   |       |-- Step5Imagenes.jsx
+|   |   |       `-- Step6Resumen.jsx
+|   |   |-- tallas
+|   |   |   `-- index.jsx
+|   |   `-- tipos
+|   |       `-- index.jsx
+|   |-- routes
+|   |   `-- index.jsx
+|   |-- services
+|   |   |-- axios.js
+|   |   |-- codigoProductoService.js
+|   |   |-- colorService.js
+|   |   |-- marcaService.js
+|   |   |-- materialService.js
+|   |   |-- productoService.js
+|   |   |-- tallaService.js
+|   |   `-- tipoCalzadoService.js
+|   |-- store
+|   |   |-- colorStore.js
+|   |   |-- marcaStore.js
+|   |   |-- materialStore.js
+|   |   |-- productoStore.js
+|   |   |-- tallaStore.js
+|   |   |-- tipoCalzadoStore.js
+|   |   `-- wizardStore.js
+|   `-- utils
+|       `-- helpers.js
+|-- tailwind.config.js
+`-- vite.config.js
+
+27 directories, 70 files

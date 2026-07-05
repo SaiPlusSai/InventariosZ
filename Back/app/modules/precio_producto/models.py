@@ -68,5 +68,6 @@ class PrecioProducto(Base):
 
     producto: Mapped[Producto] = relationship(
         "Producto",
+        back_populates="precios",
         lazy="joined",
     )

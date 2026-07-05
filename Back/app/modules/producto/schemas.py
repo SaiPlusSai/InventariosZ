@@ -251,3 +251,175 @@ class ProductoCompletoResponse(BaseModel):
     message: str
 
     created_at: datetime
+# ==========================================================
+# RESPUESTA PARA EL LISTADO DE PRODUCTOS
+# ==========================================================
+
+class MarcaInfo(BaseModel):
+
+    id: int
+    nombre: str
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class TipoCalzadoInfo(BaseModel):
+
+    id: int
+    nombre: str
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class MaterialInfo(BaseModel):
+
+    id: int
+    nombre: str
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class ColorInfo(BaseModel):
+
+    id: int
+
+    nombre: str
+
+    codigo_hex: str | None = None
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class TallaInfo(BaseModel):
+
+    id: int
+    nombre: str
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class ProductoListadoResponse(BaseModel):
+
+    id: int
+
+    codigo: str
+
+    descripcion: str | None
+
+    marca: MarcaInfo
+
+    tipo_calzado: TipoCalzadoInfo
+
+    material: MaterialInfo
+
+    color: ColorInfo
+
+    talla: TallaInfo
+
+    stock_actual: int
+
+    stock_minimo: int
+
+    stock_maximo: int | None
+
+    precio_compra: Decimal | None
+
+    precio_venta: Decimal | None
+
+    imagen_principal: str | None
+
+    estado: bool
+
+    created_at: datetime
+
+    updated_at: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+    # ==========================================================
+# DETALLE DEL PRODUCTO
+# ==========================================================
+
+class PrecioDetalleResponse(BaseModel):
+
+    precio_compra: Decimal | None
+
+    precio_venta: Decimal
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class ImagenDetalleResponse(BaseModel):
+
+    id: int
+
+    bucket: str
+
+    ruta: str
+
+    nombre_archivo: str | None
+
+    es_principal: bool
+
+    orden: int
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class ProductoDetalleResponse(BaseModel):
+
+    id: int
+
+    codigo: str
+
+    descripcion: str | None
+
+    marca: MarcaInfo
+
+    tipo_calzado: TipoCalzadoInfo
+
+    material: MaterialInfo
+
+    color: ColorInfo
+
+    talla: TallaInfo
+
+    stock_actual: int
+
+    stock_minimo: int
+
+    stock_maximo: int | None
+
+    precio: PrecioDetalleResponse | None = None
+
+    imagen_principal: str | None
+
+    imagenes: list[ImagenDetalleResponse]
+
+    estado: bool
+
+    created_at: datetime
+
+    updated_at: datetime
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+class StockResponse(BaseModel):
+    producto_id: int
+    stock_actual: int

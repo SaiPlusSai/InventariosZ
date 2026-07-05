@@ -70,5 +70,6 @@ class ProductoImagen(Base):
 
     producto: Mapped[Producto] = relationship(
         "Producto",
+        back_populates="imagenes",
         lazy="joined",
     )

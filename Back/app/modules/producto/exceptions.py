@@ -8,3 +8,5 @@ class ProductoYaExisteException(ProductoException):
 
 class ProductoNoEncontradoException(ProductoException):
     """El producto no fue encontrado."""
+class StockInsuficienteException(Exception):
+    pass

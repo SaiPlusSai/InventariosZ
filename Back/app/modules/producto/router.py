@@ -6,22 +6,24 @@ from fastapi import status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
+from fastapi import WebSocket
+from fastapi import WebSocketDisconnect
 
+from app.modules.producto.websocket import manager
 from app.modules.producto.schemas import (
     ProductoCreate,
+    ProductoDetalleResponse,
+    ProductoListadoResponse,
     ProductoResponse,
     ProductoUpdate,
+    StockResponse,
 )
 
 from app.modules.producto.service import ProductoService
 
-from app.modules.producto.exceptions import (
-    ProductoNoEncontradoException,
-    ProductoYaExisteException,
-)
-
 from app.modules.codigo_producto.exceptions import (
     CodigoProductoNoEncontradoException,
+    CodigoProductoYaExisteException,
 )
 
 from app.modules.tipo_calzado.exceptions import (
@@ -40,11 +42,19 @@ from app.modules.talla.exceptions import (
     TallaNoEncontradaException,
 )
 
+from app.modules.marca.exceptions import (
+    MarcaNoEncontradaException,
+)
+
 from app.modules.producto.schemas import (
     ProductoCompletoCreate,
     ProductoCompletoResponse,
 )
-
+from app.modules.producto.exceptions import (
+    ProductoNoEncontradoException,
+    ProductoYaExisteException,
+    StockInsuficienteException,
+)
 router = APIRouter(
     prefix="/productos",
     tags=["Productos"],
@@ -55,12 +65,36 @@ service = ProductoService()
 
 @router.get(
     "/",
-    response_model=list[ProductoResponse],
+    response_model=list[ProductoListadoResponse],
 )
 def get_all(
+    codigo: str | None = None,
+    marca_id: int | None = None,
+    marca: str | None = None,
+    color_id: int | None = None,
+    color: str | None = None,
+    material_id: int | None = None,
+    material: str | None = None,
+    talla_id: int | None = None,
+    talla: str | None = None,
+    tipo_calzado_id: int | None = None,
+    tipo: str | None = None,
     db: Session = Depends(get_db),
 ):
-    return service.get_all(db)
+    return service.get_all(
+        db,
+        codigo=codigo,
+        marca_id=marca_id,
+        marca=marca,
+        color_id=color_id,
+        color=color,
+        material_id=material_id,
+        material=material,
+        talla_id=talla_id,
+        talla=talla,
+        tipo_calzado_id=tipo_calzado_id,
+        tipo=tipo,
+    )
 
 
 @router.get(
@@ -194,6 +228,7 @@ def create_completo(
         ColorNoEncontradoException,
         TallaNoEncontradaException,
         CodigoProductoYaExisteException,
+        ProductoYaExisteException,
     ) as e:
 
         raise HTTPException(
@@ -207,3 +242,92 @@ def create_completo(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
+@router.get(
+    "/{producto_id}/detalle",
+    response_model=ProductoDetalleResponse,
+)
+def get_detalle(
+    producto_id: int,
+    db: Session = Depends(get_db),
+):
+
+    try:
+
+        return service.get_detalle(
+            db,
+            producto_id,
+        )
+
+    except ProductoNoEncontradoException as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+@router.patch(
+    "/{producto_id}/incrementar-stock",
+    response_model=StockResponse,
+)
+async def incrementar_stock(
+    producto_id: int,
+    db: Session = Depends(get_db),
+):
+
+    try:
+
+        return await service.incrementar_stock(
+            db,
+            producto_id,
+        )
+
+    except ProductoNoEncontradoException as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+@router.patch(
+    "/{producto_id}/decrementar-stock",
+    response_model=StockResponse,
+)
+async def decrementar_stock(
+    producto_id: int,
+    db: Session = Depends(get_db),
+):
+
+    try:
+
+        return await service.decrementar_stock(
+            db,
+            producto_id,
+        )
+
+    except ProductoNoEncontradoException as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+    except StockInsuficienteException as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+@router.websocket("/ws")
+async def websocket_stock(
+    websocket: WebSocket,
+):
+    await manager.connect(websocket)
+
+    try:
+
+        while True:
+            await websocket.receive_text()
+
+    except WebSocketDisconnect:
+
+        manager.disconnect(websocket)

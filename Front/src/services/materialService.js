@@ -2,13 +2,13 @@ import axiosInstance from './axios'
 
 export const materialService = {
   getAll: (params = {}) =>
-    axiosInstance.get('/materiales', { params }),
+    axiosInstance.get('/materiales/', { params }),
 
   getById: (id) =>
     axiosInstance.get(`/materiales/${id}`),
 
   create: (data) =>
-    axiosInstance.post('/materiales', data),
+    axiosInstance.post('/materiales/', data),
 
   update: (id, data) =>
     axiosInstance.put(`/materiales/${id}`, data),

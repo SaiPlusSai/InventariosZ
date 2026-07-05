@@ -1,33 +1,55 @@
 import axiosInstance from './axios'
 
-export const productoService = {
-  // GET /productos - Listar todos los productos
-  getAll: (params = {}) =>
-    axiosInstance.get('/productos', { params }),
+const getAll = (params = {}) =>
+  axiosInstance.get('/productos/', { params })
 
-  // GET /productos/{id} - Obtener producto por ID
+export const productoService = {
+  getAll,
+
+  filter: getAll,
+
+  getByCodigo: (codigo) =>
+    getAll({ codigo }),
+
+  getByMarca: (marca) =>
+    getAll({ marca }),
+
+  getByColor: (color) =>
+    getAll({ color }),
+
+  getByMaterial: (material) =>
+    getAll({ material }),
+
+  getByTalla: (talla) =>
+    getAll({ talla }),
+
+  getByTipo: (tipo) =>
+    getAll({ tipo }),
+
   getById: (id) =>
     axiosInstance.get(`/productos/${id}`),
+  getDetalle: (id) =>
+  axiosInstance.get(`/productos/${id}/detalle`),
 
-  // POST /productos - Crear nuevo producto (variante individual)
   create: (data) =>
-    axiosInstance.post('/productos', data),
+    axiosInstance.post('/productos/', data),
 
-  // POST /productos/crear-completo - Crear producto completo con variantes e imágenes
   createCompleto: (data) =>
     axiosInstance.post('/productos/crear-completo', data),
 
-  // PUT /productos/{id} - Actualizar producto
   update: (id, data) =>
     axiosInstance.put(`/productos/${id}`, data),
 
-  // DELETE /productos/{id} - Eliminar producto
   delete: (id) =>
     axiosInstance.delete(`/productos/${id}`),
 
-  // Search
   search: (query) =>
-    axiosInstance.get('/productos/search', { params: { q: query } }),
+    getAll({ codigo: query }),
+  incrementarStock: (id) =>
+  axiosInstance.patch(`/productos/${id}/incrementar-stock`),
+
+decrementarStock: (id) =>
+  axiosInstance.patch(`/productos/${id}/decrementar-stock`),
 }
 
 export default productoService

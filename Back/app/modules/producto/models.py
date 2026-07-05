@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from datetime import datetime
 
 from sqlalchemy import BigInteger
@@ -99,6 +101,10 @@ class Producto(Base):
         nullable=False,
     )
 
+    # ==========================================================
+    # RELACIONES
+    # ==========================================================
+
     codigo_producto: Mapped[CodigoProducto] = relationship(
         "CodigoProducto",
         lazy="joined",
@@ -122,4 +128,22 @@ class Producto(Base):
     talla: Mapped[Talla] = relationship(
         "Talla",
         lazy="joined",
+    )
+
+    # ==========================================================
+    # NUEVAS RELACIONES
+    # ==========================================================
+
+    precios: Mapped[list["PrecioProducto"]] = relationship(
+        "PrecioProducto",
+        back_populates="producto",
+        cascade="all, delete-orphan",
+        lazy="selectin",
+    )
+
+    imagenes: Mapped[list["ProductoImagen"]] = relationship(
+        "ProductoImagen",
+        back_populates="producto",
+        cascade="all, delete-orphan",
+        lazy="selectin",
     )

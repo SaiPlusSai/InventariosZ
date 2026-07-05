@@ -9,3 +9,4 @@ PRODUCTO_ACTUALIZADO = "Producto actualizado correctamente."
 PRODUCTO_ELIMINADO = "Producto eliminado correctamente."
 
 MAX_DESCRIPCION = 500
+STOCK_INSUFICIENTE = "No existe stock disponible."
