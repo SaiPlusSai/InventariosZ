@@ -109,3 +109,12 @@ class ProductoImagenListResponse(BaseModel):
     items: list[ProductoImagenResponse]
 
     total: int
+
+
+class ImagenOrdenUpdate(BaseModel):
+    id: int = Field(..., gt=0)
+    orden: int = Field(..., ge=MIN_ORDEN, le=MAX_ORDEN)
+
+
+class ReordenarImagenesRequest(BaseModel):
+    imagenes: list[ImagenOrdenUpdate]

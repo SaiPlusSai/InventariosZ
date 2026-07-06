@@ -106,3 +106,17 @@ class ProductoImagenRepository:
 
         db.delete(producto_imagen)
         db.commit()
+
+    def update_orden(
+        self,
+        db: Session,
+        imagenes_datos: list[dict],
+    ) -> None:
+        
+        for dato in imagenes_datos:
+            db.execute(
+                update(ProductoImagen)
+                .where(ProductoImagen.id == dato["id"])
+                .values(orden=dato["orden"])
+            )
+        db.commit()
