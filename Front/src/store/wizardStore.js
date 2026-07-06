@@ -1,5 +1,8 @@
 import { create } from 'zustand'
 
+import { productoService } from '../services/productoService'
+import { productoImagenService } from '../services/productoImagenService'
+
 const initialFormData = {
   codigo: '',
   marca_id: null,
@@ -9,7 +12,7 @@ const initialFormData = {
   colores: [],
   tallas: [],
   variantes: [],
-  imagenes: [],
+  imagenesPorColor: {},
 }
 
 export const useWizardStore = create((set) => ({
@@ -50,39 +53,53 @@ export const useWizardStore = create((set) => ({
       },
     })),
 
-  cargarProductoEditar: (data) =>
-    set({
-      modo: 'editar',
-      codigoProductoId: data.codigo_producto_id,
-      currentStep: 1,
-      formData: {
-        codigo: data.codigo,
-        marca_id: data.marca_id,
-        tipo_calzado_id: data.tipo_calzado_id,
-        material_id: data.material_id,
-        descripcion: data.descripcion,
+  cargarProductoEditarCompleto: async (codigoProductoId) => {
+    try {
+      const res = await productoService.getEditarCompleto(codigoProductoId)
+      const data = res.data
 
-        colores: [
-          ...new Set(
-            data.variantes.map(
-              (v) => v.color_id
-            )
-          ),
-        ],
+      const colores = [...new Set(data.variantes.map((v) => v.color_id))]
+      const tallas = [...new Set(data.variantes.map((v) => v.talla_id))]
 
-        tallas: [
-          ...new Set(
-            data.variantes.map(
-              (v) => v.talla_id
-            )
-          ),
-        ],
+      const imagenesPorColor = {}
+      
+      for (const color_id of colores) {
+        const firstVariant = data.variantes.find(v => v.color_id === color_id)
+        if (firstVariant) {
+          try {
+            const imgRes = await productoImagenService.getByProductoId(firstVariant.id)
+            imagenesPorColor[color_id] = imgRes.data.map(img => ({
+              ...img,
+              datos_base64: img.ruta,
+            }))
+          } catch (error) {
+            imagenesPorColor[color_id] = []
+          }
+        }
+      }
 
-        variantes: data.variantes,
+      set({
+        modo: 'editar',
+        codigoProductoId: data.codigo_producto_id,
+        currentStep: 1,
+        formData: {
+          codigo: data.codigo,
+          marca_id: data.marca_id,
+          tipo_calzado_id: data.tipo_calzado_id,
+          material_id: data.material_id,
+          descripcion: data.descripcion,
+          colores,
+          tallas,
+          variantes: data.variantes,
+          imagenesPorColor,
+        },
+      })
+    } catch (error) {
+      console.error("Error al cargar para edicion:", error)
+    }
+  },
 
-        imagenes: data.imagenes,
-      },
-    }),
+  resetWizard: () => set({ currentStep: 1, formData: initialFormData, modo: 'crear', codigoProductoId: null }),
 
   // ==========================
   // Variantes

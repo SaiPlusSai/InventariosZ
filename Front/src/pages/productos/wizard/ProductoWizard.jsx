@@ -4,21 +4,13 @@ import { productoService } from '../../../services/productoService'
 import { productoImagenService } from '../../../services/productoImagenService'
 
 import Step1InformacionGeneral from './Step1InformacionGeneral'
-import Step2Colores from './Step2Colores'
-import Step3Tallas from './Step3Tallas'
-import Step4Variantes from './Step4Variantes'
-import Step5Imagenes from './Step5Imagenes'
-import Step6Resumen from './Step6Resumen'
+import Step2ConfiguracionVariantes from './Step2ConfiguracionVariantes'
 
 import { Button } from '../../../components/ui'
 
 const steps = [
   { id: 1, title: 'Información General', component: Step1InformacionGeneral },
-  { id: 2, title: 'Colores', component: Step2Colores },
-  { id: 3, title: 'Tallas', component: Step3Tallas },
-  { id: 4, title: 'Variantes', component: Step4Variantes },
-  { id: 5, title: 'Imágenes', component: Step5Imagenes },
-  { id: 6, title: 'Resumen', component: Step6Resumen },
+  { id: 2, title: 'Configuración de Variantes', component: Step2ConfiguracionVariantes },
 ]
 
 export default function ProductoWizard({ onClose, onSuccess }) {
@@ -56,6 +48,15 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     setError(null)
 
     try {
+      // 1. Validaciones basicas
+      if (!formData.codigo || !formData.marca_id || !formData.tipo_calzado_id || !formData.material_id) {
+        throw new Error("Faltan datos en la Información General.")
+      }
+      if (formData.variantes.length === 0) {
+        throw new Error("Debes configurar al menos una variante (color y talla).")
+      }
+
+      // 2. Preparar el payload global para el backend
       const dataToSend = {
         codigo: formData.codigo,
         marca_id: formData.marca_id,
@@ -64,48 +65,64 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         descripcion: formData.descripcion,
 
         variantes: formData.variantes.map((v) => ({
-          id: v.id,
           color_id: v.color_id,
           talla_id: v.talla_id,
-          stock_actual: v.stock_actual,
-          stock_minimo: v.stock_minimo,
-          stock_maximo: v.stock_maximo,
-          precio_compra: v.precio_compra,
-          precio_venta: v.precio_venta,
+          stock_actual: Number(v.stock_actual) || 0,
+          stock_minimo: Number(v.stock_minimo) || 0,
+          stock_maximo: v.stock_maximo ? Number(v.stock_maximo) : null,
+          precio_compra: v.precio_compra ? Number(v.precio_compra) : null,
+          precio_venta: Number(v.precio_venta) || 0,
           estado: v.estado ?? true,
         })),
 
-        imagenes: [], // We upload images separately after creation
+        imagenes: [], // Las enviamos despues
       }
 
-      let productoPrincipalId = null;
+      let codigoID = null;
 
+      // 3. Crear o Actualizar Producto Base
       if (modo === 'editar') {
-        const res = await productoService.updateCompleto(
+        await productoService.updateCompleto(
           codigoProductoId,
           dataToSend
         )
-        productoPrincipalId = res.data.producto_principal_id
+        codigoID = codigoProductoId
       } else {
         const res = await productoService.createCompleto(
           dataToSend
         )
-        productoPrincipalId = res.data.producto_principal_id
+        codigoID = res.data.codigo_producto_id
       }
 
-      if (productoPrincipalId && formData.imagenes.length > 0) {
-        for (const img of formData.imagenes) {
-          if (img.file) {
-            const formDataFile = new FormData()
-            formDataFile.append('archivo', img.file)
-            formDataFile.append('es_principal', img.es_principal)
-            formDataFile.append('orden', img.orden)
-            
-            await productoImagenService.subirImagen(productoPrincipalId, formDataFile)
+      // 4. Subida Inteligente de Imagenes por Color
+      // Para saber los IDs de las variantes creadas por color, llamamos a getEditarCompleto
+      const edicionRes = await productoService.getEditarCompleto(codigoID);
+      const variantesGuardadas = edicionRes.data.variantes;
+
+      for (const colorIdStr of Object.keys(formData.imagenesPorColor)) {
+        const colorId = Number(colorIdStr);
+        const imagenesDelColor = formData.imagenesPorColor[colorId];
+        
+        // Filtramos imagenes nuevas que vienen con "file" (las viejas ya estan en backend)
+        const imagenesNuevas = imagenesDelColor.filter(img => img.file);
+        
+        if (imagenesNuevas.length > 0) {
+          // Buscamos el ID de la primera variante que tenga este color para atar las imagenes
+          const varianteRepresentante = variantesGuardadas.find(v => v.color_id === colorId);
+          if (varianteRepresentante) {
+            for (const img of imagenesNuevas) {
+              const formDataFile = new FormData()
+              formDataFile.append('archivo', img.file)
+              formDataFile.append('es_principal', img.es_principal)
+              formDataFile.append('orden', img.orden)
+              
+              await productoImagenService.subirImagen(varianteRepresentante.id, formDataFile)
+            }
           }
         }
       }
 
+      // 5. Finalizar
       resetWizard()
       if (onSuccess) {
         onSuccess()
@@ -113,7 +130,9 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         onClose()
       }
     } catch (err) {
+      console.error(err)
       setError(
+        err.message || 
         err.response?.data?.detail ||
           (modo === 'editar'
             ? 'Error al actualizar el producto.'
@@ -126,7 +145,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] flex flex-col">
 
         {/* Header */}
         <div className="border-b px-6 py-4">
@@ -159,7 +178,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
                   }`}
                 />
 
-                <p className="text-xs text-center mt-1 text-gray-600">
+                <p className="text-xs text-center mt-1 text-gray-600 font-medium">
                   {step.title}
                 </p>
               </div>
@@ -168,10 +187,10 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+        <div className="flex-1 overflow-y-auto px-6 py-6 bg-gray-50">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-              {error}
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium">
+              ⚠️ {error}
             </div>
           )}
 
@@ -181,7 +200,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4 flex justify-between gap-3">
+        <div className="border-t px-6 py-4 flex justify-between items-center gap-3 bg-white rounded-b-lg">
 
           <Button
             variant="ghost"
@@ -194,7 +213,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
             ← Anterior
           </Button>
 
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-500 font-medium bg-gray-100 px-3 py-1 rounded-full">
             Paso {currentStep} de {steps.length}
           </div>
 
@@ -203,26 +222,27 @@ export default function ProductoWizard({ onClose, onSuccess }) {
               variant="primary"
               onClick={handleSubmit}
               disabled={loading}
+              className="min-w-[150px]"
             >
               {loading
                 ? modo === 'editar'
                   ? 'Actualizando...'
                   : 'Guardando...'
                 : modo === 'editar'
-                ? '✓ Actualizar Producto'
-                : '✓ Guardar Producto'}
+                ? '💾 Actualizar Producto'
+                : '💾 Guardar Producto'}
             </Button>
           ) : (
             <Button
               variant="primary"
               onClick={handleNext}
               disabled={loading}
+              className="min-w-[150px]"
             >
               Siguiente →
             </Button>
           )}
         </div>
-
       </div>
     </div>
   )

@@ -52,7 +52,7 @@ export default function Productos() {
   loadingDetalle,
   setLoadingDetalle,
 } = useProductoStore()
-const { cargarProductoEditar } = useWizardStore()
+  const { cargarProductoEditarCompleto } = useWizardStore()
   const loadProductos = async (params = {}, papelera = isPapeleraMode) => {
 
     try {
@@ -139,28 +139,14 @@ useEffect(() => {
   }
 
 }
-const handleEditar = async (codigoProductoId) => {
-
-  try {
-
-    const res =
-      await productoService.getEditarCompleto(
-        codigoProductoId
-      )
-
-    cargarProductoEditar(
-      res.data
-    )
-
-    setShowWizard(true)
-
-  } catch (error) {
-
-    console.error(error)
-
+  const handleEditar = async (codigoProductoId) => {
+    try {
+      await cargarProductoEditarCompleto(codigoProductoId)
+      setShowWizard(true)
+    } catch (error) {
+      console.error(error)
+    }
   }
-
-}
 const handleIncrementarStock = async (id) => {
 
   try {
