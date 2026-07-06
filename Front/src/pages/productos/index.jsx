@@ -76,36 +76,29 @@ const { cargarProductoEditar } = useWizardStore()
   }
 
 useEffect(() => {
-
   loadProductos(cleanFilters(filters), isPapeleraMode)
+}, [isPapeleraMode])
 
+useEffect(() => {
   const socket = new WebSocket(
     "ws://localhost:8000/productos/ws"
   )
 
   socket.onmessage = (event) => {
-
     const data = JSON.parse(event.data)
-
     if (data.tipo === "stock_actualizado") {
-
       actualizarStock(
         data.producto_id,
         data.stock_actual,
       )
-
     }
-
   }
 
   socket.onerror = (error) => {
-
     console.error(error)
-
   }
 
   return () => socket.close()
-
 }, [])
 
   const handleFilterChange = (field, value) => {

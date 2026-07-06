@@ -23,6 +23,19 @@ class CodigoProductoRepository:
 
         return db.scalars(statement).all()
 
+    def get_papelera(
+        self,
+        db: Session,
+    ) -> list[CodigoProducto]:
+
+        statement = (
+            select(CodigoProducto)
+            .where(CodigoProducto.estado == False)
+            .order_by(CodigoProducto.codigo.asc())
+        )
+
+        return db.scalars(statement).all()
+
     def get_by_id(
         self,
         db: Session,
