@@ -21,6 +21,7 @@
 |   |   `-- ui
 |   |       |-- Button.jsx
 |   |       |-- Card.jsx
+|   |       |-- DeleteConfirmationModal.jsx
 |   |       |-- Input.jsx
 |   |       `-- index.js
 |   |-- constants
@@ -85,6 +86,7 @@
 |   |   |-- tallaService.js
 |   |   `-- tipoCalzadoService.js
 |   |-- store
+|   |   |-- codigoProductoStore.js
 |   |   |-- colorStore.js
 |   |   |-- marcaStore.js
 |   |   |-- materialStore.js
@@ -97,4 +99,4 @@
 |-- tailwind.config.js
 `-- vite.config.js
 
-27 directories, 70 files
+27 directories, 72 files

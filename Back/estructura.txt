@@ -159,7 +159,8 @@
 |       |   |   |-- router.cpython-312.pyc
 |       |   |   |-- schemas.cpython-312.pyc
 |       |   |   |-- service.cpython-312.pyc
-|       |   |   `-- validators.cpython-312.pyc
+|       |   |   |-- validators.cpython-312.pyc
+|       |   |   `-- websocket.cpython-312.pyc
 |       |   |-- constants.py
 |       |   |-- exceptions.py
 |       |   |-- models.py
@@ -167,7 +168,8 @@
 |       |   |-- router.py
 |       |   |-- schemas.py
 |       |   |-- service.py
-|       |   `-- validators.py
+|       |   |-- validators.py
+|       |   `-- websocket.py
 |       |-- producto_imagen
 |       |   |-- __init__.py
 |       |   |-- __pycache__
@@ -188,6 +190,11 @@
 |       |   |-- schemas.py
 |       |   |-- service.py
 |       |   `-- validators.py
+|       |-- storage
+|       |   |-- cliente.py
+|       |   |-- constants.py
+|       |   |-- service.py
+|       |   `-- utils.py
 |       |-- talla
 |       |   |-- __init__.py
 |       |   |-- __pycache__
@@ -230,7 +237,8 @@
 |           `-- validators.py
 |-- docker-compose.yml
 |-- estructura.txt
+|-- patch_backend.py
 |-- requirements.txt
 `-- tests
 
-30 directories, 203 files
+31 directories, 210 files

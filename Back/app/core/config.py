@@ -10,6 +10,11 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    # Supabase
+    SUPABASE_URL: str
+    SUPABASE_SERVICE_ROLE_KEY: str
+    SUPABASE_BUCKET: str
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
