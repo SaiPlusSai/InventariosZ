@@ -32,6 +32,19 @@ service = CodigoProductoService()
 def get_all(db: Session = Depends(get_db)):
     return service.get_all(db)
 
+@router.get(
+    "/papelera",
+    response_model=list[CodigoProductoResponse],
+)
+def get_papelera(db: Session = Depends(get_db)):
+    return service.get_papelera(db)
+
+@router.get(
+    "/{codigo_producto_id}/dependencias",
+)
+def get_dependencias(codigo_producto_id: int, db: Session = Depends(get_db)):
+    return service.get_dependencias(db, codigo_producto_id)
+
 
 @router.get("/{codigo_producto_id}", response_model=CodigoProductoResponse)
 def get_by_id(
@@ -110,19 +123,6 @@ def delete(
 
     except CodigoProductoNoEncontradoException as e:
         raise HTTPException(status_code=404, detail=str(e))
-@router.get(
-    "/papelera",
-    response_model=list[CodigoProductoResponse],
-)
-def get_papelera(db: Session = Depends(get_db)):
-    return service.get_papelera(db)
-
-@router.get(
-    "/{codigo_producto_id}/dependencias",
-)
-def get_dependencias(codigo_producto_id: int, db: Session = Depends(get_db)):
-    return service.get_dependencias(db, codigo_producto_id)
-
 @router.patch(
     "/{codigo_producto_id}/desactivar",
     response_model=CodigoProductoResponse,

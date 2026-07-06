@@ -152,7 +152,7 @@ export default function Tipos() {
           <p className="text-gray-500">Cargando...</p>
         ) : error ? (
           <p className="text-red-500">{error}</p>
-        ) : tiposCalzado.length === 0 ? (
+        ) : tipos.length === 0 ? (
           <p className="text-gray-500">No hay tipos registrados</p>
         ) : (
           <div className="overflow-x-auto">
