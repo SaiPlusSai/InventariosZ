@@ -564,9 +564,10 @@ class ProductoService:
                 )
 
             variantes_unicas = set()
+            cache_colores = {}
+            cache_tallas = {}
 
             for variante in data.variantes:
-
                 clave = (
                     variante.color_id,
                     variante.talla_id,
@@ -579,21 +580,17 @@ class ProductoService:
 
                 variantes_unicas.add(clave)
 
-                if not self.color_repository.get_by_id(
-                    db,
-                    variante.color_id,
-                ):
-                    raise ColorNoEncontradoException(
-                        COLOR_NO_EXISTE
-                    )
+                if variante.color_id not in cache_colores:
+                    color_obj = self.color_repository.get_by_id(db, variante.color_id)
+                    if not color_obj:
+                        raise ColorNoEncontradoException(COLOR_NO_EXISTE)
+                    cache_colores[variante.color_id] = color_obj
 
-                if not self.talla_repository.get_by_id(
-                    db,
-                    variante.talla_id,
-                ):
-                    raise TallaNoEncontradaException(
-                        TALLA_NO_EXISTE
-                    )
+                if variante.talla_id not in cache_tallas:
+                    talla_obj = self.talla_repository.get_by_id(db, variante.talla_id)
+                    if not talla_obj:
+                        raise TallaNoEncontradaException(TALLA_NO_EXISTE)
+                    cache_tallas[variante.talla_id] = talla_obj
 
             existente = self.codigo_repository.get_by_codigo(
                 db,
@@ -616,58 +613,86 @@ class ProductoService:
                 codigo_producto,
             )
 
-            self.repository.delete_productos_codigo(
-                db,
-                codigo_producto.id,
-            )
+            # Obtenemos los productos actuales para este codigo (sin N+1)
+            productos_existentes = self.repository.get_by_codigo_producto_id(db, codigo_producto.id)
+            mapa_existentes = {(p.color_id, p.talla_id): p for p in productos_existentes}
 
-            productos = []
+            variantes_entrantes_claves = set()
+            productos_modificados_o_creados = []
 
             for variante in data.variantes:
+                clave = (variante.color_id, variante.talla_id)
+                variantes_entrantes_claves.add(clave)
 
-                producto = Producto(
-                    codigo_producto_id=codigo_producto.id,
-                    tipo_calzado_id=data.tipo_calzado_id,
-                    material_id=data.material_id,
-                    color_id=variante.color_id,
-                    talla_id=variante.talla_id,
-                    descripcion=data.descripcion,
-                    stock_actual=variante.stock_actual,
-                    stock_minimo=variante.stock_minimo,
-                    stock_maximo=variante.stock_maximo,
-                    estado=variante.estado,
-                )
+                if clave in mapa_existentes:
+                    producto = mapa_existentes[clave]
+                    # Upsert (Actualización in-place)
+                    producto.tipo_calzado_id = data.tipo_calzado_id
+                    producto.material_id = data.material_id
+                    producto.descripcion = data.descripcion
+                    producto.stock_actual = variante.stock_actual
+                    producto.stock_minimo = variante.stock_minimo
+                    producto.stock_maximo = variante.stock_maximo
+                    producto.estado = variante.estado
+                    
+                    # Logica de Precio: 
+                    precio_actual = None
+                    for p in producto.precios:
+                        if p.estado and p.vigente_hasta is None:
+                            precio_actual = p
+                            break
+                            
+                    if not precio_actual or precio_actual.precio_compra != variante.precio_compra or precio_actual.precio_venta != variante.precio_venta:
+                        if precio_actual:
+                            precio_actual.vigente_hasta = datetime.now()
+                            precio_actual.estado = False
+                            
+                        nuevo_precio = PrecioProducto(
+                            precio_compra=variante.precio_compra,
+                            precio_venta=variante.precio_venta,
+                            vigente_desde=datetime.now(),
+                            estado=True,
+                        )
+                        producto.precios.append(nuevo_precio)
+                        
+                    productos_modificados_o_creados.append(producto)
+                else:
+                    # Insert (Nuevo)
+                    producto = Producto(
+                        codigo_producto_id=codigo_producto.id,
+                        tipo_calzado_id=data.tipo_calzado_id,
+                        material_id=data.material_id,
+                        color_id=variante.color_id,
+                        talla_id=variante.talla_id,
+                        descripcion=data.descripcion,
+                        stock_actual=variante.stock_actual,
+                        stock_minimo=variante.stock_minimo,
+                        stock_maximo=variante.stock_maximo,
+                        estado=variante.estado,
+                    )
+                    
+                    nuevo_precio = PrecioProducto(
+                        precio_compra=variante.precio_compra,
+                        precio_venta=variante.precio_venta,
+                        vigente_desde=datetime.now(),
+                        estado=True,
+                    )
+                    producto.precios.append(nuevo_precio)
+                    db.add(producto)
+                    productos_modificados_o_creados.append(producto)
+                    
+            # Las que no vinieron en el payload, se desactivan logicamente
+            for clave, producto in mapa_existentes.items():
+                if clave not in variantes_entrantes_claves:
+                    producto.estado = False
 
-                producto = self.repository.save_producto(
-                    db,
-                    producto,
-                )
-
-                productos.append(producto)
-
-                precio = PrecioProducto(
-                    producto_id=producto.id,
-                    precio_compra=variante.precio_compra,
-                    precio_venta=variante.precio_venta,
-                    vigente_desde=datetime.now(),
-                    estado=True,
-                )
-
-                self.repository.save_precio(
-                    db,
-                    precio,
-                )
-
-            if productos:
-                producto_principal = productos[0]
-
-            self.repository.commit(db)
+            db.commit()
 
             return {
                 "codigo_producto_id": codigo_producto.id,
-                "producto_principal_id": productos[0].id if productos else None,
-                "variantes_creadas": len(productos),
-                "precios_creados": len(productos),
+                "producto_principal_id": productos_modificados_o_creados[0].id if productos_modificados_o_creados else None,
+                "variantes_creadas": len(productos_modificados_o_creados),
+                "precios_creados": len(productos_modificados_o_creados),
                 "imagenes_creadas": 0,
                 "success": True,
                 "message": "Producto actualizado correctamente.",
@@ -827,6 +852,8 @@ class ProductoService:
                 )
 
             variantes_unicas = set()
+            cache_colores = {}
+            cache_tallas = {}
 
             for variante in data.variantes:
                 clave_variante = (
@@ -841,21 +868,17 @@ class ProductoService:
 
                 variantes_unicas.add(clave_variante)
 
-                if not self.color_repository.get_by_id(
-                    db,
-                    variante.color_id,
-                ):
-                    raise ColorNoEncontradoException(
-                        COLOR_NO_EXISTE
-                    )
+                if variante.color_id not in cache_colores:
+                    color_obj = self.color_repository.get_by_id(db, variante.color_id)
+                    if not color_obj:
+                        raise ColorNoEncontradoException(COLOR_NO_EXISTE)
+                    cache_colores[variante.color_id] = color_obj
 
-                if not self.talla_repository.get_by_id(
-                    db,
-                    variante.talla_id,
-                ):
-                    raise TallaNoEncontradaException(
-                        TALLA_NO_EXISTE
-                    )
+                if variante.talla_id not in cache_tallas:
+                    talla_obj = self.talla_repository.get_by_id(db, variante.talla_id)
+                    if not talla_obj:
+                        raise TallaNoEncontradaException(TALLA_NO_EXISTE)
+                    cache_tallas[variante.talla_id] = talla_obj
 
             if self.codigo_repository.get_by_codigo(
                 db,
@@ -872,13 +895,12 @@ class ProductoService:
             )
 
             db.add(codigo_producto)
-            db.flush()
 
             productos = []
 
             for variante in data.variantes:
                 producto = Producto(
-                    codigo_producto_id=codigo_producto.id,
+                    codigo_producto=codigo_producto,
                     tipo_calzado_id=data.tipo_calzado_id,
                     material_id=data.material_id,
                     color_id=variante.color_id,
@@ -890,23 +912,15 @@ class ProductoService:
                     estado=variante.estado,
                 )
 
-                db.add(producto)
-                db.flush()
-
-                productos.append(producto)
-
-                precio = PrecioProducto(
-                    producto_id=producto.id,
+                nuevo_precio = PrecioProducto(
                     precio_compra=variante.precio_compra,
                     precio_venta=variante.precio_venta,
                     vigente_desde=datetime.now(),
                     estado=True,
                 )
-
-                db.add(precio)
-
-            if productos:
-                producto_principal = productos[0]
+                producto.precios.append(nuevo_precio)
+                db.add(producto)
+                productos.append(producto)
 
             db.commit()
 

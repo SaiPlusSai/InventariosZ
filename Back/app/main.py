@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
+from app.core.metrics import DBProfilerMiddleware
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -10,8 +11,10 @@ app = FastAPI(
 )
 
 # ==========================================
-# CORS
+# METRICS & CORS
 # ==========================================
+
+app.add_middleware(DBProfilerMiddleware)
 
 origins = [
     "http://localhost:5173",

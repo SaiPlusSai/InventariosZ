@@ -4,7 +4,7 @@ from sqlalchemy import or_
 from sqlalchemy import select
 from sqlalchemy import update
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload, selectinload
 import time
 
 from app.modules.codigo_producto.models import CodigoProducto
@@ -401,6 +401,15 @@ class ProductoRepository:
         
         statement = (
             select(Producto)
+            .options(
+                joinedload(Producto.codigo_producto).joinedload(CodigoProducto.marca),
+                joinedload(Producto.tipo_calzado),
+                joinedload(Producto.material),
+                joinedload(Producto.color),
+                joinedload(Producto.talla),
+                selectinload(Producto.precios),
+                selectinload(Producto.imagenes),
+            )
             .where(Producto.estado == True)
             .where(
                 Producto.id == producto_id
@@ -468,6 +477,12 @@ class ProductoRepository:
 
         statement = (
             select(Producto)
+            .options(
+                joinedload(Producto.codigo_producto),
+                joinedload(Producto.color),
+                joinedload(Producto.talla),
+                selectinload(Producto.precios),
+            )
             .where(Producto.estado == True)
             .where(
                 Producto.codigo_producto_id == codigo_producto_id
