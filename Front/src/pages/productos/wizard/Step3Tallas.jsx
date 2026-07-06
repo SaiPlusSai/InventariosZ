@@ -48,7 +48,7 @@ export default function Step3Tallas() {
                 : 'border-gray-300 hover:border-gray-400'
             }`}
           >
-            {talla.numero}
+            {talla.nombre}
           </button>
         ))}
       </div>
