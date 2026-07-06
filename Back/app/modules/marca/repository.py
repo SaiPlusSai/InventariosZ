@@ -10,9 +10,18 @@ class MarcaRepository:
     a la base de datos.
     """
 
+    
+    def get_papelera(self, db: Session) -> list[Marca]:
+        statement = (
+            select(Marca)
+            .where(Marca.estado == False)
+        )
+        return db.scalars(statement).all()
+
     def get_all(self, db: Session) -> list[Marca]:
         statement = (
             select(Marca)
+            .where(Marca.estado == True)
             .order_by(Marca.nombre.asc())
         )
 
@@ -26,6 +35,7 @@ class MarcaRepository:
 
         statement = (
             select(Marca)
+            .where(Marca.estado == True)
             .where(Marca.id == marca_id)
         )
 
@@ -39,6 +49,7 @@ class MarcaRepository:
 
         statement = (
             select(Marca)
+            .where(Marca.estado == True)
             .where(Marca.nombre == nombre)
         )
 
@@ -75,3 +86,6 @@ class MarcaRepository:
 
         db.delete(marca)
         db.commit()
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}

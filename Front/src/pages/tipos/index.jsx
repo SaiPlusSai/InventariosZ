@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useTipoCalzadoStore } from '../../store/tipoCalzadoStore'
 import { tipoCalzadoService } from '../../services/tipoCalzadoService'
 
@@ -17,10 +18,14 @@ export default function Tipos() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
-  const loadTipos = async () => {
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadTipos = async (papelera = isPapeleraMode) => {
     try {
       setLoading(true)
-      const res = await tipoCalzadoService.getAll()
+      const res = papelera ? await tipoCalzadoService.getPapelera() : await tipoCalzadoService.getAll()
       setTipos(res.data)
     } catch (err) {
       console.error(err)
@@ -31,8 +36,8 @@ export default function Tipos() {
   }
 
   useEffect(() => {
-    loadTipos()
-  }, [])
+    loadTipos(isPapeleraMode)
+  }, [isPapeleraMode])
 
   const handleOpenModal = (tipo = null) => {
     if (tipo) {
@@ -69,15 +74,18 @@ export default function Tipos() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este tipo de calzado?')) {
-      try {
-        await tipoCalzadoService.delete(id)
-        loadTipos()
-      } catch (err) {
-        console.error(err)
-        alert('Error al eliminar el tipo de calzado')
-      }
+  const handleDeleteClick = (tipo) => {
+    setItemToDelete(tipo)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await tipoCalzadoService.recuperar(id)
+      loadTipos()
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar el tipo de calzado')
     }
   }
 
@@ -98,10 +106,21 @@ export default function Tipos() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tipos de Calzado</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Nuevo Tipo
-        </Button>
+        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Tipos de Calzado (Papelera)' : 'Tipos de Calzado'}</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setSearchTerm('')
+            setAppliedSearch('')
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              + Nuevo Tipo
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -152,9 +171,18 @@ export default function Tipos() {
                     <td className="py-3 px-4">{tipo.descripcion}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => handleOpenModal(tipo)}>Editar</Button>
-                        <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(tipo.id)}>Eliminar</Button>
-                        <Button variant="primary" onClick={() => navigate(`/productos?tipo_calzado_id=${tipo.id}`)}>Ver Productos</Button>
+                        {!isPapeleraMode ? (
+                          <>
+                            <Button variant="secondary" onClick={() => handleOpenModal(tipo)}>Editar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(tipo)}>Eliminar</Button>
+                            <Button variant="primary" onClick={() => navigate(`/productos?tipo_calzado_id=${tipo.id}`)}>Ver Productos</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(tipo.id)}>Recuperar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(tipo)}>Elim. Definitivo</Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -193,6 +221,15 @@ export default function Tipos() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadTipos()}
+        service={tipoCalzadoService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 }

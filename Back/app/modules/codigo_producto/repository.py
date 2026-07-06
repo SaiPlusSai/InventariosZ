@@ -17,6 +17,7 @@ class CodigoProductoRepository:
 
         statement = (
             select(CodigoProducto)
+            .where(CodigoProducto.estado == True)
             .order_by(CodigoProducto.codigo.asc())
         )
 
@@ -30,6 +31,7 @@ class CodigoProductoRepository:
 
         statement = (
             select(CodigoProducto)
+            .where(CodigoProducto.estado == True)
             .where(CodigoProducto.id == codigo_producto_id)
         )
 
@@ -43,6 +45,7 @@ class CodigoProductoRepository:
 
         statement = (
             select(CodigoProducto)
+            .where(CodigoProducto.estado == True)
             .where(CodigoProducto.codigo == codigo)
         )
 
@@ -56,6 +59,7 @@ class CodigoProductoRepository:
 
         statement = (
             select(CodigoProducto)
+            .where(CodigoProducto.estado == True)
             .where(CodigoProducto.marca_id == marca_id)
             .order_by(CodigoProducto.codigo.asc())
         )
@@ -93,3 +97,6 @@ class CodigoProductoRepository:
 
         db.delete(codigo_producto)
         db.commit()
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}

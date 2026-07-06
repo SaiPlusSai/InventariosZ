@@ -38,6 +38,32 @@ def get_all(
     return service.get_all(db)
 
 
+
+@router.get(
+    "/papelera",
+    response_model=list, # using list for simplicity since schemas vary slightly
+)
+def get_papelera(db: Session = Depends(get_db)):
+    return service.get_papelera(db)
+
+@router.get(
+    "/{material_id}/dependencias",
+)
+def get_dependencias(material_id: int, db: Session = Depends(get_db)):
+    return service.get_dependencias(db, material_id)
+
+@router.patch(
+    "/{material_id}/desactivar",
+)
+def desactivar(material_id: int, db: Session = Depends(get_db)):
+    return service.desactivar(db, material_id)
+
+@router.patch(
+    "/{material_id}/recuperar",
+)
+def recuperar(material_id: int, db: Session = Depends(get_db)):
+    return service.recuperar(db, material_id)
+
 @router.get(
     "/{material_id}",
     response_model=MaterialResponse,

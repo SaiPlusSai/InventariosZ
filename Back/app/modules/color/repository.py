@@ -10,9 +10,18 @@ class ColorRepository:
     a la base de datos.
     """
 
+    
+    def get_papelera(self, db: Session) -> list[Color]:
+        statement = (
+            select(Color)
+            .where(Color.estado == False)
+        )
+        return db.scalars(statement).all()
+
     def get_all(self, db: Session) -> list[Color]:
         statement = (
             select(Color)
+            .where(Color.estado == True)
             .order_by(Color.nombre.asc())
         )
 
@@ -26,6 +35,7 @@ class ColorRepository:
 
         statement = (
             select(Color)
+            .where(Color.estado == True)
             .where(Color.id == color_id)
         )
 
@@ -39,6 +49,7 @@ class ColorRepository:
 
         statement = (
             select(Color)
+            .where(Color.estado == True)
             .where(Color.nombre == nombre)
         )
 
@@ -75,3 +86,7 @@ class ColorRepository:
 
         db.delete(color)
         db.commit()
+
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}

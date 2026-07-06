@@ -1,3 +1,4 @@
+from app.core.exceptions import RegistroActivoNoPuedeEliminarseException
 from sqlalchemy.orm import Session
 from app.modules.marca.constants import (
     MARCA_NO_EXISTE,
@@ -20,6 +21,30 @@ class MarcaService:
 
     def __init__(self):
         self.repository = MarcaRepository()
+
+    
+    def get_papelera(self, db: Session) -> list[Marca]:
+        return self.repository.get_papelera(db)
+
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        return self.repository.get_dependencias(db, id)
+
+    def desactivar(self, db: Session, id: int):
+        item = self.repository.get_by_id(db, id)
+        if item:
+            item.estado = False
+            from sqlalchemy import func
+            item.deleted_at = func.now()
+            db.commit()
+        return item
+
+    def recuperar(self, db: Session, id: int):
+        item = self.repository.get_by_id(db, id)
+        if item:
+            item.estado = True
+            item.deleted_at = None
+            db.commit()
+        return item
 
     def get_all(
         self,
@@ -102,6 +127,11 @@ class MarcaService:
 
         if not marca:
             raise MarcaNoEncontradaException(MARCA_NO_EXISTE)
+
+        if locals().get('item') and getattr(locals()['item'], 'estado', False) or (locals().get('marca') and getattr(locals().get('marca'), 'estado', False)):
+            raise RegistroActivoNoPuedeEliminarseException('No se puede eliminar físicamente un registro activo. Envíelo a la papelera primero.')
+        if marca.estado == True:
+            raise RegistroActivoNoPuedeEliminarseException('No se puede eliminar un registro activo.')
 
         self.repository.delete(
             db,

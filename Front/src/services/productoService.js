@@ -52,6 +52,19 @@ export const productoService = {
       data
     ),
 
+  
+  getPapelera: (params = {}) =>
+    axiosInstance.get('/productos/papelera', { params }),
+
+  desactivar: (id) =>
+    axiosInstance.patch('/productos/'+id+'/desactivar'),
+
+  recuperar: (id) =>
+    axiosInstance.patch('/productos/'+id+'/recuperar'),
+
+  getDependencias: (id) =>
+    axiosInstance.get('/productos/'+id+'/dependencias'),
+
   delete: (id) =>
     axiosInstance.delete(`/productos/${id}`),
 

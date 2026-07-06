@@ -10,9 +10,18 @@ class TallaRepository:
     a la base de datos.
     """
 
+    
+    def get_papelera(self, db: Session) -> list[Talla]:
+        statement = (
+            select(Talla)
+            .where(Talla.estado == False)
+        )
+        return db.scalars(statement).all()
+
     def get_all(self, db: Session) -> list[Talla]:
         statement = (
             select(Talla)
+            .where(Talla.estado == True)
             .order_by(Talla.orden.asc(), Talla.nombre.asc())
         )
 
@@ -26,6 +35,7 @@ class TallaRepository:
 
         statement = (
             select(Talla)
+            .where(Talla.estado == True)
             .where(Talla.id == talla_id)
         )
 
@@ -39,6 +49,7 @@ class TallaRepository:
 
         statement = (
             select(Talla)
+            .where(Talla.estado == True)
             .where(Talla.nombre == nombre)
         )
 
@@ -75,3 +86,7 @@ class TallaRepository:
 
         db.delete(talla)
         db.commit()
+
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}

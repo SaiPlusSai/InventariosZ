@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useCodigoProductoStore } from '../../store/codigoProductoStore'
 import { codigoProductoService } from '../../services/codigoProductoService'
 import { marcaService } from '../../services/marcaService'
@@ -19,11 +20,15 @@ export default function CodigoProducto() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
-  const loadData = async () => {
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadData = async (papelera = isPapeleraMode) => {
     try {
       setLoading(true)
       const [resCodigos, resMarcas] = await Promise.all([
-        codigoProductoService.getAll(),
+        papelera ? codigoProductoService.getPapelera() : codigoProductoService.getAll(),
         marcaService.getAll()
       ])
       setCodigos(resCodigos.data)
@@ -37,8 +42,8 @@ export default function CodigoProducto() {
   }
 
   useEffect(() => {
-    loadData()
-  }, [])
+    loadData(isPapeleraMode)
+  }, [isPapeleraMode])
 
   const handleOpenModal = (codigo = null) => {
     if (codigo) {
@@ -79,15 +84,18 @@ export default function CodigoProducto() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este código?')) {
-      try {
-        await codigoProductoService.delete(id)
-        loadData()
-      } catch (err) {
-        console.error(err)
-        alert('Error al eliminar el código')
-      }
+  const handleDeleteClick = (codigo) => {
+    setItemToDelete(codigo)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await codigoProductoService.recuperar(id)
+      loadData()
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar el código')
     }
   }
 
@@ -110,10 +118,21 @@ export default function CodigoProducto() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Códigos de Producto</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Nuevo Código
-        </Button>
+        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Códigos de Producto (Papelera)' : 'Códigos de Producto'}</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setSearchTerm('')
+            setAppliedSearch('')
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              + Nuevo Código
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -166,9 +185,18 @@ export default function CodigoProducto() {
                       <td className="py-3 px-4">{marca ? marca.nombre : item.marca_id}</td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="secondary" onClick={() => handleOpenModal(item)}>Editar</Button>
-                          <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(item.id)}>Eliminar</Button>
-                          <Button variant="primary" onClick={() => navigate(`/productos?codigo=${item.codigo}`)}>Ver Variantes</Button>
+                          {!isPapeleraMode ? (
+                            <>
+                              <Button variant="secondary" onClick={() => handleOpenModal(item)}>Editar</Button>
+                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Eliminar</Button>
+                              <Button variant="primary" onClick={() => navigate(`/productos?codigo=${item.codigo}`)}>Ver Variantes</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(item.id)}>Recuperar</Button>
+                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Elim. Definitivo</Button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -218,6 +246,15 @@ export default function CodigoProducto() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadData()}
+        service={codigoProductoService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 }

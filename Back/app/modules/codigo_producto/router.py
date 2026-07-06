@@ -110,3 +110,27 @@ def delete(
 
     except CodigoProductoNoEncontradoException as e:
         raise HTTPException(status_code=404, detail=str(e))
+@router.get(
+    "/papelera",
+    response_model=list, # using list for simplicity since schemas vary slightly
+)
+def get_papelera(db: Session = Depends(get_db)):
+    return service.get_papelera(db)
+
+@router.get(
+    "/{codigo_producto_id}/dependencias",
+)
+def get_dependencias(codigo_producto_id: int, db: Session = Depends(get_db)):
+    return service.get_dependencias(db, codigo_producto_id)
+
+@router.patch(
+    "/{codigo_producto_id}/desactivar",
+)
+def desactivar(codigo_producto_id: int, db: Session = Depends(get_db)):
+    return service.desactivar(db, codigo_producto_id)
+
+@router.patch(
+    "/{codigo_producto_id}/recuperar",
+)
+def recuperar(codigo_producto_id: int, db: Session = Depends(get_db)):
+    return service.recuperar(db, codigo_producto_id)

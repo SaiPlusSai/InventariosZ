@@ -46,6 +46,32 @@ def get_all(
     return service.get_all(db)
 
 
+
+@router.get(
+    "/papelera",
+    response_model=list, # using list for simplicity since schemas vary slightly
+)
+def get_papelera(db: Session = Depends(get_db)):
+    return service.get_papelera(db)
+
+@router.get(
+    "/{marca_id}/dependencias",
+)
+def get_dependencias(marca_id: int, db: Session = Depends(get_db)):
+    return service.get_dependencias(db, marca_id)
+
+@router.patch(
+    "/{marca_id}/desactivar",
+)
+def desactivar(marca_id: int, db: Session = Depends(get_db)):
+    return service.desactivar(db, marca_id)
+
+@router.patch(
+    "/{marca_id}/recuperar",
+)
+def recuperar(marca_id: int, db: Session = Depends(get_db)):
+    return service.recuperar(db, marca_id)
+
 @router.get(
     "/{marca_id}",
     response_model=MarcaResponse,

@@ -10,9 +10,18 @@ class MaterialRepository:
     a la base de datos.
     """
 
+    
+    def get_papelera(self, db: Session) -> list[Material]:
+        statement = (
+            select(Material)
+            .where(Material.estado == False)
+        )
+        return db.scalars(statement).all()
+
     def get_all(self, db: Session) -> list[Material]:
         statement = (
             select(Material)
+            .where(Material.estado == True)
             .order_by(Material.nombre.asc())
         )
 
@@ -26,6 +35,7 @@ class MaterialRepository:
 
         statement = (
             select(Material)
+            .where(Material.estado == True)
             .where(Material.id == material_id)
         )
 
@@ -39,6 +49,7 @@ class MaterialRepository:
 
         statement = (
             select(Material)
+            .where(Material.estado == True)
             .where(Material.nombre == nombre)
         )
 
@@ -75,3 +86,7 @@ class MaterialRepository:
 
         db.delete(material)
         db.commit()
+
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useColorStore } from '../../store/colorStore'
 import { colorService } from '../../services/colorService'
 
@@ -17,10 +18,14 @@ export default function Colores() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
-  const loadColores = async () => {
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadColores = async (papelera = isPapeleraMode) => {
     try {
       setLoading(true)
-      const res = await colorService.getAll()
+      const res = papelera ? await colorService.getPapelera() : await colorService.getAll()
       setColores(res.data)
     } catch (err) {
       console.error(err)
@@ -31,8 +36,8 @@ export default function Colores() {
   }
 
   useEffect(() => {
-    loadColores()
-  }, [])
+    loadColores(isPapeleraMode)
+  }, [isPapeleraMode])
 
   const handleOpenModal = (color = null) => {
     if (color) {
@@ -69,15 +74,18 @@ export default function Colores() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este color?')) {
-      try {
-        await colorService.delete(id)
-        loadColores()
-      } catch (err) {
-        console.error(err)
-        alert('Error al eliminar el color')
-      }
+  const handleDeleteClick = (color) => {
+    setItemToDelete(color)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await colorService.recuperar(id)
+      loadColores()
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar el color')
     }
   }
 
@@ -98,10 +106,21 @@ export default function Colores() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Colores</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Nuevo Color
-        </Button>
+        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Colores (Papelera)' : 'Colores'}</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setSearchTerm('')
+            setAppliedSearch('')
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              + Nuevo Color
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -158,9 +177,18 @@ export default function Colores() {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => handleOpenModal(color)}>Editar</Button>
-                        <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(color.id)}>Eliminar</Button>
-                        <Button variant="primary" onClick={() => navigate(`/productos?color_id=${color.id}`)}>Ver Productos</Button>
+                        {!isPapeleraMode ? (
+                          <>
+                            <Button variant="secondary" onClick={() => handleOpenModal(color)}>Editar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Eliminar</Button>
+                            <Button variant="primary" onClick={() => navigate(`/productos?color_id=${color.id}`)}>Ver Productos</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(color.id)}>Recuperar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Elim. Definitivo</Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -199,6 +227,15 @@ export default function Colores() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadColores()}
+        service={colorService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 }

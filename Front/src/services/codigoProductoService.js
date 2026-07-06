@@ -13,6 +13,19 @@ export const codigoProductoService = {
   update: (id, data) =>
     axiosInstance.put(`/codigos-producto/${id}`, data),
 
+  
+  getPapelera: (params = {}) =>
+    axiosInstance.get('/codigos-producto/papelera', { params }),
+
+  desactivar: (id) =>
+    axiosInstance.patch('/codigos-producto/'+id+'/desactivar'),
+
+  recuperar: (id) =>
+    axiosInstance.patch('/codigos-producto/'+id+'/recuperar'),
+
+  getDependencias: (id) =>
+    axiosInstance.get('/codigos-producto/'+id+'/dependencias'),
+
   delete: (id) =>
     axiosInstance.delete(`/codigos-producto/${id}`),
 }

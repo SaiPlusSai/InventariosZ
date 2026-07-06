@@ -7,6 +7,7 @@ import ProductoWizard from './wizard/ProductoWizard'
 import { formatCurrency, getStockLabel } from '../../utils/helpers'
 import { useWizardStore } from '../../store/wizardStore'
 import ProductoDetalle from './ProductoDetalle'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 const emptyFilters = {
   codigo: '',
   marca: '',
@@ -37,6 +38,10 @@ export default function Productos() {
   const [showDetalle, setShowDetalle] = useState(false)
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(initialFilters)
+  
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
 
  const {
   productos,
@@ -48,13 +53,13 @@ export default function Productos() {
   setLoadingDetalle,
 } = useProductoStore()
 const { cargarProductoEditar } = useWizardStore()
-  const loadProductos = async (params = {}) => {
+  const loadProductos = async (params = {}, papelera = isPapeleraMode) => {
 
     try {
 
       setLoading(true)
 
-      const res = await productoService.getAll(params)
+      const res = papelera ? await productoService.getPapelera(params) : await productoService.getAll(params)
 
       setProductos(res.data)
 
@@ -72,7 +77,7 @@ const { cargarProductoEditar } = useWizardStore()
 
 useEffect(() => {
 
-  loadProductos(cleanFilters(filters))
+  loadProductos(cleanFilters(filters), isPapeleraMode)
 
   const socket = new WebSocket(
     "ws://localhost:8000/productos/ws"
@@ -111,12 +116,12 @@ useEffect(() => {
   }
 
   const handleApplyFilters = () => {
-    loadProductos(cleanFilters(filters))
+    loadProductos(cleanFilters(filters), isPapeleraMode)
   }
 
   const handleClearFilters = () => {
     setFilters(emptyFilters)
-    loadProductos()
+    loadProductos({}, isPapeleraMode)
   }
   const handleVer = async (id) => {
 
@@ -190,20 +195,46 @@ const handleDecrementarStock = async (id) => {
   }
 
 }
+
+  const handleDeleteClick = (producto) => {
+    setItemToDelete(producto)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await productoService.recuperar(id)
+      loadProductos(cleanFilters(filters), isPapeleraMode)
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar el producto')
+    }
+  }
+
   return (
     <div>
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">
-          Productos
+          {isPapeleraMode ? 'Productos (Papelera)' : 'Productos'}
         </h1>
 
-        <Button
-          variant="primary"
-          onClick={() => setShowWizard(true)}
-        >
-          + Nuevo Producto
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setFilters(emptyFilters)
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button
+              variant="primary"
+              onClick={() => setShowWizard(true)}
+            >
+              + Nuevo Producto
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -398,28 +429,29 @@ const handleDecrementarStock = async (id) => {
 
               </div>
 
-              <div className="flex gap-2">
-
-                <Button
-  variant="ghost"
-  className="flex-1"
-  onClick={() => handleVer(producto.id)}
->
-  Ver
-</Button>
-
-                <Button
-  variant="secondary"
-  className="flex-1"
-  onClick={() =>
-    handleEditar(
-      producto.codigo_producto_id
-    )
-  }
->
-  Editar
-</Button>
-
+              <div className="flex gap-2 flex-wrap mt-2">
+                {!isPapeleraMode ? (
+                  <>
+                    <Button variant="ghost" className="flex-1" onClick={() => handleVer(producto.id)}>
+                      Ver
+                    </Button>
+                    <Button variant="secondary" className="flex-1" onClick={() => handleEditar(producto.codigo_producto_id)}>
+                      Editar
+                    </Button>
+                    <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 flex-1" onClick={() => handleDeleteClick(producto)}>
+                      Eliminar
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50 flex-1" onClick={() => handleRecuperar(producto.id)}>
+                      Recuperar
+                    </Button>
+                    <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 flex-1" onClick={() => handleDeleteClick(producto)}>
+                      Elim. Definitivo
+                    </Button>
+                  </>
+                )}
               </div>
 
             </Card>
@@ -443,6 +475,15 @@ const handleDecrementarStock = async (id) => {
   />
 
 )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadProductos(cleanFilters(filters), isPapeleraMode)}
+        service={productoService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 

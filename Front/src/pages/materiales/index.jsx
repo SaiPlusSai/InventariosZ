@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useMaterialStore } from '../../store/materialStore'
 import { materialService } from '../../services/materialService'
 
@@ -17,10 +18,14 @@ export default function Materiales() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
-  const loadMateriales = async () => {
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadMateriales = async (papelera = isPapeleraMode) => {
     try {
       setLoading(true)
-      const res = await materialService.getAll()
+      const res = papelera ? await materialService.getPapelera() : await materialService.getAll()
       setMateriales(res.data)
     } catch (err) {
       console.error(err)
@@ -31,8 +36,8 @@ export default function Materiales() {
   }
 
   useEffect(() => {
-    loadMateriales()
-  }, [])
+    loadMateriales(isPapeleraMode)
+  }, [isPapeleraMode])
 
   const handleOpenModal = (material = null) => {
     if (material) {
@@ -69,15 +74,18 @@ export default function Materiales() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar este material?')) {
-      try {
-        await materialService.delete(id)
-        loadMateriales()
-      } catch (err) {
-        console.error(err)
-        alert('Error al eliminar el material')
-      }
+  const handleDeleteClick = (material) => {
+    setItemToDelete(material)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await materialService.recuperar(id)
+      loadMateriales()
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar el material')
     }
   }
 
@@ -98,10 +106,21 @@ export default function Materiales() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Materiales</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Nuevo Material
-        </Button>
+        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Materiales (Papelera)' : 'Materiales'}</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setSearchTerm('')
+            setAppliedSearch('')
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              + Nuevo Material
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -152,9 +171,18 @@ export default function Materiales() {
                     <td className="py-3 px-4">{material.descripcion}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => handleOpenModal(material)}>Editar</Button>
-                        <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(material.id)}>Eliminar</Button>
-                        <Button variant="primary" onClick={() => navigate(`/productos?material_id=${material.id}`)}>Ver Productos</Button>
+                        {!isPapeleraMode ? (
+                          <>
+                            <Button variant="secondary" onClick={() => handleOpenModal(material)}>Editar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(material)}>Eliminar</Button>
+                            <Button variant="primary" onClick={() => navigate(`/productos?material_id=${material.id}`)}>Ver Productos</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(material.id)}>Recuperar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(material)}>Elim. Definitivo</Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -193,6 +221,15 @@ export default function Materiales() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadMateriales()}
+        service={materialService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 }

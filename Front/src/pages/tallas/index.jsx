@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useTallaStore } from '../../store/tallaStore'
 import { tallaService } from '../../services/tallaService'
 
@@ -17,10 +18,14 @@ export default function Tallas() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
-  const loadTallas = async () => {
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadTallas = async (papelera = isPapeleraMode) => {
     try {
       setLoading(true)
-      const res = await tallaService.getAll()
+      const res = papelera ? await tallaService.getPapelera() : await tallaService.getAll()
       setTallas(res.data)
     } catch (err) {
       console.error(err)
@@ -31,8 +36,8 @@ export default function Tallas() {
   }
 
   useEffect(() => {
-    loadTallas()
-  }, [])
+    loadTallas(isPapeleraMode)
+  }, [isPapeleraMode])
 
   const handleOpenModal = (talla = null) => {
     if (talla) {
@@ -74,15 +79,18 @@ export default function Tallas() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta talla?')) {
-      try {
-        await tallaService.delete(id)
-        loadTallas()
-      } catch (err) {
-        console.error(err)
-        alert('Error al eliminar la talla')
-      }
+  const handleDeleteClick = (talla) => {
+    setItemToDelete(talla)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await tallaService.recuperar(id)
+      loadTallas()
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar la talla')
     }
   }
 
@@ -102,10 +110,21 @@ export default function Tallas() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Tallas</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Nueva Talla
-        </Button>
+        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Tallas (Papelera)' : 'Tallas'}</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setSearchTerm('')
+            setAppliedSearch('')
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              + Nueva Talla
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -154,9 +173,18 @@ export default function Tallas() {
                     <td className="py-3 px-4">{talla.nombre}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => handleOpenModal(talla)}>Editar</Button>
-                        <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(talla.id)}>Eliminar</Button>
-                        <Button variant="primary" onClick={() => navigate(`/productos?talla_id=${talla.id}`)}>Ver Productos</Button>
+                        {!isPapeleraMode ? (
+                          <>
+                            <Button variant="secondary" onClick={() => handleOpenModal(talla)}>Editar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(talla)}>Eliminar</Button>
+                            <Button variant="primary" onClick={() => navigate(`/productos?talla_id=${talla.id}`)}>Ver Productos</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(talla.id)}>Recuperar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(talla)}>Elim. Definitivo</Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -190,6 +218,15 @@ export default function Tallas() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadTallas()}
+        service={tallaService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 }

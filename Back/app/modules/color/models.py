@@ -53,3 +53,8 @@ class Color(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+    deleted_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )

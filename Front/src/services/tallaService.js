@@ -13,6 +13,19 @@ export const tallaService = {
   update: (id, data) =>
     axiosInstance.put(`/tallas/${id}`, data),
 
+  
+  getPapelera: (params = {}) =>
+    axiosInstance.get('/tallas/papelera', { params }),
+
+  desactivar: (id) =>
+    axiosInstance.patch('/tallas/'+id+'/desactivar'),
+
+  recuperar: (id) =>
+    axiosInstance.patch('/tallas/'+id+'/recuperar'),
+
+  getDependencias: (id) =>
+    axiosInstance.get('/tallas/'+id+'/dependencias'),
+
   delete: (id) =>
     axiosInstance.delete(`/tallas/${id}`),
 }

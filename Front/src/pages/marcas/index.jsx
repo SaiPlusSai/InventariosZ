@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
+import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useMarcaStore } from '../../store/marcaStore'
 import { marcaService } from '../../services/marcaService'
 
@@ -17,10 +18,14 @@ export default function Marcas() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
-  const loadMarcas = async () => {
+  const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+
+  const loadMarcas = async (papelera = isPapeleraMode) => {
     try {
       setLoading(true)
-      const res = await marcaService.getAll()
+      const res = papelera ? await marcaService.getPapelera() : await marcaService.getAll()
       setMarcas(res.data)
     } catch (err) {
       console.error(err)
@@ -31,8 +36,8 @@ export default function Marcas() {
   }
 
   useEffect(() => {
-    loadMarcas()
-  }, [])
+    loadMarcas(isPapeleraMode)
+  }, [isPapeleraMode])
 
   const handleOpenModal = (marca = null) => {
     if (marca) {
@@ -69,15 +74,18 @@ export default function Marcas() {
     }
   }
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta marca?')) {
-      try {
-        await marcaService.delete(id)
-        loadMarcas()
-      } catch (err) {
-        console.error(err)
-        alert('Error al eliminar la marca')
-      }
+  const handleDeleteClick = (marca) => {
+    setItemToDelete(marca)
+    setShowDeleteModal(true)
+  }
+
+  const handleRecuperar = async (id) => {
+    try {
+      await marcaService.recuperar(id)
+      loadMarcas()
+    } catch (err) {
+      console.error(err)
+      alert('Error al recuperar la marca')
     }
   }
 
@@ -98,10 +106,21 @@ export default function Marcas() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Marcas</h1>
-        <Button variant="primary" onClick={() => handleOpenModal()}>
-          + Nueva Marca
-        </Button>
+        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Marcas (Papelera)' : 'Marcas'}</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => {
+            setIsPapeleraMode(!isPapeleraMode)
+            setSearchTerm('')
+            setAppliedSearch('')
+          }}>
+            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          </Button>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => handleOpenModal()}>
+              + Nueva Marca
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card className="mb-6">
@@ -152,9 +171,18 @@ export default function Marcas() {
                     <td className="py-3 px-4">{marca.descripcion}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="secondary" onClick={() => handleOpenModal(marca)}>Editar</Button>
-                        <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDelete(marca.id)}>Eliminar</Button>
-                        <Button variant="primary" onClick={() => navigate(`/productos?marca_id=${marca.id}`)}>Ver Productos</Button>
+                        {!isPapeleraMode ? (
+                          <>
+                            <Button variant="secondary" onClick={() => handleOpenModal(marca)}>Editar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Eliminar</Button>
+                            <Button variant="primary" onClick={() => navigate(`/productos?marca_id=${marca.id}`)}>Ver Productos</Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(marca.id)}>Recuperar</Button>
+                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Elim. Definitivo</Button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -193,6 +221,15 @@ export default function Marcas() {
           </div>
         </div>
       )}
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
+        onConfirm={() => loadMarcas()}
+        service={marcaService}
+        item={itemToDelete}
+        isPhysicalDelete={isPapeleraMode}
+      />
     </div>
   )
 }

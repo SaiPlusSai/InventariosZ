@@ -99,6 +99,32 @@ def get_all(
     )
 
 
+
+@router.get(
+    "/papelera",
+    response_model=list, # using list for simplicity since schemas vary slightly
+)
+def get_papelera(db: Session = Depends(get_db)):
+    return service.get_papelera(db)
+
+@router.get(
+    "/{producto_id}/dependencias",
+)
+def get_dependencias(producto_id: int, db: Session = Depends(get_db)):
+    return service.get_dependencias(db, producto_id)
+
+@router.patch(
+    "/{producto_id}/desactivar",
+)
+def desactivar(producto_id: int, db: Session = Depends(get_db)):
+    return service.desactivar(db, producto_id)
+
+@router.patch(
+    "/{producto_id}/recuperar",
+)
+def recuperar(producto_id: int, db: Session = Depends(get_db)):
+    return service.recuperar(db, producto_id)
+
 @router.get(
     "/{producto_id}",
     response_model=ProductoResponse,

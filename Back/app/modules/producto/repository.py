@@ -203,6 +203,7 @@ class ProductoRepository:
 
         statement = (
             select(Producto)
+            .where(Producto.estado == True)
             .where(
                 Producto.id == producto_id
             )
@@ -217,6 +218,7 @@ class ProductoRepository:
         
         statement = (
             select(Producto)
+            .where(Producto.estado == True)
             .where(
                 Producto.id == producto_id
             )
@@ -266,6 +268,7 @@ class ProductoRepository:
 
         statement = (
             select(Producto)
+            .where(Producto.estado == True)
             .where(
                 Producto.codigo_producto_id == codigo_producto_id,
                 Producto.color_id == color_id,
@@ -282,6 +285,7 @@ class ProductoRepository:
 
         statement = (
             select(Producto)
+            .where(Producto.estado == True)
             .where(
                 Producto.codigo_producto_id == codigo_producto_id
             )
@@ -489,3 +493,7 @@ class ProductoRepository:
         db.commit()
 
         return stock
+
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}

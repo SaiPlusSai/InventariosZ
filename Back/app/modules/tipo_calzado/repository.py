@@ -10,9 +10,18 @@ class TipoCalzadoRepository:
     a la base de datos.
     """
 
+    
+    def get_papelera(self, db: Session) -> list[TipoCalzado]:
+        statement = (
+            select(TipoCalzado)
+            .where(TipoCalzado.estado == False)
+        )
+        return db.scalars(statement).all()
+
     def get_all(self, db: Session) -> list[TipoCalzado]:
         statement = (
             select(TipoCalzado)
+            .where(TipoCalzado.estado == True)
             .order_by(TipoCalzado.nombre.asc())
         )
 
@@ -26,6 +35,7 @@ class TipoCalzadoRepository:
 
         statement = (
             select(TipoCalzado)
+            .where(TipoCalzado.estado == True)
             .where(TipoCalzado.id == tipo_calzado_id)
         )
 
@@ -39,6 +49,7 @@ class TipoCalzadoRepository:
 
         statement = (
             select(TipoCalzado)
+            .where(TipoCalzado.estado == True)
             .where(TipoCalzado.nombre == nombre)
         )
 
@@ -75,3 +86,7 @@ class TipoCalzadoRepository:
 
         db.delete(tipo_calzado)
         db.commit()
+
+    def get_dependencias(self, db: Session, id: int) -> dict:
+        # Dummy implementation, can be refined manually if needed
+        return {"dependencias": {}}
