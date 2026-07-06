@@ -8,7 +8,9 @@ export default function ProductoCard({
   onVer,
   onEditar,
   onEliminar,
-  onRecuperar 
+  onRecuperar,
+  onIncrementar,
+  onDecrementar 
 }) {
   // Calculamos stock total y rango de precios
   const stockTotal = color.variantes.reduce((sum, v) => sum + v.stock_actual, 0)
@@ -53,21 +55,35 @@ export default function ProductoCard({
           <p className="text-primary-600 font-medium">Color: {color.color.nombre}</p>
         </div>
 
-        {/* Tallas disponibles como chips */}
+        {/* Tallas disponibles con controles de stock */}
         <div className="mt-3">
-          <p className="text-xs text-gray-500 mb-1">Tallas disponibles:</p>
-          <div className="flex flex-wrap gap-1">
+          <p className="text-xs text-gray-500 mb-2">Inventario por talla:</p>
+          <div className="space-y-2">
             {color.variantes.map(v => (
-              <span 
-                key={v.id} 
-                className={`px-2 py-0.5 text-xs rounded border ${
-                  v.stock_actual > 0 
-                    ? 'border-gray-300 bg-white text-gray-700' 
-                    : 'border-red-200 bg-red-50 text-red-400 line-through'
-                }`}
-              >
-                {v.talla.nombre}
-              </span>
+              <div key={v.id} className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100">
+                <span className="text-sm font-medium text-gray-700 min-w-[3rem]">
+                  {v.talla.nombre}
+                </span>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="secondary"
+                    className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md"
+                    onClick={() => onDecrementar && onDecrementar(v.id)}
+                  >
+                    -
+                  </Button>
+                  <span className={`text-sm font-bold w-6 text-center ${v.stock_actual > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                    {v.stock_actual}
+                  </span>
+                  <Button
+                    variant="secondary"
+                    className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md"
+                    onClick={() => onIncrementar && onIncrementar(v.id)}
+                  >
+                    +
+                  </Button>
+                </div>
+              </div>
             ))}
           </div>
         </div>

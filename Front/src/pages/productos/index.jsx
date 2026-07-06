@@ -100,6 +100,22 @@ export default function Productos() {
     setEditingColor({ codigoProductoId: producto.codigo_producto_id, colorId: colorInfo.color_id, productoCompleto: producto, colorInfo: colorInfo })
   }
 
+  const handleIncrementarStock = async (id) => {
+    try {
+      await productoService.incrementarStock(id)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
+  const handleDecrementarStock = async (id) => {
+    try {
+      await productoService.decrementarStock(id)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   const confirmDelete = async () => {
     if (!itemToDelete) return
     try {
@@ -219,6 +235,8 @@ export default function Productos() {
                   colorNombre: colorInfo.color.nombre
                 })}
                 onRecuperar={() => handleRecuperar(producto.codigo_producto_id, colorInfo.color_id)}
+                onIncrementar={handleIncrementarStock}
+                onDecrementar={handleDecrementarStock}
               />
             ))
           )}

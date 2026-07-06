@@ -66,14 +66,15 @@ export const useProductoStore = create((set) => ({
 
   actualizarStock: (id, stock_actual) =>
     set((state) => ({
-      productos: state.productos.map((producto) =>
-        producto.id === id
-          ? {
-              ...producto,
-              stock_actual,
-            }
-          : producto
-      ),
+      productos: state.productos.map((producto) => ({
+        ...producto,
+        colores: producto.colores.map((colorInfo) => ({
+          ...colorInfo,
+          variantes: colorInfo.variantes.map((v) =>
+            v.id === id ? { ...v, stock_actual } : v
+          )
+        }))
+      })),
     })),
 
   deleteProducto: (id) =>
