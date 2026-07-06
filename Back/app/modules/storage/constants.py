@@ -48,13 +48,13 @@ ALLOWED_CONTENT_TYPES = {
 # Nombre del bucket
 # ==========================================
 
-DEFAULT_BUCKET = "productos"
+DEFAULT_BUCKET = "productos(zapatos)"
 
 # ==========================================
 # Carpetas
 # ==========================================
 
-PRODUCT_FOLDER_PREFIX = "producto"
+PRODUCT_FOLDER_PREFIX = "productos(zapatos)"
 
 # ==========================================
 # Longitud máxima del nombre del archivo
