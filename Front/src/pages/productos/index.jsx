@@ -187,37 +187,40 @@ export default function Productos() {
         </div>
       </div>
 
-      {/* Buscador Global (Nivel 1) */}
-      <div className="mb-6">
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-            <Search className="h-6 w-6 text-gray-400" />
+      {/* Buscador y Filtros Combinados */}
+      <Card className="mb-8 border border-gray-200 shadow-sm bg-white rounded-xl overflow-hidden">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center">
+          {/* Buscador Global */}
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-gray-400" />
+            </div>
+            <input
+              type="text"
+              className="block w-full pl-11 pr-4 py-3.5 bg-transparent border-none focus:ring-0 text-gray-700 text-base"
+              placeholder="Buscar por nombre o descripción..."
+              value={globalSearch}
+              onChange={(e) => setGlobalSearch(e.target.value)}
+            />
           </div>
-          <input
-            type="text"
-            className="block w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg transition-shadow"
-            placeholder="Buscar por nombre o descripción..."
-            value={globalSearch}
-            onChange={(e) => setGlobalSearch(e.target.value)}
-          />
-        </div>
-      </div>
+          
+          {/* Separator (visible on desktop) */}
+          <div className="hidden md:block w-px h-8 bg-gray-200 mx-2"></div>
 
-      {/* Filtros Modernos (Nivel 2) */}
-      <Card className="mb-8 border-gray-100 shadow-sm bg-white overflow-hidden rounded-xl">
-        <button 
-          onClick={() => setShowFilters(!showFilters)}
-          className="w-full bg-gray-50/50 px-6 py-4 flex items-center justify-between border-b border-gray-100 hover:bg-gray-50 transition-colors focus:outline-none"
-        >
-          <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-            <Filter size={18} className="text-gray-400"/> Filtros
-          </h3>
-          <div className="text-gray-400">
-            {showFilters ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-          </div>
-        </button>
-        
-        {showFilters && (
+          {/* Botón Filtros */}
+          <button 
+            onClick={() => setShowFilters(!showFilters)}
+            className={`flex items-center justify-center gap-2 px-6 py-3.5 font-medium transition-colors md:w-auto w-full md:border-none border-t border-gray-100 focus:outline-none
+              ${showFilters ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50'}`}
+          >
+            <Filter size={18} />
+            <span>Filtros</span>
+            {showFilters ? <ChevronUp size={18} className="ml-1" /> : <ChevronDown size={18} className="ml-1" />}
+          </button>
+        </div>
+
+        {/* Panel de Filtros Desplegable */}
+        <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${showFilters ? 'max-h-[1000px] opacity-100 border-t border-gray-100 bg-gray-50/50' : 'max-h-0 opacity-0'}`}>
           <div className="p-6">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Input label="Código" value={filters.codigo} onChange={(e) => setFilters({...filters, codigo: e.target.value})} />
@@ -236,7 +239,7 @@ export default function Productos() {
               </Button>
             </div>
           </div>
-        )}
+        </div>
       </Card>
 
       {/* Grid de Productos */}
