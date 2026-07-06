@@ -7,7 +7,7 @@ import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
-import { Search, Filter, Plus, Trash2, RotateCcw } from 'lucide-react'
+import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
 
 const emptyFilters = {
   codigo: '', marca: '', tipo: '', material: '', color: '', talla: '',
@@ -53,6 +53,8 @@ export default function Productos() {
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(initialFilters)
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
+  const [globalSearch, setGlobalSearch] = useState('')
+  const [showFilters, setShowFilters] = useState(false)
   
   // Modals States
   const [showNewWizard, setShowNewWizard] = useState(false)
@@ -169,11 +171,11 @@ export default function Productos() {
             {isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
           </p>
         </div>
-        
-        <div className="flex gap-3 w-full md:w-auto">
+             <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
           <Button variant="secondary" onClick={() => {
             setIsPapeleraMode(!isPapeleraMode)
             setFilters(emptyFilters)
+            setGlobalSearch('')
           }} className="flex-1 md:flex-none">
             {isPapeleraMode ? <><RotateCcw size={16} className="mr-2"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2"/> Ver Papelera</>}
           </Button>
@@ -185,78 +187,117 @@ export default function Productos() {
         </div>
       </div>
 
-      {/* Filtros Modernos */}
-      <Card className="mb-8 border-gray-100 shadow-sm bg-white overflow-hidden">
-        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
+      {/* Buscador Global (Nivel 1) */}
+      <div className="mb-6">
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <Search className="h-6 w-6 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            className="block w-full pl-12 pr-4 py-4 rounded-xl border border-gray-200 shadow-sm focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-lg transition-shadow"
+            placeholder="Buscar por nombre o descripción..."
+            value={globalSearch}
+            onChange={(e) => setGlobalSearch(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Filtros Modernos (Nivel 2) */}
+      <Card className="mb-8 border-gray-100 shadow-sm bg-white overflow-hidden rounded-xl">
+        <button 
+          onClick={() => setShowFilters(!showFilters)}
+          className="w-full bg-gray-50/50 px-6 py-4 flex items-center justify-between border-b border-gray-100 hover:bg-gray-50 transition-colors focus:outline-none"
+        >
           <h3 className="font-semibold text-gray-700 flex items-center gap-2">
-            <Filter size={18} className="text-gray-400"/> Filtros de Búsqueda
+            <Filter size={18} className="text-gray-400"/> Filtros
           </h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <Input label="Código" value={filters.codigo} onChange={(e) => setFilters({...filters, codigo: e.target.value})} />
-            <Input label="Marca" value={filters.marca} onChange={(e) => setFilters({...filters, marca: e.target.value})} />
-            <Input label="Tipo" value={filters.tipo} onChange={(e) => setFilters({...filters, tipo: e.target.value})} />
-            <Input label="Material" value={filters.material} onChange={(e) => setFilters({...filters, material: e.target.value})} />
-            <Input label="Color" value={filters.color} onChange={(e) => setFilters({...filters, color: e.target.value})} />
-            <Input label="Talla" value={filters.talla} onChange={(e) => setFilters({...filters, talla: e.target.value})} />
+          <div className="text-gray-400">
+            {showFilters ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
           </div>
-          <div className="flex justify-end gap-3 mt-6">
-            <Button variant="secondary" onClick={() => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); }}>
-              Limpiar
-            </Button>
-            <Button variant="primary" onClick={() => loadProductos(cleanFilters(filters), isPapeleraMode)}>
-              <Search size={16} className="mr-2"/> Buscar
-            </Button>
+        </button>
+        
+        {showFilters && (
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              <Input label="Código" value={filters.codigo} onChange={(e) => setFilters({...filters, codigo: e.target.value})} />
+              <Input label="Marca" value={filters.marca} onChange={(e) => setFilters({...filters, marca: e.target.value})} />
+              <Input label="Tipo" value={filters.tipo} onChange={(e) => setFilters({...filters, tipo: e.target.value})} />
+              <Input label="Material" value={filters.material} onChange={(e) => setFilters({...filters, material: e.target.value})} />
+              <Input label="Color" value={filters.color} onChange={(e) => setFilters({...filters, color: e.target.value})} />
+              <Input label="Talla" value={filters.talla} onChange={(e) => setFilters({...filters, talla: e.target.value})} />
+            </div>
+            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
+              <Button variant="secondary" className="w-full sm:w-auto" onClick={() => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); }}>
+                Limpiar
+              </Button>
+              <Button variant="primary" className="w-full sm:w-auto" onClick={() => loadProductos(cleanFilters(filters), isPapeleraMode)}>
+                <Search size={16} className="mr-2"/> Buscar
+              </Button>
+            </div>
           </div>
-        </div>
+        )}
       </Card>
 
       {/* Grid de Productos */}
-      {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
-        </div>
-      ) : productos.length === 0 ? (
-        <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
-          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Search size={24} className="text-gray-400" />
+      {(() => {
+        const filteredProductos = productos.filter((p) => {
+          if (!globalSearch) return true
+          const searchLower = globalSearch.toLowerCase()
+          return (
+            (p.codigo && p.codigo.toLowerCase().includes(searchLower)) ||
+            (p.descripcion && p.descripcion.toLowerCase().includes(searchLower))
+          )
+        })
+
+        if (loading) {
+          return (
+            <div className="flex items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+            </div>
+          )
+        }
+
+        if (filteredProductos.length === 0) {
+          return (
+            <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
+              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package size={32} className="text-gray-400" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">No se encontraron productos</h3>
+              <p className="mt-1 text-gray-500">
+                {isPapeleraMode ? 'La papelera está vacía.' : 'Intenta ajustar los filtros de búsqueda.'}
+              </p>
+            </div>
+          )
+        }
+
+        return (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProductos.flatMap((producto) =>
+              producto.colores.map((colorInfo) => (
+                <ProductoCard
+                  key={`${producto.codigo_producto_id}-${colorInfo.color_id}`}
+                  producto={producto}
+                  color={colorInfo}
+                  isPapeleraMode={isPapeleraMode}
+                  onVer={() => handleVer(producto, colorInfo)}
+                  onEditar={() => handleEditar(producto, colorInfo)}
+                  onEliminar={() => setItemToDelete({
+                    codigoProductoId: producto.codigo_producto_id, 
+                    colorId: colorInfo.color_id, 
+                    nombre: producto.descripcion || producto.codigo,
+                    colorNombre: colorInfo.color.nombre
+                  })}
+                  onRecuperar={() => handleRecuperar(producto.codigo_producto_id, colorInfo.color_id)}
+                  onIncrementar={handleIncrementarStock}
+                  onDecrementar={handleDecrementarStock}
+                />
+              ))
+            )}
           </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-1">No se encontraron productos</h3>
-          <p className="text-gray-500 mb-6 max-w-md mx-auto">
-            Intenta ajustar los filtros o agrega un nuevo producto al catálogo para comenzar.
-          </p>
-          {!isPapeleraMode && (
-            <Button variant="primary" onClick={() => setShowNewWizard(true)}>
-              Crear el primer producto
-            </Button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {productos.flatMap((producto) =>
-            producto.colores.map((colorInfo) => (
-              <ProductoCard
-                key={`${producto.codigo_producto_id}-${colorInfo.color_id}`}
-                producto={producto}
-                color={colorInfo}
-                isPapeleraMode={isPapeleraMode}
-                onVer={() => handleVer(producto, colorInfo)}
-                onEditar={() => handleEditar(producto, colorInfo)}
-                onEliminar={() => setItemToDelete({
-                  codigoProductoId: producto.codigo_producto_id, 
-                  colorId: colorInfo.color_id, 
-                  nombre: producto.descripcion || producto.codigo,
-                  colorNombre: colorInfo.color.nombre
-                })}
-                onRecuperar={() => handleRecuperar(producto.codigo_producto_id, colorInfo.color_id)}
-                onIncrementar={handleIncrementarStock}
-                onDecrementar={handleDecrementarStock}
-              />
-            ))
-          )}
-        </div>
-      )}
+        )
+      })()}
 
       {/* Delete Modal custom for Colors */}
       {itemToDelete && (

@@ -10,11 +10,14 @@ import {
   Ruler,
   Hammer,
   Barcode,
+  User,
+  LogOut,
+  X
 } from 'lucide-react'
 
 import { ROUTES } from '../../constants'
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation()
 
   const [catalogosOpen, setCatalogosOpen] = useState(true)
@@ -22,14 +25,34 @@ export default function Sidebar() {
   const isActive = (path) => location.pathname === path
 
   return (
-    <aside className="w-64 bg-primary-800 text-white shadow-lg">
-      <div className="p-6">
-        <h1 className="text-2xl font-bold">Inventarios Z</h1>
-      </div>
+    <>
+      {/* Mobile overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 z-20 bg-black/50 lg:hidden transition-opacity" 
+          onClick={() => setIsOpen(false)}
+        />
+      )}
 
-      <nav className="mt-8">
+      {/* Sidebar Content */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-primary-800 text-white shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-6 flex items-center justify-between flex-shrink-0 border-b border-primary-700/50">
+          <h1 className="text-2xl font-bold tracking-tight">Inventarios Z</h1>
+          <button 
+            className="lg:hidden text-white/70 hover:text-white transition-colors"
+            onClick={() => setIsOpen(false)}
+          >
+            <X size={24} />
+          </button>
+        </div>
 
-        {/* Dashboard */}
+        <nav className="flex-1 overflow-y-auto py-4 scrollbar-thin scrollbar-thumb-primary-600 scrollbar-track-transparent">
+
+          {/* Dashboard */}
         <Link
           to={ROUTES.DASHBOARD}
           className={`flex items-center px-6 py-3 transition-colors ${
@@ -140,7 +163,7 @@ export default function Sidebar() {
               className={`flex items-center px-6 py-2 ${
                 isActive(ROUTES.CODIGO_PRODUCTO)
                   ? 'bg-primary-700 border-l-4 border-white'
-                  : 'hover:bg-primary-700'
+                  : 'hover:bg-primary-700 text-white/80 hover:text-white'
               }`}
             >
               <Barcode size={16} className="mr-3" />
@@ -149,8 +172,20 @@ export default function Sidebar() {
 
           </div>
         )}
+        </nav>
 
-      </nav>
-    </aside>
+        {/* Footer actions */}
+        <div className="border-t border-primary-700/50 p-4 space-y-2 flex-shrink-0">
+          <button className="w-full flex items-center px-4 py-2.5 text-sm rounded-lg text-white/80 hover:text-white hover:bg-primary-700 transition-colors">
+            <User size={18} className="mr-3" />
+            Perfil
+          </button>
+          <button className="w-full flex items-center px-4 py-2.5 text-sm rounded-lg text-red-200 hover:text-white hover:bg-red-500/20 transition-colors">
+            <LogOut size={18} className="mr-3" />
+            Cerrar sesión
+          </button>
+        </div>
+      </aside>
+    </>
   )
 }
