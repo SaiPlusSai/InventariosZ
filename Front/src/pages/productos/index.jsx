@@ -4,8 +4,7 @@ import { Card, Button, Input } from '../../components/ui'
 import { useProductoStore } from '../../store/productoStore'
 import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
-import ProductoColorWizard from './wizard/ProductoColorWizard'
-import ProductoColorDetalle from './ProductoColorDetalle'
+import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
 import { Search, Filter, Plus, Trash2, RotateCcw } from 'lucide-react'
 
@@ -56,11 +55,10 @@ export default function Productos() {
   
   // Modals States
   const [showNewWizard, setShowNewWizard] = useState(false)
-  const [editingColor, setEditingColor] = useState(null) // { codigoProductoId, colorId }
-  const [viewingColor, setViewingColor] = useState(null) // { productoCompleto, colorId }
+  const [showDetalle, setShowDetalle] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null) // { codigoProductoId, colorId, nombre, colorNombre }
   
-  const { productos, setProductos, actualizarStock } = useProductoStore()
+  const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
 
   const loadProductos = async (params = {}, papelera = isPapeleraMode) => {
     try {
@@ -92,12 +90,28 @@ export default function Productos() {
     return () => socket.close()
   }, [])
 
-  const handleVer = (producto, colorInfo) => {
-    setViewingColor({ productoCompleto: producto, colorInfo: colorInfo })
+  const handleVer = async (producto, colorInfo) => {
+    try {
+      setLoadingDetalle(true)
+      const varianteId = colorInfo.variantes[0]?.id
+      if (!varianteId) return
+
+      const res = await productoService.getDetalle(varianteId)
+      setProductoDetalle(res.data)
+      setShowDetalle(true)
+    } catch (error) {
+      console.error('Error loading producto:', error)
+    } finally {
+      setLoadingDetalle(false)
+    }
   }
 
-  const handleEditar = (producto, colorInfo) => {
-    setEditingColor({ codigoProductoId: producto.codigo_producto_id, colorId: colorInfo.color_id, productoCompleto: producto, colorInfo: colorInfo })
+  const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto } = useWizardStore()
+
+  const handleEditar = async (producto, colorInfo) => {
+    // Le decimos al Wizard que queremos editar el color especifico
+    await cargarProductoEditarCompleto(producto.codigo_producto_id, colorInfo.color_id)
+    setShowNewWizard(true)
   }
 
   const handleIncrementarStock = async (id) => {
@@ -120,8 +134,6 @@ export default function Productos() {
     if (!itemToDelete) return
     try {
       if (isPapeleraMode) {
-        // Asumiendo que quisieramos eliminar fisico, por ahora la API dice desactivar. 
-        // Eliminacion fisica de color no está añadida. Mostramos error temporal.
         alert('La eliminación física masiva no está implementada aún.')
       } else {
         await productoService.desactivarColor(itemToDelete.codigoProductoId, itemToDelete.colorId)
@@ -278,24 +290,14 @@ export default function Productos() {
         />
       )}
 
-      {/* Wizard de Edicion Específico de un Color */}
-      {editingColor && (
-        <ProductoColorWizard
-          codigoProductoId={editingColor.codigoProductoId}
-          colorId={editingColor.colorId}
-          productoData={editingColor.productoCompleto}
-          colorInfo={editingColor.colorInfo}
-          onClose={() => setEditingColor(null)}
-          onSuccess={() => { setEditingColor(null); loadProductos(cleanFilters(filters), isPapeleraMode); }}
-        />
-      )}
-
-      {/* Detalle de un Color Específico */}
-      {viewingColor && (
-        <ProductoColorDetalle
-          productoCompleto={viewingColor.productoCompleto}
-          targetColorId={viewingColor.colorId}
-          onClose={() => setViewingColor(null)}
+      {/* Renderizar el modal original de detalles */}
+      {showDetalle && productoDetalle && (
+        <ProductoDetalle
+          producto={productoDetalle}
+          onClose={() => {
+            setShowDetalle(false)
+            setProductoDetalle(null)
+          }}
         />
       )}
 

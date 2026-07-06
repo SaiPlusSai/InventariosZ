@@ -17,6 +17,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
   const {
     modo,
     codigoProductoId,
+    targetColorId,
     currentStep,
     setCurrentStep,
     formData,
@@ -85,11 +86,30 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
       // 3. Crear o Actualizar Producto Base
       if (modo === 'editar') {
-        await productoService.updateCompleto(
-          codigoProductoId,
-          dataToSend
-        )
-        codigoID = codigoProductoId
+        if (targetColorId) {
+          // Actualización de un color en específico
+          // Las imagenes que ya existen (tienen ID) van al Payload para conservar su orden y flag principal
+          dataToSend.imagenes = Object.entries(formData.imagenesPorColor).flatMap(([colorId, imgs]) => 
+            imgs.filter(img => img.id).map(img => ({
+              id: img.id,
+              es_principal: img.es_principal,
+              orden: img.orden
+            }))
+          )
+          await productoService.updateColor(
+            codigoProductoId,
+            targetColorId,
+            dataToSend
+          )
+          codigoID = codigoProductoId
+        } else {
+          // Actualización completa de múltiples colores
+          await productoService.updateCompleto(
+            codigoProductoId,
+            dataToSend
+          )
+          codigoID = codigoProductoId
+        }
       } else {
         const res = await productoService.createCompleto(
           dataToSend
@@ -97,13 +117,17 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         codigoID = res.data.codigo_producto_id
       }
 
-      // 4. Subida Inteligente de Imagenes por Color
+      
+      // 4. Procesar Imagenes Nuevas
       // Para saber los IDs de las variantes creadas por color, llamamos a getEditarCompleto
       const edicionRes = await productoService.getEditarCompleto(codigoID);
       const variantesGuardadas = edicionRes.data.variantes;
 
       for (const colorIdStr of Object.keys(formData.imagenesPorColor)) {
         const colorId = Number(colorIdStr);
+        // Si estamos editando un color en especifico, ignoramos el resto
+        if (targetColorId && colorId !== targetColorId) continue;
+
         const imagenesDelColor = formData.imagenesPorColor[colorId];
         
         // Filtramos imagenes nuevas que vienen con "file" (las viejas ya estan en backend)

@@ -23,6 +23,7 @@ export const useWizardStore = create((set) => ({
   modo: 'crear',
 
   codigoProductoId: null,
+  targetColorId: null,
 
   currentStep: 1,
 
@@ -53,18 +54,23 @@ export const useWizardStore = create((set) => ({
       },
     })),
 
-  cargarProductoEditarCompleto: async (codigoProductoId) => {
+  cargarProductoEditarCompleto: async (codigoProductoId, targetColorId = null) => {
     try {
       const res = await productoService.getEditarCompleto(codigoProductoId)
       const data = res.data
 
-      const colores = [...new Set(data.variantes.map((v) => v.color_id))]
-      const tallas = [...new Set(data.variantes.map((v) => v.talla_id))]
+      let variantes = data.variantes
+      if (targetColorId) {
+        variantes = variantes.filter((v) => v.color_id === targetColorId)
+      }
+
+      const colores = [...new Set(variantes.map((v) => v.color_id))]
+      const tallas = [...new Set(variantes.map((v) => v.talla_id))]
 
       const imagenesPorColor = {}
       
       for (const color_id of colores) {
-        const firstVariant = data.variantes.find(v => v.color_id === color_id)
+        const firstVariant = variantes.find(v => v.color_id === color_id)
         if (firstVariant) {
           try {
             const imgRes = await productoImagenService.getByProductoId(firstVariant.id)
@@ -81,6 +87,7 @@ export const useWizardStore = create((set) => ({
       set({
         modo: 'editar',
         codigoProductoId: data.codigo_producto_id,
+        targetColorId: targetColorId,
         currentStep: 1,
         formData: {
           codigo: data.codigo,
@@ -90,7 +97,7 @@ export const useWizardStore = create((set) => ({
           descripcion: data.descripcion,
           colores,
           tallas,
-          variantes: data.variantes,
+          variantes: variantes,
           imagenesPorColor,
         },
       })
@@ -167,6 +174,7 @@ export const useWizardStore = create((set) => ({
     set({
       modo: 'crear',
       codigoProductoId: null,
+      targetColorId: null,
       currentStep: 1,
       formData: {
         ...initialFormData,
