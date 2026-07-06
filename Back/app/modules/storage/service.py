@@ -104,6 +104,8 @@ class StorageService:
         """
 
         try:
+            if "http" in ruta and f"/{self.bucket}/" in ruta:
+                ruta = ruta.split(f"/{self.bucket}/")[-1]
 
             self.client.storage.from_(
                 self.bucket

@@ -53,7 +53,7 @@ class ProductoImagenService:
             producto_imagen = ProductoImagen(
                 producto_id=producto_id,
                 bucket=self.storage_service.bucket,
-                ruta=resultado_storage["ruta"],
+                ruta=resultado_storage["url_publica"],
                 nombre_archivo=resultado_storage["nombre_original"],
                 es_principal=es_principal,
                 orden=orden,
@@ -83,7 +83,7 @@ class ProductoImagenService:
             nuevo_archivo=archivo
         )
 
-        producto_imagen.ruta = resultado_storage["ruta"]
+        producto_imagen.ruta = resultado_storage["url_publica"]
         producto_imagen.nombre_archivo = resultado_storage["nombre_original"]
 
         return self.repository.update(db, producto_imagen)

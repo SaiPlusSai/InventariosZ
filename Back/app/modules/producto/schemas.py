@@ -240,6 +240,8 @@ class ProductoCompletoResponse(BaseModel):
 
     codigo_producto_id: int
 
+    producto_principal_id: int | None = None
+
     variantes_creadas: int
 
     precios_creados: int
@@ -383,6 +385,17 @@ class ImagenDetalleResponse(BaseModel):
     )
 
 
+class VarianteDetalleResponse(BaseModel):
+    id: int
+    color: ColorInfo
+    talla: TallaInfo
+    stock_actual: int
+    stock_minimo: int
+    stock_maximo: int | None
+    precio: PrecioDetalleResponse | None = None
+    estado: bool
+    model_config = ConfigDict(from_attributes=True)
+
 class ProductoDetalleResponse(BaseModel):
 
     id: int
@@ -412,6 +425,8 @@ class ProductoDetalleResponse(BaseModel):
     imagen_principal: str | None
 
     imagenes: list[ImagenDetalleResponse]
+
+    variantes: list[VarianteDetalleResponse] = Field(default_factory=list)
 
     estado: bool
 

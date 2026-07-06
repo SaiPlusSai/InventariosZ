@@ -31,8 +31,8 @@ export default function Step5Imagenes() {
         nombre_archivo: selectedFile.file.name,
         es_principal: formData.imagenes.length === 0, // Primera es principal
         orden: formData.imagenes.length === 0 ? 1 : nuevoOrden,
-        // Mantener datos Base64 temporalmente para envío
         datos_base64: selectedFile.data,
+        file: selectedFile.file,
       }
       setFormData({
         imagenes: [...formData.imagenes, nuevaImagen],
@@ -72,6 +72,7 @@ export default function Step5Imagenes() {
             es_principal: formData.imagenes.length === 0,
             orden: formData.imagenes.length === 0 ? 1 : nuevoOrden,
             datos_base64: event.target.result,
+            file: file,
           }
           setFormData({
             imagenes: [...formData.imagenes, nuevaImagen],

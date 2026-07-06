@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useWizardStore } from '../../../store/wizardStore'
 import { productoService } from '../../../services/productoService'
+import { productoImagenService } from '../../../services/productoImagenService'
 
 import Step1InformacionGeneral from './Step1InformacionGeneral'
 import Step2Colores from './Step2Colores'
@@ -20,7 +21,7 @@ const steps = [
   { id: 6, title: 'Resumen', component: Step6Resumen },
 ]
 
-export default function ProductoWizard({ onClose }) {
+export default function ProductoWizard({ onClose, onSuccess }) {
   const {
     modo,
     codigoProductoId,
@@ -74,29 +75,43 @@ export default function ProductoWizard({ onClose }) {
           estado: v.estado ?? true,
         })),
 
-        imagenes: formData.imagenes.map((i) => ({
-          id: i.id,
-          bucket: i.bucket,
-          ruta: i.ruta,
-          nombre_archivo: i.nombre_archivo,
-          es_principal: i.es_principal,
-          orden: i.orden,
-        })),
+        imagenes: [], // We upload images separately after creation
       }
 
+      let productoPrincipalId = null;
+
       if (modo === 'editar') {
-        await productoService.updateCompleto(
+        const res = await productoService.updateCompleto(
           codigoProductoId,
           dataToSend
         )
+        productoPrincipalId = res.data.producto_principal_id
       } else {
-        await productoService.createCompleto(
+        const res = await productoService.createCompleto(
           dataToSend
         )
+        productoPrincipalId = res.data.producto_principal_id
+      }
+
+      if (productoPrincipalId && formData.imagenes.length > 0) {
+        for (const img of formData.imagenes) {
+          if (img.file) {
+            const formDataFile = new FormData()
+            formDataFile.append('archivo', img.file)
+            formDataFile.append('es_principal', img.es_principal)
+            formDataFile.append('orden', img.orden)
+            
+            await productoImagenService.subirImagen(productoPrincipalId, formDataFile)
+          }
+        }
       }
 
       resetWizard()
-      onClose()
+      if (onSuccess) {
+        onSuccess()
+      } else {
+        onClose()
+      }
     } catch (err) {
       setError(
         err.response?.data?.detail ||

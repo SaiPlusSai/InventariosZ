@@ -259,10 +259,46 @@ class ProductoService:
             None,
         )
 
+        todas_variantes = self.repository.get_by_codigo_producto_id(
+            db,
+            producto.codigo_producto_id,
+        )
+
+        variantes_response = []
+        for v in todas_variantes:
+            v_precio = next((p for p in v.precios if p.estado), None)
+            variantes_response.append(
+                VarianteDetalleResponse(
+                    id=v.id,
+                    color=ColorInfo(
+                        id=v.color.id,
+                        nombre=v.color.nombre,
+                        codigo_hex=v.color.codigo_hex,
+                    ),
+                    talla=TallaInfo(
+                        id=v.talla.id,
+                        nombre=v.talla.nombre,
+                    ),
+                    stock_actual=v.stock_actual,
+                    stock_minimo=v.stock_minimo,
+                    stock_maximo=v.stock_maximo,
+                    precio=(
+                        PrecioDetalleResponse(
+                            precio_compra=v_precio.precio_compra,
+                            precio_venta=v_precio.precio_venta,
+                        )
+                        if v_precio else None
+                    ),
+                    estado=v.estado,
+                )
+            )
+
+        producto_principal = todas_variantes[0] if todas_variantes else producto
+
         imagen_principal = next(
             (
                 img.ruta
-                for img in producto.imagenes
+                for img in producto_principal.imagenes
                 if img.es_principal
             ),
             None,
@@ -326,8 +362,10 @@ class ProductoService:
                     es_principal=img.es_principal,
                     orden=img.orden,
                 )
-                for img in producto.imagenes
+                for img in producto_principal.imagenes
             ],
+            
+            variantes=variantes_response,
 
             estado=producto.estado,
 
@@ -621,42 +659,16 @@ class ProductoService:
                 )
 
             if productos:
+                producto_principal = productos[0]
 
-                principal = productos[0]
-
-                ya_principal = False
-
-                for imagen in data.imagenes:
-
-                    principal_actual = imagen.es_principal
-
-                    if principal_actual and ya_principal:
-                        principal_actual = False
-
-                    if principal_actual:
-                        ya_principal = True
-
-                    self.repository.save_imagen(
-                        db,
-                        ProductoImagen(
-                            producto_id=principal.id,
-                            bucket=imagen.bucket,
-                            ruta=imagen.ruta,
-                            nombre_archivo=imagen.nombre_archivo,
-                            es_principal=principal_actual,
-                            orden=imagen.orden,
-                        ),
-                    )
-
-            self.repository.commit(
-                db,
-            )
+            self.repository.commit(db)
 
             return {
                 "codigo_producto_id": codigo_producto.id,
+                "producto_principal_id": productos[0].id if productos else None,
                 "variantes_creadas": len(productos),
                 "precios_creados": len(productos),
-                "imagenes_creadas": len(data.imagenes),
+                "imagenes_creadas": 0,
                 "success": True,
                 "message": "Producto actualizado correctamente.",
                 "created_at": datetime.now(),
@@ -895,35 +907,15 @@ class ProductoService:
 
             if productos:
                 producto_principal = productos[0]
-                ya_tiene_principal = False
-
-                for imagen in data.imagenes:
-                    es_principal = imagen.es_principal
-
-                    if es_principal and ya_tiene_principal:
-                        es_principal = False
-
-                    if es_principal:
-                        ya_tiene_principal = True
-
-                    db.add(
-                        ProductoImagen(
-                            producto_id=producto_principal.id,
-                            bucket=imagen.bucket,
-                            ruta=imagen.ruta,
-                            nombre_archivo=imagen.nombre_archivo,
-                            es_principal=es_principal,
-                            orden=imagen.orden,
-                        )
-                    )
 
             db.commit()
 
             return {
                 "codigo_producto_id": codigo_producto.id,
+                "producto_principal_id": productos[0].id if productos else None,
                 "variantes_creadas": len(productos),
                 "precios_creados": len(productos),
-                "imagenes_creadas": len(data.imagenes),
+                "imagenes_creadas": 0,
                 "success": True,
                 "message": "Producto creado correctamente.",
                 "created_at": datetime.now(),

@@ -458,6 +458,10 @@ const handleDecrementarStock = async (id) => {
       {showWizard && (
         <ProductoWizard
           onClose={() => setShowWizard(false)}
+          onSuccess={() => {
+            setShowWizard(false)
+            loadProductos(cleanFilters(filters), isPapeleraMode)
+          }}
         />
       )}
         {showDetalle && (
