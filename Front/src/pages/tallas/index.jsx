@@ -11,8 +11,11 @@ export default function Tallas() {
   const [showModal, setShowModal] = useState(false)
   const [editingTalla, setEditingTalla] = useState(null)
   
-  const [formData, setFormData] = useState({ nombre: '', orden: 0 })
+  const [formData, setFormData] = useState({ numero: '' })
   const [saving, setSaving] = useState(false)
+
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
 
   const loadTallas = async () => {
     try {
@@ -34,10 +37,10 @@ export default function Tallas() {
   const handleOpenModal = (talla = null) => {
     if (talla) {
       setEditingTalla(talla)
-      setFormData({ nombre: talla.nombre, orden: talla.orden || 0 })
+      setFormData({ numero: talla.nombre || '' })
     } else {
       setEditingTalla(null)
-      setFormData({ nombre: '', orden: 0 })
+      setFormData({ numero: '' })
     }
     setShowModal(true)
   }
@@ -45,15 +48,16 @@ export default function Tallas() {
   const handleCloseModal = () => {
     setShowModal(false)
     setEditingTalla(null)
-    setFormData({ nombre: '', orden: 0 })
+    setFormData({ numero: '' })
   }
 
   const handleSave = async () => {
     try {
       setSaving(true)
+      const parsedNum = parseInt(formData.numero, 10) || 0
       const payload = {
-        nombre: formData.nombre,
-        orden: parseInt(formData.orden, 10) || 0
+        nombre: formData.numero,
+        orden: parsedNum
       }
       if (editingTalla) {
         await tallaService.update(editingTalla.id, payload)
@@ -82,6 +86,14 @@ export default function Tallas() {
     }
   }
 
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm)
+  }
+
+  const filteredTallas = tallas.filter(talla => 
+    talla.nombre.toLowerCase().includes(appliedSearch.toLowerCase())
+  )
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -90,6 +102,27 @@ export default function Tallas() {
           + Nueva Talla
         </Button>
       </div>
+
+      <Card className="mb-6">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1 max-w-md">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+          <Button variant="primary" onClick={handleSearch}>
+            Filtrar
+          </Button>
+        </div>
+      </Card>
 
       <Card>
         {loading ? (
@@ -103,16 +136,14 @@ export default function Tallas() {
             <table className="w-full text-left border-collapse">
               <thead>
                 <tr className="border-b">
-                  <th className="py-3 px-4 font-semibold text-gray-700">Nombre</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700">Orden</th>
+                  <th className="py-3 px-4 font-semibold text-gray-700">Número</th>
                   <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {tallas.map((talla) => (
+                {filteredTallas.map((talla) => (
                   <tr key={talla.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">{talla.nombre}</td>
-                    <td className="py-3 px-4">{talla.orden}</td>
                     <td className="py-3 px-4 text-right">
                       <div className="flex justify-end gap-2">
                         <Button variant="secondary" onClick={() => handleOpenModal(talla)}>Editar</Button>
@@ -137,15 +168,9 @@ export default function Tallas() {
             </div>
             <div className="p-6 flex flex-col gap-4">
               <Input
-                label="Nombre"
-                value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-              />
-              <Input
-                label="Orden (Número)"
-                type="number"
-                value={formData.orden}
-                onChange={(e) => setFormData({ ...formData, orden: e.target.value })}
+                label="Número"
+                value={formData.numero}
+                onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
               />
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-3">

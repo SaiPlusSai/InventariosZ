@@ -13,6 +13,9 @@ export default function Marcas() {
   
   const [formData, setFormData] = useState({ nombre: '', descripcion: '' })
   const [saving, setSaving] = useState(false)
+  
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
 
   const loadMarcas = async () => {
     try {
@@ -78,6 +81,15 @@ export default function Marcas() {
     }
   }
 
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm)
+  }
+
+  const filteredMarcas = marcas.filter(marca => 
+    marca.nombre.toLowerCase().includes(appliedSearch.toLowerCase()) || 
+    (marca.descripcion && marca.descripcion.toLowerCase().includes(appliedSearch.toLowerCase()))
+  )
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -86,6 +98,27 @@ export default function Marcas() {
           + Nueva Marca
         </Button>
       </div>
+
+      <Card className="mb-6">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1 max-w-md">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+          <Button variant="primary" onClick={handleSearch}>
+            Filtrar
+          </Button>
+        </div>
+      </Card>
 
       <Card>
         {loading ? (
@@ -105,7 +138,7 @@ export default function Marcas() {
                 </tr>
               </thead>
               <tbody>
-                {marcas.map((marca) => (
+                {filteredMarcas.map((marca) => (
                   <tr key={marca.id} className="border-b hover:bg-gray-50">
                     <td className="py-3 px-4">{marca.nombre}</td>
                     <td className="py-3 px-4">{marca.descripcion}</td>

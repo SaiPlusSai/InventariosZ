@@ -16,6 +16,9 @@ export default function CodigoProducto() {
   const [formData, setFormData] = useState({ marca_id: '', codigo: '' })
   const [saving, setSaving] = useState(false)
 
+  const [searchTerm, setSearchTerm] = useState('')
+  const [appliedSearch, setAppliedSearch] = useState('')
+
   const loadData = async () => {
     try {
       setLoading(true)
@@ -88,6 +91,17 @@ export default function CodigoProducto() {
     }
   }
 
+  const handleSearch = () => {
+    setAppliedSearch(searchTerm)
+  }
+
+  const filteredCodigos = codigos.filter(item => {
+    const term = appliedSearch.toLowerCase()
+    const marca = marcas.find(m => m.id === item.marca_id)
+    const marcaNombre = marca ? marca.nombre.toLowerCase() : ''
+    return item.codigo.toLowerCase().includes(term) || marcaNombre.includes(term)
+  })
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -96,6 +110,27 @@ export default function CodigoProducto() {
           + Nuevo Código
         </Button>
       </div>
+
+      <Card className="mb-6">
+        <div className="flex gap-2 items-center">
+          <div className="relative flex-1 max-w-md">
+            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
+              🔍
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar..."
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            />
+          </div>
+          <Button variant="primary" onClick={handleSearch}>
+            Filtrar
+          </Button>
+        </div>
+      </Card>
 
       <Card>
         {loading ? (
@@ -115,7 +150,7 @@ export default function CodigoProducto() {
                 </tr>
               </thead>
               <tbody>
-                {codigos.map((item) => {
+                {filteredCodigos.map((item) => {
                   const marca = marcas.find((m) => m.id === item.marca_id)
                   return (
                     <tr key={item.id} className="border-b hover:bg-gray-50">
