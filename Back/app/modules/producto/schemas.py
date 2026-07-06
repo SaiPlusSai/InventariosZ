@@ -603,3 +603,38 @@ class ProductoCompletoEditarResponse(BaseModel):
     model_config = ConfigDict(
         from_attributes=True
     )
+
+# ==========================================================
+# RESPUESTA PARA EL CATALOGO (NUEVO MODELO DE NEGOCIO)
+# ==========================================================
+
+class VarianteCatalogoResponse(BaseModel):
+    id: int
+    talla: TallaInfo
+    stock_actual: int
+    stock_minimo: int
+    stock_maximo: int | None
+    precio_compra: Decimal | None
+    precio_venta: Decimal
+    estado: bool
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ColorCatalogoResponse(BaseModel):
+    color_id: int
+    color: ColorInfo
+    imagen_principal: str | None
+    variantes: list[VarianteCatalogoResponse]
+
+    model_config = ConfigDict(from_attributes=True)
+
+class ProductoCatalogoResponse(BaseModel):
+    codigo_producto_id: int
+    codigo: str
+    marca: MarcaInfo
+    tipo_calzado: TipoCalzadoInfo
+    material: MaterialInfo
+    descripcion: str | None
+    colores: list[ColorCatalogoResponse]
+
+    model_config = ConfigDict(from_attributes=True)

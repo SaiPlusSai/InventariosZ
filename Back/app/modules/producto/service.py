@@ -40,6 +40,9 @@ from app.modules.producto.schemas import (
     ProductoCompletoCreate,
     ProductoCreate,
     ProductoListadoResponse,
+    ProductoCatalogoResponse,
+    ColorCatalogoResponse,
+    VarianteCatalogoResponse,
     ProductoUpdate,
     TallaInfo,
     TipoCalzadoInfo,
@@ -73,6 +76,99 @@ class ProductoService:
         self.talla_repository = TallaRepository()
 
     
+    def get_catalogo(
+        self,
+        db: Session,
+        codigo: str | None = None,
+        marca_id: int | None = None,
+        marca: str | None = None,
+        color_id: int | None = None,
+        color: str | None = None,
+        material_id: int | None = None,
+        material: str | None = None,
+        talla_id: int | None = None,
+        talla: str | None = None,
+        tipo_calzado_id: int | None = None,
+        tipo: str | None = None,
+    ) -> list[ProductoCatalogoResponse]:
+        productos_planos = self.repository.get_all(
+            db,
+            codigo=codigo,
+            marca_id=marca_id,
+            marca=marca,
+            color_id=color_id,
+            color=color,
+            material_id=material_id,
+            material=material,
+            talla_id=talla_id,
+            talla=talla,
+            tipo_calzado_id=tipo_calzado_id,
+            tipo=tipo,
+        )
+
+        catalogo_dict = {}
+
+        for p in productos_planos:
+            cp_id = p["codigo_producto_id"]
+            if cp_id not in catalogo_dict:
+                catalogo_dict[cp_id] = {
+                    "codigo_producto_id": cp_id,
+                    "codigo": p["codigo"],
+                    "marca": MarcaInfo(id=p["marca_id"], nombre=p["marca_nombre"]),
+                    "tipo_calzado": TipoCalzadoInfo(id=p["tipo_calzado_id"], nombre=p["tipo_calzado_nombre"]),
+                    "material": MaterialInfo(id=p["material_id"], nombre=p["material_nombre"]),
+                    "descripcion": p["descripcion"],
+                    "colores": {}
+                }
+
+            colores_dict = catalogo_dict[cp_id]["colores"]
+            color_id = p["color_id"]
+
+            if color_id not in colores_dict:
+                colores_dict[color_id] = {
+                    "color_id": color_id,
+                    "color": ColorInfo(id=color_id, nombre=p["color_nombre"]),
+                    "imagen_principal": p["imagen_principal"],
+                    "variantes": []
+                }
+
+            variante = VarianteCatalogoResponse(
+                id=p["id"],
+                talla=TallaInfo(id=p["talla_id"], nombre=p["talla_nombre"]),
+                stock_actual=p["stock_actual"],
+                stock_minimo=p["stock_minimo"],
+                stock_maximo=p["stock_maximo"],
+                precio_compra=p["precio_compra"],
+                precio_venta=p["precio_venta"],
+                estado=p["estado"]
+            )
+            colores_dict[color_id]["variantes"].append(variante)
+
+        respuestas = []
+        for cp_id, cp_data in catalogo_dict.items():
+            colores_list = [
+                ColorCatalogoResponse(
+                    color_id=c_data["color_id"],
+                    color=c_data["color"],
+                    imagen_principal=c_data["imagen_principal"],
+                    variantes=c_data["variantes"]
+                )
+                for c_data in cp_data["colores"].values()
+            ]
+            respuestas.append(
+                ProductoCatalogoResponse(
+                    codigo_producto_id=cp_data["codigo_producto_id"],
+                    codigo=cp_data["codigo"],
+                    marca=cp_data["marca"],
+                    tipo_calzado=cp_data["tipo_calzado"],
+                    material=cp_data["material"],
+                    descripcion=cp_data["descripcion"],
+                    colores=colores_list
+                )
+            )
+
+        return respuestas
+
     def get_papelera(
         self,
         db: Session,

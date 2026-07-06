@@ -3,8 +3,12 @@ import axiosInstance from './axios'
 const getAll = (params = {}) =>
   axiosInstance.get('/productos/', { params })
 
+const getCatalogo = (params = {}) =>
+  axiosInstance.get('/productos/catalogo', { params })
+
 export const productoService = {
   getAll,
+  getCatalogo,
 
   filter: getAll,
 

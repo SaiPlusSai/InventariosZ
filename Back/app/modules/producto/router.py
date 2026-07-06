@@ -18,7 +18,8 @@ from app.modules.producto.schemas import (
     ProductoUpdate,
     StockResponse,
     ProductoCompletoEditarResponse,
-    ProductoCompletoUpdate
+    ProductoCompletoUpdate,
+    ProductoCatalogoResponse
 )
 
 from app.modules.producto.service import ProductoService
@@ -84,6 +85,39 @@ def get_all(
     db: Session = Depends(get_db),
 ):
     return service.get_all(
+        db,
+        codigo=codigo,
+        marca_id=marca_id,
+        marca=marca,
+        color_id=color_id,
+        color=color,
+        material_id=material_id,
+        material=material,
+        talla_id=talla_id,
+        talla=talla,
+        tipo_calzado_id=tipo_calzado_id,
+        tipo=tipo,
+    )
+
+@router.get(
+    "/catalogo",
+    response_model=list[ProductoCatalogoResponse],
+)
+def get_catalogo(
+    codigo: str | None = None,
+    marca_id: int | None = None,
+    marca: str | None = None,
+    color_id: int | None = None,
+    color: str | None = None,
+    material_id: int | None = None,
+    material: str | None = None,
+    talla_id: int | None = None,
+    talla: str | None = None,
+    tipo_calzado_id: int | None = None,
+    tipo: str | None = None,
+    db: Session = Depends(get_db),
+):
+    return service.get_catalogo(
         db,
         codigo=codigo,
         marca_id=marca_id,
