@@ -50,7 +50,7 @@ from app.modules.producto.schemas import (
     ProductoCompletoUpdate,
     VarianteEditarResponse,
     ImagenEditarResponse,
-    
+    VarianteDetalleResponse,
 )
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.constants import TALLA_NO_EXISTE
