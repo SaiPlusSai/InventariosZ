@@ -7,7 +7,7 @@ import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
-import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package } from 'lucide-react'
 
 const emptyFilters = {
   codigo: '', marca: '', tipo: '', material: '', color: '', talla: '',
