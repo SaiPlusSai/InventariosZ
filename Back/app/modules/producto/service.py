@@ -43,6 +43,8 @@ from app.modules.producto.schemas import (
     ProductoCatalogoResponse,
     ColorCatalogoResponse,
     VarianteCatalogoResponse,
+    ProductoColorUpdate,
+    VarianteColorUpdate,
     ProductoUpdate,
     TallaInfo,
     TipoCalzadoInfo,
@@ -860,12 +862,11 @@ class ProductoService:
         if locals().get('item') and getattr(locals()['item'], 'estado', False) or (locals().get('producto') and getattr(locals().get('producto'), 'estado', False)):
             raise RegistroActivoNoPuedeEliminarseException('No se puede eliminar físicamente un registro activo. Envíelo a la papelera primero.')
         if producto.estado == True:
-            raise RegistroActivoNoPuedeEliminarseException('No se puede eliminar un registro activo.')
+            raise RegistroActivoNoPuedeEliminarseException(
+                "No se puede eliminar un registro activo. Desactívalo primero."
+            )
 
-        self.repository.delete(
-            db,
-            producto,
-        )
+        self.repository.delete(db, producto)
     async def incrementar_stock(
         self,
         db: Session,
@@ -1034,3 +1035,80 @@ class ProductoService:
         except Exception:
             db.rollback()
             raise
+
+    def desactivar_color(self, db: Session, codigo_producto_id: int, color_id: int):
+        variantes = db.query(Producto).filter(
+            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.color_id == color_id,
+            Producto.estado == True
+        ).all()
+        for v in variantes:
+            v.estado = False
+            v.deleted_at = datetime.now()
+        db.commit()
+        return {'msg': f'{len(variantes)} variantes desactivadas'}
+
+    def recuperar_color(self, db: Session, codigo_producto_id: int, color_id: int):
+        variantes = db.query(Producto).filter(
+            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.color_id == color_id,
+            Producto.estado == False
+        ).all()
+        for v in variantes:
+            v.estado = True
+            v.deleted_at = None
+        db.commit()
+        return {'msg': f'{len(variantes)} variantes recuperadas'}
+
+    def update_por_color(
+        self,
+        db: Session,
+        codigo_producto_id: int,
+        color_id: int,
+        data: ProductoColorUpdate,
+    ):
+        codigo_producto = self.codigo_repository.get_by_id(db, codigo_producto_id)
+        if not codigo_producto:
+            raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
+        
+        existente = self.codigo_repository.get_by_codigo(db, data.codigo)
+        if existente and existente.id != codigo_producto.id:
+            raise CodigoProductoYaExisteException(CODIGO_PRODUCTO_YA_EXISTE)
+            
+        codigo_producto.codigo = data.codigo
+        codigo_producto.marca_id = data.marca_id
+        self.codigo_repository.update(db, codigo_producto)
+
+        variantes_actuales = db.query(Producto).filter(
+            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.color_id == color_id
+        ).all()
+        for v in variantes_actuales:
+            db.delete(v)
+        db.commit()
+        
+        for variante in data.variantes:
+            nuevo = Producto(
+                codigo_producto_id=codigo_producto_id,
+                tipo_calzado_id=data.tipo_calzado_id,
+                material_id=data.material_id,
+                color_id=color_id,
+                talla_id=variante.talla_id,
+                descripcion=data.descripcion,
+                stock_actual=variante.stock_actual,
+                stock_minimo=variante.stock_minimo,
+                stock_maximo=variante.stock_maximo,
+                estado=variante.estado,
+            )
+            db.add(nuevo)
+            db.flush()
+            
+            precio = PrecioProducto(
+                producto_id=nuevo.id,
+                precio_compra=variante.precio_compra,
+                precio_venta=variante.precio_venta,
+            )
+            db.add(precio)
+            
+        db.commit()
+        return {'msg': 'Color actualizado correctamente'}

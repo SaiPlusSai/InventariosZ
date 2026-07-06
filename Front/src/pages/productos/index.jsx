@@ -4,72 +4,37 @@ import { Card, Button, Input } from '../../components/ui'
 import { useProductoStore } from '../../store/productoStore'
 import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
-import { useWizardStore } from '../../store/wizardStore'
-import ProductoDetalle from './ProductoDetalle'
-import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
+import ProductoColorWizard from './wizard/ProductoColorWizard'
+import ProductoColorDetalle from './ProductoColorDetalle'
 import ProductoCard from './ProductoCard'
+import { Search, Filter, Plus, Trash2, RotateCcw } from 'lucide-react'
 
 const emptyFilters = {
-  codigo: '',
-  marca: '',
-  tipo: '',
-  material: '',
-  color: '',
-  talla: '',
+  codigo: '', marca: '', tipo: '', material: '', color: '', talla: '',
 }
 
-const cleanFilters = (filters) =>
-  Object.fromEntries(
-    Object.entries(filters).filter(([, value]) => value !== '')
-  )
+const cleanFilters = (filters) => Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ''))
 
-// Helper para agrupar productos planos (usado solo para la Papelera, 
-// ya que el endpoint /catalogo ya los trae agrupados)
 const agruparProductosPlanos = (productosPlanos) => {
   const catalogoDict = {}
-  
   for (const p of productosPlanos) {
     const cp_id = p.codigo_producto_id
     if (!catalogoDict[cp_id]) {
       catalogoDict[cp_id] = {
-        codigo_producto_id: cp_id,
-        codigo: p.codigo,
-        marca: p.marca,
-        tipo_calzado: p.tipo_calzado,
-        material: p.material,
-        descripcion: p.descripcion,
-        colores: {}
+        codigo_producto_id: cp_id, codigo: p.codigo, marca: p.marca,
+        tipo_calzado: p.tipo_calzado, material: p.material, descripcion: p.descripcion, colores: {}
       }
     }
-    
-    const coloresDict = catalogoDict[cp_id].colores
     const color_id = p.color.id
-    
-    if (!coloresDict[color_id]) {
-      coloresDict[color_id] = {
-        color_id: color_id,
-        color: p.color,
-        imagen_principal: p.imagen_principal,
-        variantes: []
-      }
+    if (!catalogoDict[cp_id].colores[color_id]) {
+      catalogoDict[cp_id].colores[color_id] = { color_id: color_id, color: p.color, imagen_principal: p.imagen_principal, variantes: [] }
     }
-    
-    coloresDict[color_id].variantes.push({
-      id: p.id,
-      talla: p.talla,
-      stock_actual: p.stock_actual,
-      stock_minimo: p.stock_minimo,
-      stock_maximo: p.stock_maximo,
-      precio_compra: p.precio_compra,
-      precio_venta: p.precio_venta,
-      estado: p.estado
+    catalogoDict[cp_id].colores[color_id].variantes.push({
+      id: p.id, talla: p.talla, stock_actual: p.stock_actual, stock_minimo: p.stock_minimo,
+      stock_maximo: p.stock_maximo, precio_compra: p.precio_compra, precio_venta: p.precio_venta, estado: p.estado
     })
   }
-  
-  return Object.values(catalogoDict).map(cp => ({
-    ...cp,
-    colores: Object.values(cp.colores)
-  }))
+  return Object.values(catalogoDict).map(cp => ({ ...cp, colores: Object.values(cp.colores) }))
 }
 
 export default function Productos() {
@@ -84,42 +49,30 @@ export default function Productos() {
     codigo: searchParams.get('codigo') || '',
   }
 
-  const [showWizard, setShowWizard] = useState(false)
-  const [showDetalle, setShowDetalle] = useState(false)
+  // UI States
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(initialFilters)
-  
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState(null)
-
-  const {
-    productos,
-    productoDetalle,
-    setProductos,
-    setProductoDetalle,
-    actualizarStock,
-    loadingDetalle,
-    setLoadingDetalle,
-  } = useProductoStore()
-
-  const { cargarProductoEditarCompleto } = useWizardStore()
+  
+  // Modals States
+  const [showNewWizard, setShowNewWizard] = useState(false)
+  const [editingColor, setEditingColor] = useState(null) // { codigoProductoId, colorId }
+  const [viewingColor, setViewingColor] = useState(null) // { productoCompleto, colorId }
+  const [itemToDelete, setItemToDelete] = useState(null) // { codigoProductoId, colorId, nombre, colorNombre }
+  
+  const { productos, setProductos, actualizarStock } = useProductoStore()
 
   const loadProductos = async (params = {}, papelera = isPapeleraMode) => {
     try {
       setLoading(true)
       let data = []
-      
       if (papelera) {
-        // Papelera sigue usando getPapelera (plano) y lo agrupamos en frontend
         const res = await productoService.getPapelera(params)
         data = agruparProductosPlanos(res.data)
       } else {
-        // Catálogo principal usa el nuevo endpoint super-optimizado
         const res = await productoService.getCatalogo(params)
         data = res.data
       }
-
       setProductos(data)
     } catch (error) {
       console.error('Error loading productos:', error)
@@ -128,120 +81,140 @@ export default function Productos() {
     }
   }
 
-  useEffect(() => {
-    loadProductos(cleanFilters(filters), isPapeleraMode)
-  }, [isPapeleraMode])
+  useEffect(() => { loadProductos(cleanFilters(filters), isPapeleraMode) }, [isPapeleraMode])
 
   useEffect(() => {
     const socket = new WebSocket("ws://localhost:8000/productos/ws")
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
-      if (data.tipo === "stock_actualizado") {
-        actualizarStock(data.producto_id, data.stock_actual)
-      }
+      if (data.tipo === "stock_actualizado") actualizarStock(data.producto_id, data.stock_actual)
     }
-    socket.onerror = (error) => console.error(error)
     return () => socket.close()
   }, [])
 
-  const handleFilterChange = (field, value) => {
-    setFilters((currentFilters) => ({
-      ...currentFilters,
-      [field]: value,
-    }))
-  }
-
-  const handleApplyFilters = () => {
-    loadProductos(cleanFilters(filters), isPapeleraMode)
-  }
-
-  const handleClearFilters = () => {
-    setFilters(emptyFilters)
-    loadProductos({}, isPapeleraMode)
-  }
-
-  const handleVer = async (color_id) => {
-    // La logica anterior usaba ID de Variante. Para simplificar,
-    // podríamos buscar el primer ID de variante de este color y mostrarlo,
-    // o adaptar ProductoDetalle. Como el endpoint pide ID de variante:
-    console.log("Ver detalle del color", color_id)
-    // Pendiente: Adaptar si es necesario, pero por ahora mostramos un alert
-    alert(`Abrir detalle para el color ${color_id}`)
-  }
-
-  const handleEditar = async (codigoProductoId) => {
+  const handleVer = async (codigo_producto_id, color_id) => {
     try {
-      await cargarProductoEditarCompleto(codigoProductoId)
-      setShowWizard(true)
-    } catch (error) {
-      console.error(error)
+      // Obtenemos el detalle completo y le pasamos el color que queremos ver
+      const res = await productoService.getEditarCompleto(codigo_producto_id)
+      setViewingColor({ productoCompleto: res.data, colorId: color_id })
+    } catch (err) {
+      alert("Error cargando detalle")
     }
   }
 
-  const handleDeleteClick = (producto) => {
-    setItemToDelete(producto)
-    setShowDeleteModal(true)
+  const handleEditar = async (codigo_producto_id, color_id) => {
+    try {
+      // Obtenemos los datos completos del codigo_producto para inyectarlos en el ColorWizard
+      const res = await productoService.getEditarCompleto(codigo_producto_id)
+      setEditingColor({ codigoProductoId: codigo_producto_id, colorId: color_id, productoData: res.data })
+    } catch (err) {
+      alert("Error cargando datos para edición")
+    }
   }
 
-  const handleRecuperar = async (variante_id) => {
+  const confirmDelete = async () => {
+    if (!itemToDelete) return
     try {
-      await productoService.recuperar(variante_id)
+      if (isPapeleraMode) {
+        // Asumiendo que quisieramos eliminar fisico, por ahora la API dice desactivar. 
+        // Eliminacion fisica de color no está añadida. Mostramos error temporal.
+        alert('La eliminación física masiva no está implementada aún.')
+      } else {
+        await productoService.desactivarColor(itemToDelete.codigoProductoId, itemToDelete.colorId)
+        loadProductos(cleanFilters(filters), isPapeleraMode)
+        setItemToDelete(null)
+      }
+    } catch (err) {
+      alert('Error eliminando: ' + (err.response?.data?.detail || err.message))
+    }
+  }
+
+  const handleRecuperar = async (codigo_producto_id, color_id) => {
+    try {
+      await productoService.recuperarColor(codigo_producto_id, color_id)
       loadProductos(cleanFilters(filters), isPapeleraMode)
     } catch (err) {
-      console.error(err)
-      alert('Error al recuperar el producto')
+      alert('Error al recuperar el color')
     }
   }
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">
-          {isPapeleraMode ? 'Productos (Papelera)' : 'Catálogo de Productos'}
-        </h1>
-        <div className="flex gap-2">
+    <div className="max-w-7xl mx-auto pb-12">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+            {isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            {isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
+          </p>
+        </div>
+        
+        <div className="flex gap-3 w-full md:w-auto">
           <Button variant="secondary" onClick={() => {
             setIsPapeleraMode(!isPapeleraMode)
             setFilters(emptyFilters)
-          }}>
-            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          }} className="flex-1 md:flex-none">
+            {isPapeleraMode ? <><RotateCcw size={16} className="mr-2"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2"/> Ver Papelera</>}
           </Button>
           {!isPapeleraMode && (
-            <Button variant="primary" onClick={() => setShowWizard(true)}>
-              + Nuevo Producto
+            <Button variant="primary" onClick={() => setShowNewWizard(true)} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
+              <Plus size={16} className="mr-2"/> Nuevo Producto
             </Button>
           )}
         </div>
       </div>
 
-      <Card className="mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Input label="Codigo" value={filters.codigo} onChange={(e) => handleFilterChange('codigo', e.target.value)} />
-          <Input label="Marca" value={filters.marca} onChange={(e) => handleFilterChange('marca', e.target.value)} />
-          <Input label="Tipo" value={filters.tipo} onChange={(e) => handleFilterChange('tipo', e.target.value)} />
-          <Input label="Material" value={filters.material} onChange={(e) => handleFilterChange('material', e.target.value)} />
-          <Input label="Color" value={filters.color} onChange={(e) => handleFilterChange('color', e.target.value)} />
-          <Input label="Talla" value={filters.talla} onChange={(e) => handleFilterChange('talla', e.target.value)} />
+      {/* Filtros Modernos */}
+      <Card className="mb-8 border-gray-100 shadow-sm bg-white overflow-hidden">
+        <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100">
+          <h3 className="font-semibold text-gray-700 flex items-center gap-2">
+            <Filter size={18} className="text-gray-400"/> Filtros de Búsqueda
+          </h3>
         </div>
-        <div className="flex gap-2 mt-4">
-          <Button variant="primary" onClick={handleApplyFilters}>Filtrar</Button>
-          <Button variant="secondary" onClick={handleClearFilters}>Limpiar</Button>
+        <div className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            <Input label="Código" value={filters.codigo} onChange={(e) => setFilters({...filters, codigo: e.target.value})} />
+            <Input label="Marca" value={filters.marca} onChange={(e) => setFilters({...filters, marca: e.target.value})} />
+            <Input label="Tipo" value={filters.tipo} onChange={(e) => setFilters({...filters, tipo: e.target.value})} />
+            <Input label="Material" value={filters.material} onChange={(e) => setFilters({...filters, material: e.target.value})} />
+            <Input label="Color" value={filters.color} onChange={(e) => setFilters({...filters, color: e.target.value})} />
+            <Input label="Talla" value={filters.talla} onChange={(e) => setFilters({...filters, talla: e.target.value})} />
+          </div>
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="secondary" onClick={() => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); }}>
+              Limpiar
+            </Button>
+            <Button variant="primary" onClick={() => loadProductos(cleanFilters(filters), isPapeleraMode)}>
+              <Search size={16} className="mr-2"/> Buscar
+            </Button>
+          </div>
         </div>
       </Card>
 
+      {/* Grid de Productos */}
       {loading ? (
-        <div className="text-center text-gray-600">Cargando productos...</div>
+        <div className="flex items-center justify-center py-20">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+        </div>
       ) : productos.length === 0 ? (
-        <Card>
-          <div className="text-center py-8">
-            <p className="text-gray-500 text-lg">No hay productos registrados</p>
-            <Button variant="primary" onClick={() => setShowWizard(true)} className="mt-4">
+        <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
+          <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Search size={24} className="text-gray-400" />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-1">No se encontraron productos</h3>
+          <p className="text-gray-500 mb-6 max-w-md mx-auto">
+            Intenta ajustar los filtros o agrega un nuevo producto al catálogo para comenzar.
+          </p>
+          {!isPapeleraMode && (
+            <Button variant="primary" onClick={() => setShowNewWizard(true)}>
               Crear el primer producto
             </Button>
-          </div>
-        </Card>
+          )}
+        </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {productos.flatMap((producto) =>
             producto.colores.map((colorInfo) => (
               <ProductoCard
@@ -249,41 +222,76 @@ export default function Productos() {
                 producto={producto}
                 color={colorInfo}
                 isPapeleraMode={isPapeleraMode}
-                onVer={(colorId) => handleVer(colorId)}
-                onEditar={() => handleEditar(producto.codigo_producto_id)}
-                onEliminar={() => handleDeleteClick(producto)}
-                onRecuperar={() => handleRecuperar(colorInfo.variantes[0]?.id)}
+                onVer={() => handleVer(producto.codigo_producto_id, colorInfo.color_id)}
+                onEditar={() => handleEditar(producto.codigo_producto_id, colorInfo.color_id)}
+                onEliminar={() => setItemToDelete({
+                  codigoProductoId: producto.codigo_producto_id, 
+                  colorId: colorInfo.color_id, 
+                  nombre: producto.descripcion || producto.codigo,
+                  colorNombre: colorInfo.color.nombre
+                })}
+                onRecuperar={() => handleRecuperar(producto.codigo_producto_id, colorInfo.color_id)}
               />
             ))
           )}
         </div>
       )}
 
-      {showWizard && (
+      {/* Delete Modal custom for Colors */}
+      {itemToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
+            <div className={`px-6 py-4 border-b ${isPapeleraMode ? 'bg-red-50' : 'bg-orange-50'}`}>
+              <h2 className={`text-xl font-bold ${isPapeleraMode ? 'text-red-700' : 'text-orange-700'}`}>
+                {isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Color'}
+              </h2>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-800 text-lg">
+                ¿Estás seguro de desactivar <strong>todas las tallas</strong> del color <span className="font-bold text-primary-600">{itemToDelete.colorNombre}</span> para el producto <strong>{itemToDelete.nombre}</strong>?
+              </p>
+              <p className="text-sm text-gray-500 mt-4">
+                El color dejará de mostrarse en el catálogo principal, pero podrás recuperarlo desde la papelera.
+              </p>
+            </div>
+            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+              <Button variant="ghost" onClick={() => setItemToDelete(null)}>Cancelar</Button>
+              <Button variant="primary" className="bg-orange-500 hover:bg-orange-600 border-none" onClick={confirmDelete}>
+                Desactivar Color
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Creacion de todo el Producto (Wizard Antiguo de Creacion Completa) */}
+      {showNewWizard && (
         <ProductoWizard
-          onClose={() => setShowWizard(false)}
-          onSuccess={() => {
-            setShowWizard(false)
-            loadProductos(cleanFilters(filters), isPapeleraMode)
-          }}
+          onClose={() => setShowNewWizard(false)}
+          onSuccess={() => { setShowNewWizard(false); loadProductos(cleanFilters(filters), isPapeleraMode); }}
         />
       )}
 
-      {showDetalle && (
-        <ProductoDetalle
-          producto={productoDetalle}
-          onClose={() => setShowDetalle(false)}
+      {/* Wizard de Edicion Específico de un Color */}
+      {editingColor && (
+        <ProductoColorWizard
+          codigoProductoId={editingColor.codigoProductoId}
+          colorId={editingColor.colorId}
+          productoData={editingColor.productoData}
+          onClose={() => setEditingColor(null)}
+          onSuccess={() => { setEditingColor(null); loadProductos(cleanFilters(filters), isPapeleraMode); }}
         />
       )}
 
-      <DeleteConfirmationModal
-        isOpen={showDeleteModal}
-        onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
-        onConfirm={() => loadProductos(cleanFilters(filters), isPapeleraMode)}
-        service={productoService}
-        item={itemToDelete}
-        isPhysicalDelete={isPapeleraMode}
-      />
+      {/* Detalle de un Color Específico */}
+      {viewingColor && (
+        <ProductoColorDetalle
+          productoCompleto={viewingColor.productoCompleto}
+          targetColorId={viewingColor.colorId}
+          onClose={() => setViewingColor(null)}
+        />
+      )}
+
     </div>
   )
 }

@@ -638,3 +638,28 @@ class ProductoCatalogoResponse(BaseModel):
     colores: list[ColorCatalogoResponse]
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class VarianteColorUpdate(BaseModel):
+    id: int | None = None
+    talla_id: int
+    stock_actual: int = 0
+    stock_minimo: int = 0
+    stock_maximo: int | None = None
+    precio_compra: Decimal | None = None
+    precio_venta: Decimal
+    estado: bool = True
+
+class ImagenColorUpdate(BaseModel):
+    id: int | None = None
+    es_principal: bool
+    orden: int
+
+class ProductoColorUpdate(BaseModel):
+    codigo: str = Field(..., max_length=50)
+    marca_id: int
+    tipo_calzado_id: int
+    material_id: int
+    descripcion: str | None = None
+    variantes: list[VarianteColorUpdate]
+    imagenes: list[ImagenColorUpdate] = []

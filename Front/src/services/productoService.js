@@ -3,12 +3,25 @@ import axiosInstance from './axios'
 const getAll = (params = {}) =>
   axiosInstance.get('/productos/', { params })
 
+
+const desactivarColor = (codigoProductoId, colorId) =>
+  axiosInstance.patch(/productos//color//desactivar)
+
+const recuperarColor = (codigoProductoId, colorId) =>
+  axiosInstance.patch(/productos//color//recuperar)
+
+const updateColor = (codigoProductoId, colorId, data) =>
+  axiosInstance.put(/productos//color/, data)
+
 const getCatalogo = (params = {}) =>
   axiosInstance.get('/productos/catalogo', { params })
 
 export const productoService = {
   getAll,
   getCatalogo,
+  desactivarColor,
+  recuperarColor,
+  updateColor,
 
   filter: getAll,
 

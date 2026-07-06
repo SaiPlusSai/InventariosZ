@@ -494,3 +494,36 @@ async def websocket_stock(
     except WebSocketDisconnect:
 
         manager.disconnect(websocket)
+@router.patch(
+    '/{codigo_producto_id}/color/{color_id}/desactivar',
+    status_code=status.HTTP_200_OK,
+)
+def desactivar_color(
+    codigo_producto_id: int,
+    color_id: int,
+    db: Session = Depends(get_db),
+):
+    return service.desactivar_color(db, codigo_producto_id, color_id)
+
+@router.patch(
+    '/{codigo_producto_id}/color/{color_id}/recuperar',
+    status_code=status.HTTP_200_OK,
+)
+def recuperar_color(
+    codigo_producto_id: int,
+    color_id: int,
+    db: Session = Depends(get_db),
+):
+    return service.recuperar_color(db, codigo_producto_id, color_id)
+
+@router.put(
+    '/{codigo_producto_id}/color/{color_id}',
+    status_code=status.HTTP_200_OK,
+)
+def update_por_color(
+    codigo_producto_id: int,
+    color_id: int,
+    data: ProductoColorUpdate,
+    db: Session = Depends(get_db),
+):
+    return service.update_por_color(db, codigo_producto_id, color_id, data)
