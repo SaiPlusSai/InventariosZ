@@ -10,6 +10,9 @@ const desactivarColor = (codigoProductoId, colorId) =>
 const recuperarColor = (codigoProductoId, colorId) =>
   axiosInstance.patch(`/productos/${codigoProductoId}/color/${colorId}/recuperar`)
 
+const eliminarColorPermanente = (codigoProductoId, colorId) =>
+  axiosInstance.delete(`/productos/${codigoProductoId}/color/${colorId}`)
+
 const updateColor = (codigoProductoId, colorId, data) =>
   axiosInstance.put(`/productos/${codigoProductoId}/color/${colorId}`, data)
 
@@ -21,6 +24,7 @@ export const productoService = {
   getCatalogo,
   desactivarColor,
   recuperarColor,
+  eliminarColorPermanente,
   updateColor,
 
   filter: getAll,

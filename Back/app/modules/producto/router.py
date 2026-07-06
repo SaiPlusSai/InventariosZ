@@ -295,6 +295,33 @@ def delete(
             status_code=404,
             detail=str(e),
         )
+
+@router.delete(
+    "/{codigo_producto_id}/color/{color_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def delete_color(
+    codigo_producto_id: int,
+    color_id: int,
+    db: Session = Depends(get_db),
+):
+    try:
+        service.delete_color(
+            db,
+            codigo_producto_id,
+            color_id,
+        )
+    except ProductoNoEncontradoException as e:
+        raise HTTPException(
+            status_code=404,
+            detail=str(e),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=str(e),
+        )
+
 @router.post(
     "/crear-completo",
     response_model=ProductoCompletoResponse,

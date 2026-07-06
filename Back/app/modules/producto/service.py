@@ -1060,6 +1060,24 @@ class ProductoService:
         db.commit()
         return {'msg': f'{len(variantes)} variantes recuperadas'}
 
+    def delete_color(self, db: Session, codigo_producto_id: int, color_id: int) -> None:
+        variantes = db.query(Producto).filter(
+            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.color_id == color_id
+        ).all()
+
+        if not variantes:
+            raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
+
+        for v in variantes:
+            if v.estado == True:
+                raise RegistroActivoNoPuedeEliminarseException(
+                    "No se puede eliminar un registro activo. Desactívalo primero."
+                )
+
+        for v in variantes:
+            self.repository.delete(db, v)
+
     def update_por_color(
         self,
         db: Session,

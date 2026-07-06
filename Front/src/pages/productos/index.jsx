@@ -135,10 +135,12 @@ export default function Productos() {
     if (!itemToDelete) return
     try {
       if (isPapeleraMode) {
-        alert('La eliminación física masiva no está implementada aún.')
+        await productoService.eliminarColorPermanente(itemToDelete.codigoProductoId, itemToDelete.colorId)
+        loadProductos(cleanFilters(filters), true)
+        setItemToDelete(null)
       } else {
         await productoService.desactivarColor(itemToDelete.codigoProductoId, itemToDelete.colorId)
-        loadProductos(cleanFilters(filters), isPapeleraMode)
+        loadProductos(cleanFilters(filters), false)
         setItemToDelete(null)
       }
     } catch (err) {
