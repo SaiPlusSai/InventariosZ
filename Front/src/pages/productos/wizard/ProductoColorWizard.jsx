@@ -8,7 +8,8 @@ import { X, CheckCircle, ChevronRight, ChevronLeft, Upload, Trash2 } from 'lucid
 export default function ProductoColorWizard({ 
   codigoProductoId, 
   colorId, 
-  productoData, // Data del producto
+  productoData, 
+  colorInfo,
   onClose, 
   onSuccess 
 }) {
@@ -33,7 +34,7 @@ export default function ProductoColorWizard({
   useEffect(() => {
     // Cargar catalogos para selects
     // (Omitiendo importaciones de servicios de catálogo por brevedad, asumiendo variables globales o fetch directos,
-    //  pero lo ideal es hacerlos. Usaremos un mock o fetch real si tuvieramos los services a mano.
+    //  pero lo ideal es hacerlos. Usaremos un mock o fetch real si tuvieramos los servicios a mano.
     // Para no romper, asumo que tenemos que cargar los datos desde productoService o el store si existen.
     // Aqui podriamos invocar las API)
     // Para simplificar y mantener la integridad, asumimos que el usuario solo puede cambiar textos/nums 
@@ -42,22 +43,22 @@ export default function ProductoColorWizard({
   }, [])
 
   const cargarDatos = async () => {
-    // Si editamos, extraemos los datos de `productoData`
-    if (productoData) {
+    // Si editamos, extraemos los datos de `productoData` y `colorInfo`
+    if (productoData && colorInfo) {
       setFormData({
         codigo: productoData.codigo,
         marca_id: productoData.marca?.id || '',
         tipo_calzado_id: productoData.tipo_calzado?.id || '',
         material_id: productoData.material?.id || '',
         descripcion: productoData.descripcion || '',
-        variantes: productoData.variantes.filter(v => v.color.id === colorId).map(v => ({
-          talla_id: v.talla.id,
-          talla_nombre: v.talla.nombre,
+        variantes: (colorInfo.variantes || []).map(v => ({
+          talla_id: v.talla?.id || v.talla_id,
+          talla_nombre: v.talla?.nombre || v.talla,
           stock_actual: v.stock_actual,
           stock_minimo: v.stock_minimo,
           stock_maximo: v.stock_maximo,
-          precio_compra: v.precios[0]?.precio_compra || 0,
-          precio_venta: v.precios[0]?.precio_venta || 0,
+          precio_compra: v.precios && v.precios[0] ? v.precios[0].precio_compra : (v.precio_compra || 0),
+          precio_venta: v.precios && v.precios[0] ? v.precios[0].precio_venta : (v.precio_venta || 0),
           estado: v.estado
         })),
         imagenes: []

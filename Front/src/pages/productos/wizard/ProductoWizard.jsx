@@ -49,8 +49,11 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
     try {
       // 1. Validaciones basicas
-      if (!formData.codigo || !formData.marca_id || !formData.tipo_calzado_id || !formData.material_id) {
-        throw new Error("Faltan datos en la Información General.")
+      if (!formData.codigo || formData.codigo.trim().length < 2) {
+        throw new Error("El código debe tener al menos 2 caracteres.")
+      }
+      if (!formData.marca_id || !formData.tipo_calzado_id || !formData.material_id) {
+        throw new Error("Faltan datos en la Información General (Marca, Tipo o Material).")
       }
       if (formData.variantes.length === 0) {
         throw new Error("Debes configurar al menos una variante (color y talla).")
@@ -58,20 +61,20 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
       // 2. Preparar el payload global para el backend
       const dataToSend = {
-        codigo: formData.codigo,
-        marca_id: formData.marca_id,
-        tipo_calzado_id: formData.tipo_calzado_id,
-        material_id: formData.material_id,
-        descripcion: formData.descripcion,
+        codigo: String(formData.codigo).trim(),
+        marca_id: Number(formData.marca_id),
+        tipo_calzado_id: Number(formData.tipo_calzado_id),
+        material_id: Number(formData.material_id),
+        descripcion: formData.descripcion ? String(formData.descripcion).trim() : null,
 
         variantes: formData.variantes.map((v) => ({
-          color_id: v.color_id,
-          talla_id: v.talla_id,
-          stock_actual: Number(v.stock_actual) || 0,
-          stock_minimo: Number(v.stock_minimo) || 0,
-          stock_maximo: v.stock_maximo ? Number(v.stock_maximo) : null,
-          precio_compra: v.precio_compra ? Number(v.precio_compra) : null,
-          precio_venta: Number(v.precio_venta) || 0,
+          color_id: Number(v.color_id),
+          talla_id: Number(v.talla_id),
+          stock_actual: parseInt(v.stock_actual) || 0,
+          stock_minimo: parseInt(v.stock_minimo) || 0,
+          stock_maximo: v.stock_maximo !== null && v.stock_maximo !== '' ? parseInt(v.stock_maximo) : null,
+          precio_compra: v.precio_compra !== null && v.precio_compra !== '' ? parseFloat(v.precio_compra) : null,
+          precio_venta: parseFloat(v.precio_venta) || 0,
           estado: v.estado ?? true,
         })),
 

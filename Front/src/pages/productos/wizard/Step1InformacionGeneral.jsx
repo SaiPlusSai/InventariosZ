@@ -38,8 +38,15 @@ export default function Step1InformacionGeneral() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    // Si el campo es un ID (termina en _id), lo convertimos a entero si no esta vacio.
+    // Si es un campo de texto (codigo, descripcion), lo mantenemos como string.
+    let parsedValue = value
+    if (name.endsWith('_id')) {
+      parsedValue = value === '' ? null : parseInt(value)
+    }
+    
     setFormData({
-      [name]: value === '' ? null : (isNaN(value) ? value : parseInt(value)),
+      [name]: parsedValue,
     })
   }
 

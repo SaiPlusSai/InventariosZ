@@ -13,34 +13,22 @@ import {
 } from 'lucide-react'
 
 export default function ProductoColorDetalle({
-  productoCompleto, // La respuesta de productoService.getDetalle(id)
-  targetColorId,    // El ID del color que se debe mostrar
+  productoCompleto, 
+  colorInfo,    
   onClose,
 }) {
   const [activeImage, setActiveImage] = useState(0)
 
-  if (!productoCompleto) return null
+  if (!productoCompleto || !colorInfo) return null
 
-  // Filtramos la data para que solo represente al color objetivo
-  const { codigo, marca, tipo_calzado, material, descripcion, variantes, imagenes } = productoCompleto
-
-  // Filtramos variantes de este color
-  const variantesColor = variantes.filter(v => v.color.id === targetColorId)
+  const { codigo, marca, tipo_calzado, material, descripcion } = productoCompleto
+  const variantesColor = colorInfo.variantes || []
+  const colorData = colorInfo.color
   
-  // Asumimos que todas las variantes filtradas tienen el mismo color
-  const colorInfo = variantesColor.length > 0 ? variantesColor[0].color : null
-
-  // Filtramos imágenes de este color (o todas si no están vinculadas a la variante en el backend, 
-  // pero según la BD las imagenes pertenecen a Variante/Producto)
-  // Como `imagenes` están a nivel del CodigoProducto en la respuesta plana, hay que extraerlas.
-  // Wait, el backend get_editar_completo devuelve `imagenes` a nivel de variante? 
-  // En reality, `imagenes` in `ProductoCompletoResponse` are a flat list, we might need to filter by color if possible. 
-  // Si no tienen color, usamos todas o buscamos las de las variantes del color.
-  // Para este mockup, vamos a extraer las imágenes principales de las variantesColor y la general
   const galleryImages = [
-    ...imagenes.map(img => img.url),
+    colorInfo.imagen_principal,
     ...variantesColor.map(v => v.imagen_principal).filter(Boolean)
-  ].filter((v, i, a) => a.indexOf(v) === i) // Unique
+  ].filter((v, i, a) => v && a.indexOf(v) === i) 
 
   if (galleryImages.length === 0) {
     galleryImages.push('https://via.placeholder.com/600x400?text=Sin+Imagen')
@@ -69,7 +57,7 @@ export default function ProductoColorDetalle({
                 {descripcion || 'Detalle del Producto'}
               </h2>
               <p className="text-sm text-gray-500 mt-1">
-                Visualizando información para el color <span className="font-semibold text-gray-700">{colorInfo?.nombre || 'Desconocido'}</span>
+                Visualizando información para el color <span className="font-semibold text-gray-700">{colorData?.nombre || 'Desconocido'}</span>
               </p>
             </div>
             <button
@@ -152,7 +140,7 @@ export default function ProductoColorDetalle({
                   <Palette className="text-primary-500 w-5 h-5 mt-0.5" />
                   <div>
                     <p className="text-xs text-gray-400 font-medium">Color Activo</p>
-                    <p className="font-semibold text-gray-800">{colorInfo?.nombre}</p>
+                    <p className="font-semibold text-gray-800">{colorData?.nombre}</p>
                   </div>
                 </div>
               </div>
@@ -190,7 +178,7 @@ export default function ProductoColorDetalle({
                           <tr key={v.id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-6 py-4">
                               <span className="inline-block px-3 py-1 bg-gray-100 text-gray-800 rounded font-semibold text-sm">
-                                {v.talla.nombre}
+                                {v.talla?.nombre || v.talla}
                               </span>
                             </td>
                             <td className="px-6 py-4">

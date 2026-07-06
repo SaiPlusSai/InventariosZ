@@ -92,24 +92,12 @@ export default function Productos() {
     return () => socket.close()
   }, [])
 
-  const handleVer = async (codigo_producto_id, color_id) => {
-    try {
-      // Obtenemos el detalle completo y le pasamos el color que queremos ver
-      const res = await productoService.getEditarCompleto(codigo_producto_id)
-      setViewingColor({ productoCompleto: res.data, colorId: color_id })
-    } catch (err) {
-      alert("Error cargando detalle")
-    }
+  const handleVer = (producto, colorInfo) => {
+    setViewingColor({ productoCompleto: producto, colorInfo: colorInfo })
   }
 
-  const handleEditar = async (codigo_producto_id, color_id) => {
-    try {
-      // Obtenemos los datos completos del codigo_producto para inyectarlos en el ColorWizard
-      const res = await productoService.getEditarCompleto(codigo_producto_id)
-      setEditingColor({ codigoProductoId: codigo_producto_id, colorId: color_id, productoData: res.data })
-    } catch (err) {
-      alert("Error cargando datos para edición")
-    }
+  const handleEditar = (producto, colorInfo) => {
+    setEditingColor({ codigoProductoId: producto.codigo_producto_id, colorId: colorInfo.color_id, productoCompleto: producto, colorInfo: colorInfo })
   }
 
   const confirmDelete = async () => {
@@ -222,8 +210,8 @@ export default function Productos() {
                 producto={producto}
                 color={colorInfo}
                 isPapeleraMode={isPapeleraMode}
-                onVer={() => handleVer(producto.codigo_producto_id, colorInfo.color_id)}
-                onEditar={() => handleEditar(producto.codigo_producto_id, colorInfo.color_id)}
+                onVer={() => handleVer(producto, colorInfo)}
+                onEditar={() => handleEditar(producto, colorInfo)}
                 onEliminar={() => setItemToDelete({
                   codigoProductoId: producto.codigo_producto_id, 
                   colorId: colorInfo.color_id, 
@@ -277,7 +265,8 @@ export default function Productos() {
         <ProductoColorWizard
           codigoProductoId={editingColor.codigoProductoId}
           colorId={editingColor.colorId}
-          productoData={editingColor.productoData}
+          productoData={editingColor.productoCompleto}
+          colorInfo={editingColor.colorInfo}
           onClose={() => setEditingColor(null)}
           onSuccess={() => { setEditingColor(null); loadProductos(cleanFilters(filters), isPapeleraMode); }}
         />
