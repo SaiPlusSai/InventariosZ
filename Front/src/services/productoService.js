@@ -5,13 +5,13 @@ const getAll = (params = {}) =>
 
 
 const desactivarColor = (codigoProductoId, colorId) =>
-  axiosInstance.patch(/productos//color//desactivar)
+  axiosInstance.patch(`/productos/${codigoProductoId}/color/${colorId}/desactivar`)
 
 const recuperarColor = (codigoProductoId, colorId) =>
-  axiosInstance.patch(/productos//color//recuperar)
+  axiosInstance.patch(`/productos/${codigoProductoId}/color/${colorId}/recuperar`)
 
 const updateColor = (codigoProductoId, colorId, data) =>
-  axiosInstance.put(/productos//color/, data)
+  axiosInstance.put(`/productos/${codigoProductoId}/color/${colorId}`, data)
 
 const getCatalogo = (params = {}) =>
   axiosInstance.get('/productos/catalogo', { params })

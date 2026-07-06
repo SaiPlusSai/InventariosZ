@@ -19,7 +19,8 @@ from app.modules.producto.schemas import (
     StockResponse,
     ProductoCompletoEditarResponse,
     ProductoCompletoUpdate,
-    ProductoCatalogoResponse
+    ProductoCatalogoResponse,
+    ProductoColorUpdate
 )
 
 from app.modules.producto.service import ProductoService
