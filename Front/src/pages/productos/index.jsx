@@ -4,6 +4,7 @@ import { useProductoStore } from '../../store/productoStore'
 import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
 import { formatCurrency, getStockLabel } from '../../utils/helpers'
+import { useWizardStore } from '../../store/wizardStore'
 import ProductoDetalle from './ProductoDetalle'
 const emptyFilters = {
   codigo: '',
@@ -35,7 +36,7 @@ export default function Productos() {
   loadingDetalle,
   setLoadingDetalle,
 } = useProductoStore()
-
+const { cargarProductoEditar } = useWizardStore()
   const loadProductos = async (params = {}) => {
 
     try {
@@ -125,6 +126,28 @@ useEffect(() => {
   } finally {
 
     setLoadingDetalle(false)
+
+  }
+
+}
+const handleEditar = async (codigoProductoId) => {
+
+  try {
+
+    const res =
+      await productoService.getEditarCompleto(
+        codigoProductoId
+      )
+
+    cargarProductoEditar(
+      res.data
+    )
+
+    setShowWizard(true)
+
+  } catch (error) {
+
+    console.error(error)
 
   }
 
@@ -375,11 +398,16 @@ const handleDecrementarStock = async (id) => {
 </Button>
 
                 <Button
-                  variant="secondary"
-                  className="flex-1"
-                >
-                  Editar
-                </Button>
+  variant="secondary"
+  className="flex-1"
+  onClick={() =>
+    handleEditar(
+      producto.codigo_producto_id
+    )
+  }
+>
+  Editar
+</Button>
 
               </div>
 

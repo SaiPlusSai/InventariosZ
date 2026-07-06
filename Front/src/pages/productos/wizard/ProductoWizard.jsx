@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useWizardStore } from '../../../store/wizardStore'
-import { useAsync } from '../../../hooks'
 import { productoService } from '../../../services/productoService'
+
 import Step1InformacionGeneral from './Step1InformacionGeneral'
 import Step2Colores from './Step2Colores'
 import Step3Tallas from './Step3Tallas'
 import Step4Variantes from './Step4Variantes'
 import Step5Imagenes from './Step5Imagenes'
 import Step6Resumen from './Step6Resumen'
+
 import { Button } from '../../../components/ui'
 
 const steps = [
@@ -20,15 +21,23 @@ const steps = [
 ]
 
 export default function ProductoWizard({ onClose }) {
-  const { currentStep, setCurrentStep, formData, resetWizard } = useWizardStore()
+  const {
+    modo,
+    codigoProductoId,
+    currentStep,
+    setCurrentStep,
+    formData,
+    resetWizard,
+  } = useWizardStore()
+
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(false)
 
-  const CurrentStepComponent = steps.find((s) => s.id === currentStep)?.component
+  const CurrentStepComponent =
+    steps.find((s) => s.id === currentStep)?.component
 
-  const handleNext = async () => {
-    // Validar paso actual antes de pasar al siguiente
-    if (currentStep < 6) {
+  const handleNext = () => {
+    if (currentStep < steps.length) {
       setCurrentStep(currentStep + 1)
       setError(null)
     }
@@ -44,15 +53,17 @@ export default function ProductoWizard({ onClose }) {
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
+
     try {
-      // Preparar datos para enviar (remover campos internos)
       const dataToSend = {
         codigo: formData.codigo,
         marca_id: formData.marca_id,
         tipo_calzado_id: formData.tipo_calzado_id,
         material_id: formData.material_id,
         descripcion: formData.descripcion,
-        variantes: formData.variantes.map(v => ({
+
+        variantes: formData.variantes.map((v) => ({
+          id: v.id,
           color_id: v.color_id,
           talla_id: v.talla_id,
           stock_actual: v.stock_actual,
@@ -60,9 +71,11 @@ export default function ProductoWizard({ onClose }) {
           stock_maximo: v.stock_maximo,
           precio_compra: v.precio_compra,
           precio_venta: v.precio_venta,
-          estado: v.estado,
+          estado: v.estado ?? true,
         })),
-        imagenes: formData.imagenes.map(i => ({
+
+        imagenes: formData.imagenes.map((i) => ({
+          id: i.id,
           bucket: i.bucket,
           ruta: i.ruta,
           nombre_archivo: i.nombre_archivo,
@@ -70,14 +83,26 @@ export default function ProductoWizard({ onClose }) {
           orden: i.orden,
         })),
       }
-      
-      await productoService.createCompleto(dataToSend)
+
+      if (modo === 'editar') {
+        await productoService.updateCompleto(
+          codigoProductoId,
+          dataToSend
+        )
+      } else {
+        await productoService.createCompleto(
+          dataToSend
+        )
+      }
+
       resetWizard()
       onClose()
     } catch (err) {
       setError(
         err.response?.data?.detail ||
-        'Error al crear el producto. Intenta nuevamente.'
+          (modo === 'editar'
+            ? 'Error al actualizar el producto.'
+            : 'Error al crear el producto.')
       )
     } finally {
       setLoading(false)
@@ -87,10 +112,16 @@ export default function ProductoWizard({ onClose }) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] flex flex-col">
+
         {/* Header */}
         <div className="border-b px-6 py-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Nuevo Producto</h2>
+            <h2 className="text-2xl font-bold">
+              {modo === 'editar'
+                ? 'Editar Producto'
+                : 'Nuevo Producto'}
+            </h2>
+
             <button
               onClick={onClose}
               className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -98,10 +129,13 @@ export default function ProductoWizard({ onClose }) {
               ×
             </button>
           </div>
-          {/* Indicador de pasos */}
+
           <div className="mt-4 flex gap-2">
             {steps.map((step) => (
-              <div key={step.id} className="flex-1">
+              <div
+                key={step.id}
+                className="flex-1"
+              >
                 <div
                   className={`h-2 rounded-full transition-colors ${
                     step.id <= currentStep
@@ -109,6 +143,7 @@ export default function ProductoWizard({ onClose }) {
                       : 'bg-gray-200'
                   }`}
                 />
+
                 <p className="text-xs text-center mt-1 text-gray-600">
                   {step.title}
                 </p>
@@ -117,22 +152,29 @@ export default function ProductoWizard({ onClose }) {
           </div>
         </div>
 
-        {/* Content */}
+        {/* Body */}
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {error && (
             <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
               {error}
             </div>
           )}
-          {CurrentStepComponent && <CurrentStepComponent />}
+
+          {CurrentStepComponent && (
+            <CurrentStepComponent />
+          )}
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4 flex gap-3 justify-between">
+        <div className="border-t px-6 py-4 flex justify-between gap-3">
+
           <Button
             variant="ghost"
             onClick={handlePrev}
-            disabled={currentStep === 1 || loading}
+            disabled={
+              currentStep === 1 ||
+              loading
+            }
           >
             ← Anterior
           </Button>
@@ -147,7 +189,13 @@ export default function ProductoWizard({ onClose }) {
               onClick={handleSubmit}
               disabled={loading}
             >
-              {loading ? 'Guardando...' : '✓ Guardar Producto'}
+              {loading
+                ? modo === 'editar'
+                  ? 'Actualizando...'
+                  : 'Guardando...'
+                : modo === 'editar'
+                ? '✓ Actualizar Producto'
+                : '✓ Guardar Producto'}
             </Button>
           ) : (
             <Button
@@ -159,6 +207,7 @@ export default function ProductoWizard({ onClose }) {
             </Button>
           )}
         </div>
+
       </div>
     </div>
   )

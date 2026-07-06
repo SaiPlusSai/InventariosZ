@@ -17,6 +17,8 @@ from app.modules.producto.schemas import (
     ProductoResponse,
     ProductoUpdate,
     StockResponse,
+    ProductoCompletoEditarResponse,
+    ProductoCompletoUpdate
 )
 
 from app.modules.producto.service import ProductoService
@@ -287,7 +289,80 @@ async def incrementar_stock(
             detail=str(e),
         )
 
+@router.get(
+    "/{codigo_producto_id}/editar-completo",
+    response_model=ProductoCompletoEditarResponse,
+)
+def get_editar_completo(
+    codigo_producto_id: int,
+    db: Session = Depends(get_db),
+):
 
+    try:
+
+        return service.get_editar_completo(
+            db,
+            codigo_producto_id,
+        )
+
+    except ProductoNoEncontradoException as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+
+# ----------------------------------------------------------
+# PUT EDITAR COMPLETO
+# ----------------------------------------------------------
+
+@router.put(
+    "/{codigo_producto_id}/editar-completo",
+    response_model=ProductoCompletoResponse,
+)
+def update_completo(
+    codigo_producto_id: int,
+    data: ProductoCompletoUpdate,
+    db: Session = Depends(get_db),
+):
+
+    try:
+
+        return service.update_completo(
+            db,
+            codigo_producto_id,
+            data,
+        )
+
+    except (
+        MarcaNoEncontradaException,
+        TipoCalzadoNoEncontradoException,
+        MaterialNoEncontradoException,
+        ColorNoEncontradoException,
+        TallaNoEncontradaException,
+        CodigoProductoYaExisteException,
+        ProductoYaExisteException,
+    ) as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    except ProductoNoEncontradoException as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e),
+        )
+
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
 @router.patch(
     "/{producto_id}/decrementar-stock",
     response_model=StockResponse,

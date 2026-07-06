@@ -311,6 +311,8 @@ class TallaInfo(BaseModel):
 class ProductoListadoResponse(BaseModel):
 
     id: int
+    
+    codigo_producto_id: int
 
     codigo: str
 
@@ -423,3 +425,166 @@ class ProductoDetalleResponse(BaseModel):
 class StockResponse(BaseModel):
     producto_id: int
     stock_actual: int
+# ==========================================================
+# EDITAR PRODUCTO COMPLETO
+# ==========================================================
+
+class VarianteUpdate(BaseModel):
+
+    id: int | None = None
+
+    color_id: int = Field(
+        ...,
+        gt=0,
+    )
+
+    talla_id: int = Field(
+        ...,
+        gt=0,
+    )
+
+    stock_actual: int = Field(
+        default=0,
+        ge=0,
+    )
+
+    stock_minimo: int = Field(
+        default=0,
+        ge=0,
+    )
+
+    stock_maximo: int | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    precio_compra: Decimal | None = Field(
+        default=None,
+        ge=0,
+    )
+
+    precio_venta: Decimal = Field(
+        ...,
+        ge=0,
+    )
+
+    estado: bool = True
+
+
+class ImagenProductoUpdate(BaseModel):
+
+    id: int | None = None
+
+    bucket: str
+
+    ruta: str
+
+    nombre_archivo: str | None = None
+
+    es_principal: bool = False
+
+    orden: int = 1
+
+
+class ProductoCompletoUpdate(BaseModel):
+
+    codigo: str = Field(
+        ...,
+        min_length=2,
+        max_length=50,
+    )
+
+    marca_id: int = Field(
+        ...,
+        gt=0,
+    )
+
+    tipo_calzado_id: int = Field(
+        ...,
+        gt=0,
+    )
+
+    material_id: int = Field(
+        ...,
+        gt=0,
+    )
+
+    descripcion: str | None = Field(
+        default=None,
+        max_length=500,
+    )
+
+    variantes: list[VarianteUpdate]
+
+    imagenes: list[ImagenProductoUpdate] = Field(
+        default_factory=list,
+    )
+
+
+# ==========================================================
+# RESPUESTA GET EDITAR
+# ==========================================================
+
+class VarianteEditarResponse(BaseModel):
+
+    id: int
+
+    color_id: int
+
+    talla_id: int
+
+    stock_actual: int
+
+    stock_minimo: int
+
+    stock_maximo: int | None
+
+    precio_compra: Decimal | None
+
+    precio_venta: Decimal
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class ImagenEditarResponse(BaseModel):
+
+    id: int
+
+    bucket: str
+
+    ruta: str
+
+    nombre_archivo: str | None
+
+    es_principal: bool
+
+    orden: int
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )
+
+
+class ProductoCompletoEditarResponse(BaseModel):
+
+    codigo_producto_id: int
+
+    codigo: str
+
+    marca_id: int
+
+    tipo_calzado_id: int
+
+    material_id: int
+
+    descripcion: str | None
+
+    variantes: list[VarianteEditarResponse]
+
+    imagenes: list[ImagenEditarResponse]
+
+    model_config = ConfigDict(
+        from_attributes=True
+    )

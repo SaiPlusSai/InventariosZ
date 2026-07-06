@@ -6,6 +6,7 @@ from sqlalchemy import update
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 import time
+
 from app.modules.codigo_producto.models import CodigoProducto
 from app.modules.color.models import Color
 from app.modules.marca.models import Marca
@@ -15,6 +16,12 @@ from app.modules.producto.models import Producto
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.models import Talla
 from app.modules.tipo_calzado.models import TipoCalzado
+from sqlalchemy import delete
+from sqlalchemy import select
+
+from app.modules.codigo_producto.models import CodigoProducto
+from app.modules.precio_producto.models import PrecioProducto
+from app.modules.producto_imagen.models import ProductoImagen
 
 
 class ProductoRepository:
@@ -87,6 +94,7 @@ class ProductoRepository:
         statement = (
             select(
                 Producto.id.label("id"),
+                CodigoProducto.id.label("codigo_producto_id"),
                 CodigoProducto.codigo.label("codigo"),
                 Producto.descripcion.label("descripcion"),
                 Marca.id.label("marca_id"),
@@ -266,7 +274,168 @@ class ProductoRepository:
         )
 
         return db.scalar(statement)
-    
+    def get_by_codigo_producto_id(
+        self,
+        db: Session,
+        codigo_producto_id: int,
+    ) -> list[Producto]:
+
+        statement = (
+            select(Producto)
+            .where(
+                Producto.codigo_producto_id == codigo_producto_id
+            )
+            .order_by(
+                Producto.id.asc()
+            )
+        )
+
+        return db.scalars(statement).all()
+
+
+    def get_editar_completo(
+        self,
+        db: Session,
+        codigo_producto_id: int,
+    ) -> CodigoProducto | None:
+
+        statement = (
+            select(CodigoProducto)
+            .where(
+                CodigoProducto.id == codigo_producto_id
+            )
+        )
+
+        return db.scalar(statement)
+
+
+    def delete_precios(
+        self,
+        db: Session,
+        producto_id: int,
+    ):
+
+        db.execute(
+            delete(PrecioProducto)
+            .where(
+                PrecioProducto.producto_id == producto_id
+            )
+        )
+
+
+    def delete_imagenes(
+        self,
+        db: Session,
+        producto_id: int,
+    ):
+
+        db.execute(
+            delete(ProductoImagen)
+            .where(
+                ProductoImagen.producto_id == producto_id
+            )
+        )
+
+
+    def delete_producto(
+        self,
+        db: Session,
+        producto_id: int,
+    ):
+
+        db.execute(
+            delete(Producto)
+            .where(
+                Producto.id == producto_id
+            )
+        )
+
+
+    def delete_productos_codigo(
+        self,
+        db: Session,
+        codigo_producto_id: int,
+    ):
+
+        productos = self.get_by_codigo_producto_id(
+            db,
+            codigo_producto_id,
+        )
+
+        for producto in productos:
+
+            self.delete_precios(
+                db,
+                producto.id,
+            )
+
+            self.delete_imagenes(
+                db,
+                producto.id,
+            )
+
+            self.delete_producto(
+                db,
+                producto.id,
+            )
+
+
+    def save_codigo_producto(
+        self,
+        db: Session,
+        codigo_producto: CodigoProducto,
+    ):
+
+        db.add(codigo_producto)
+        db.flush()
+
+
+    def save_producto(
+        self,
+        db: Session,
+        producto: Producto,
+    ):
+
+        db.add(producto)
+        db.flush()
+
+        return producto
+
+
+    def save_precio(
+        self,
+        db: Session,
+        precio: PrecioProducto,
+    ):
+
+        db.add(precio)
+        db.flush()
+
+
+    def save_imagen(
+        self,
+        db: Session,
+        imagen: ProductoImagen,
+    ):
+
+        db.add(imagen)
+        db.flush()
+
+
+    def commit(
+        self,
+        db: Session,
+    ):
+
+        db.commit()
+
+
+    def rollback(
+        self,
+        db: Session,
+    ):
+
+        db.rollback()
     def incrementar_stock(
         self,
         db: Session,

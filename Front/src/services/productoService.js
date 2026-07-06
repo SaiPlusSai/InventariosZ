@@ -28,8 +28,14 @@ export const productoService = {
 
   getById: (id) =>
     axiosInstance.get(`/productos/${id}`),
+
   getDetalle: (id) =>
-  axiosInstance.get(`/productos/${id}/detalle`),
+    axiosInstance.get(`/productos/${id}/detalle`),
+
+  getEditarCompleto: (codigoProductoId) =>
+    axiosInstance.get(
+      `/productos/${codigoProductoId}/editar-completo`
+    ),
 
   create: (data) =>
     axiosInstance.post('/productos/', data),
@@ -40,16 +46,27 @@ export const productoService = {
   update: (id, data) =>
     axiosInstance.put(`/productos/${id}`, data),
 
+  updateCompleto: (codigoProductoId, data) =>
+    axiosInstance.put(
+      `/productos/${codigoProductoId}/editar-completo`,
+      data
+    ),
+
   delete: (id) =>
     axiosInstance.delete(`/productos/${id}`),
 
   search: (query) =>
     getAll({ codigo: query }),
-  incrementarStock: (id) =>
-  axiosInstance.patch(`/productos/${id}/incrementar-stock`),
 
-decrementarStock: (id) =>
-  axiosInstance.patch(`/productos/${id}/decrementar-stock`),
+  incrementarStock: (id) =>
+    axiosInstance.patch(
+      `/productos/${id}/incrementar-stock`
+    ),
+
+  decrementarStock: (id) =>
+    axiosInstance.patch(
+      `/productos/${id}/decrementar-stock`
+    ),
 }
 
 export default productoService

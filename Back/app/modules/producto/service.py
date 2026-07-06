@@ -45,6 +45,11 @@ from app.modules.producto.schemas import (
     ProductoDetalleResponse,
     PrecioDetalleResponse,
     ImagenDetalleResponse,
+    ProductoCompletoEditarResponse,
+    ProductoCompletoUpdate,
+    VarianteEditarResponse,
+    ImagenEditarResponse,
+    
 )
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.constants import TALLA_NO_EXISTE
@@ -100,6 +105,7 @@ class ProductoService:
         return [
             ProductoListadoResponse(
                 id=producto["id"],
+                codigo_producto_id=producto["codigo_producto_id"],
                 codigo=producto["codigo"],
                 descripcion=producto["descripcion"],
                 marca=MarcaInfo(
@@ -293,7 +299,282 @@ class ProductoService:
             db,
             producto,
         )
+    def get_editar_completo(
+        self,
+        db: Session,
+        codigo_producto_id: int,
+    ) -> ProductoCompletoEditarResponse:
 
+        codigo_producto = self.codigo_repository.get_by_id(
+            db,
+            codigo_producto_id,
+        )
+
+        if not codigo_producto:
+            raise ProductoNoEncontradoException(
+                PRODUCTO_NO_EXISTE
+            )
+
+        productos = self.repository.get_by_codigo_producto_id(
+            db,
+            codigo_producto_id,
+        )
+
+        if not productos:
+            raise ProductoNoEncontradoException(
+                PRODUCTO_NO_EXISTE
+            )
+
+        primer_producto = productos[0]
+
+        variantes = []
+
+        for producto in productos:
+
+            precio = next(
+                (
+                    p
+                    for p in producto.precios
+                    if p.estado
+                ),
+                None,
+            )
+
+            variantes.append(
+                VarianteEditarResponse(
+                    id=producto.id,
+                    color_id=producto.color_id,
+                    talla_id=producto.talla_id,
+                    stock_actual=producto.stock_actual,
+                    stock_minimo=producto.stock_minimo,
+                    stock_maximo=producto.stock_maximo,
+                    precio_compra=(
+                        precio.precio_compra
+                        if precio
+                        else None
+                    ),
+                    precio_venta=(
+                        precio.precio_venta
+                        if precio
+                        else 0
+                    ),
+                )
+            )
+
+        imagenes = [
+            ImagenEditarResponse(
+                id=imagen.id,
+                bucket=imagen.bucket,
+                ruta=imagen.ruta,
+                nombre_archivo=imagen.nombre_archivo,
+                es_principal=imagen.es_principal,
+                orden=imagen.orden,
+            )
+            for imagen in primer_producto.imagenes
+        ]
+
+        return ProductoCompletoEditarResponse(
+            codigo_producto_id=codigo_producto.id,
+            codigo=codigo_producto.codigo,
+            marca_id=codigo_producto.marca_id,
+            tipo_calzado_id=primer_producto.tipo_calzado_id,
+            material_id=primer_producto.material_id,
+            descripcion=primer_producto.descripcion,
+            variantes=variantes,
+            imagenes=imagenes,
+        )
+    def update_completo(
+        self,
+        db: Session,
+        codigo_producto_id: int,
+        data: ProductoCompletoUpdate,
+    ):
+        """
+        Edita completamente un producto.
+        La estrategia consiste en actualizar el código y recrear todas las
+        variantes, precios e imágenes.
+        """
+
+        try:
+
+            codigo_producto = self.codigo_repository.get_by_id(
+                db,
+                codigo_producto_id,
+            )
+
+            if not codigo_producto:
+                raise ProductoNoEncontradoException(
+                    PRODUCTO_NO_EXISTE
+                )
+
+            if not self.marca_repository.get_by_id(
+                db,
+                data.marca_id,
+            ):
+                raise MarcaNoEncontradaException(
+                    MARCA_NO_EXISTE
+                )
+
+            if not self.tipo_repository.get_by_id(
+                db,
+                data.tipo_calzado_id,
+            ):
+                raise TipoCalzadoNoEncontradoException(
+                    TIPO_CALZADO_NO_EXISTE
+                )
+
+            if not self.material_repository.get_by_id(
+                db,
+                data.material_id,
+            ):
+                raise MaterialNoEncontradoException(
+                    MATERIAL_NO_EXISTE
+                )
+
+            variantes_unicas = set()
+
+            for variante in data.variantes:
+
+                clave = (
+                    variante.color_id,
+                    variante.talla_id,
+                )
+
+                if clave in variantes_unicas:
+                    raise ProductoYaExisteException(
+                        PRODUCTO_YA_EXISTE
+                    )
+
+                variantes_unicas.add(clave)
+
+                if not self.color_repository.get_by_id(
+                    db,
+                    variante.color_id,
+                ):
+                    raise ColorNoEncontradoException(
+                        COLOR_NO_EXISTE
+                    )
+
+                if not self.talla_repository.get_by_id(
+                    db,
+                    variante.talla_id,
+                ):
+                    raise TallaNoEncontradaException(
+                        TALLA_NO_EXISTE
+                    )
+
+            existente = self.codigo_repository.get_by_codigo(
+                db,
+                data.codigo,
+            )
+
+            if (
+                existente
+                and existente.id != codigo_producto.id
+            ):
+                raise CodigoProductoYaExisteException(
+                    CODIGO_PRODUCTO_YA_EXISTE
+                )
+
+            codigo_producto.codigo = data.codigo
+            codigo_producto.marca_id = data.marca_id
+
+            self.repository.save_codigo_producto(
+                db,
+                codigo_producto,
+            )
+
+            self.repository.delete_productos_codigo(
+                db,
+                codigo_producto.id,
+            )
+
+            productos = []
+
+            for variante in data.variantes:
+
+                producto = Producto(
+                    codigo_producto_id=codigo_producto.id,
+                    tipo_calzado_id=data.tipo_calzado_id,
+                    material_id=data.material_id,
+                    color_id=variante.color_id,
+                    talla_id=variante.talla_id,
+                    descripcion=data.descripcion,
+                    stock_actual=variante.stock_actual,
+                    stock_minimo=variante.stock_minimo,
+                    stock_maximo=variante.stock_maximo,
+                    estado=variante.estado,
+                )
+
+                producto = self.repository.save_producto(
+                    db,
+                    producto,
+                )
+
+                productos.append(producto)
+
+                precio = PrecioProducto(
+                    producto_id=producto.id,
+                    precio_compra=variante.precio_compra,
+                    precio_venta=variante.precio_venta,
+                    vigente_desde=datetime.now(),
+                    estado=True,
+                )
+
+                self.repository.save_precio(
+                    db,
+                    precio,
+                )
+
+            if productos:
+
+                principal = productos[0]
+
+                ya_principal = False
+
+                for imagen in data.imagenes:
+
+                    principal_actual = imagen.es_principal
+
+                    if principal_actual and ya_principal:
+                        principal_actual = False
+
+                    if principal_actual:
+                        ya_principal = True
+
+                    self.repository.save_imagen(
+                        db,
+                        ProductoImagen(
+                            producto_id=principal.id,
+                            bucket=imagen.bucket,
+                            ruta=imagen.ruta,
+                            nombre_archivo=imagen.nombre_archivo,
+                            es_principal=principal_actual,
+                            orden=imagen.orden,
+                        ),
+                    )
+
+            self.repository.commit(
+                db,
+            )
+
+            return {
+                "codigo_producto_id": codigo_producto.id,
+                "variantes_creadas": len(productos),
+                "precios_creados": len(productos),
+                "imagenes_creadas": len(data.imagenes),
+                "success": True,
+                "message": "Producto actualizado correctamente.",
+                "created_at": datetime.now(),
+            }
+
+        except Exception:
+
+            self.repository.rollback(
+                db,
+            )
+
+            raise
     def update(
         self,
         db: Session,

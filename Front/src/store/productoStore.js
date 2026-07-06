@@ -7,9 +7,11 @@ export const useProductoStore = create((set) => ({
 
   productos: [],
   productoDetalle: null,
+  productoEditar: null,
 
   loading: false,
   loadingDetalle: false,
+  loadingEditar: false,
 
   error: null,
 
@@ -23,14 +25,23 @@ export const useProductoStore = create((set) => ({
   setProductoDetalle: (productoDetalle) =>
     set({ productoDetalle }),
 
+  setProductoEditar: (productoEditar) =>
+    set({ productoEditar }),
+
   clearProductoDetalle: () =>
     set({ productoDetalle: null }),
+
+  clearProductoEditar: () =>
+    set({ productoEditar: null }),
 
   setLoading: (loading) =>
     set({ loading }),
 
   setLoadingDetalle: (loadingDetalle) =>
     set({ loadingDetalle }),
+
+  setLoadingEditar: (loadingEditar) =>
+    set({ loadingEditar }),
 
   setError: (error) =>
     set({ error }),
@@ -52,17 +63,19 @@ export const useProductoStore = create((set) => ({
           : producto
       ),
     })),
-    actualizarStock: (id, stock_actual) =>
-  set((state) => ({
-    productos: state.productos.map((producto) =>
-      producto.id === id
-        ? {
-            ...producto,
-            stock_actual,
-          }
-        : producto
-    ),
-  })),
+
+  actualizarStock: (id, stock_actual) =>
+    set((state) => ({
+      productos: state.productos.map((producto) =>
+        producto.id === id
+          ? {
+              ...producto,
+              stock_actual,
+            }
+          : producto
+      ),
+    })),
+
   deleteProducto: (id) =>
     set((state) => ({
       productos: state.productos.filter(
@@ -78,6 +91,7 @@ export const useProductoStore = create((set) => ({
     set({
       productos: [],
       productoDetalle: null,
+      productoEditar: null,
       error: null,
     }),
 }))
