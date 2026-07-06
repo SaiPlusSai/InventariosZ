@@ -90,6 +90,11 @@ export default function Tallas() {
     setAppliedSearch(searchTerm)
   }
 
+  const handleClear = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }
+
   const filteredTallas = tallas.filter(talla => 
     talla.nombre.toLowerCase().includes(appliedSearch.toLowerCase())
   )
@@ -120,6 +125,9 @@ export default function Tallas() {
           </div>
           <Button variant="primary" onClick={handleSearch}>
             Filtrar
+          </Button>
+          <Button variant="secondary" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </Card>

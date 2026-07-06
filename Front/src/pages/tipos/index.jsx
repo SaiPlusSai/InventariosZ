@@ -6,7 +6,7 @@ import { tipoCalzadoService } from '../../services/tipoCalzadoService'
 
 export default function Tipos() {
   const navigate = useNavigate()
-  const { tiposCalzado, setTiposCalzado, loading, setLoading, error, setError } = useTipoCalzadoStore()
+  const { tipos, setTipos, loading, setLoading, error, setError } = useTipoCalzadoStore()
   
   const [showModal, setShowModal] = useState(false)
   const [editingTipo, setEditingTipo] = useState(null)
@@ -21,7 +21,7 @@ export default function Tipos() {
     try {
       setLoading(true)
       const res = await tipoCalzadoService.getAll()
-      setTiposCalzado(res.data)
+      setTipos(res.data)
     } catch (err) {
       console.error(err)
       setError('Error al cargar los tipos de calzado')
@@ -85,7 +85,12 @@ export default function Tipos() {
     setAppliedSearch(searchTerm)
   }
 
-  const filteredTipos = tiposCalzado.filter(tipo => 
+  const handleClear = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }
+
+  const filteredTipos = tipos.filter(tipo => 
     tipo.nombre.toLowerCase().includes(appliedSearch.toLowerCase()) || 
     (tipo.descripcion && tipo.descripcion.toLowerCase().includes(appliedSearch.toLowerCase()))
   )
@@ -116,6 +121,9 @@ export default function Tipos() {
           </div>
           <Button variant="primary" onClick={handleSearch}>
             Filtrar
+          </Button>
+          <Button variant="secondary" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </Card>

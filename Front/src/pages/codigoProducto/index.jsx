@@ -95,6 +95,11 @@ export default function CodigoProducto() {
     setAppliedSearch(searchTerm)
   }
 
+  const handleClear = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }
+
   const filteredCodigos = codigos.filter(item => {
     const term = appliedSearch.toLowerCase()
     const marca = marcas.find(m => m.id === item.marca_id)
@@ -128,6 +133,9 @@ export default function CodigoProducto() {
           </div>
           <Button variant="primary" onClick={handleSearch}>
             Filtrar
+          </Button>
+          <Button variant="secondary" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </Card>

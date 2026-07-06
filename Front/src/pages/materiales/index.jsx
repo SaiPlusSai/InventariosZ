@@ -85,6 +85,11 @@ export default function Materiales() {
     setAppliedSearch(searchTerm)
   }
 
+  const handleClear = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }
+
   const filteredMateriales = materiales.filter(material => 
     material.nombre.toLowerCase().includes(appliedSearch.toLowerCase()) || 
     (material.descripcion && material.descripcion.toLowerCase().includes(appliedSearch.toLowerCase()))
@@ -116,6 +121,9 @@ export default function Materiales() {
           </div>
           <Button variant="primary" onClick={handleSearch}>
             Filtrar
+          </Button>
+          <Button variant="secondary" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </Card>

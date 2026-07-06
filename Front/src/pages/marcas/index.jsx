@@ -85,6 +85,11 @@ export default function Marcas() {
     setAppliedSearch(searchTerm)
   }
 
+  const handleClear = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }
+
   const filteredMarcas = marcas.filter(marca => 
     marca.nombre.toLowerCase().includes(appliedSearch.toLowerCase()) || 
     (marca.descripcion && marca.descripcion.toLowerCase().includes(appliedSearch.toLowerCase()))
@@ -116,6 +121,9 @@ export default function Marcas() {
           </div>
           <Button variant="primary" onClick={handleSearch}>
             Filtrar
+          </Button>
+          <Button variant="secondary" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </Card>

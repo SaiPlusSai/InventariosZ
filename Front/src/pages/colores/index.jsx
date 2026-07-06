@@ -85,6 +85,11 @@ export default function Colores() {
     setAppliedSearch(searchTerm)
   }
 
+  const handleClear = () => {
+    setSearchTerm('')
+    setAppliedSearch('')
+  }
+
   const filteredColores = colores.filter(color => 
     color.nombre.toLowerCase().includes(appliedSearch.toLowerCase()) || 
     (color.codigo_hex && color.codigo_hex.toLowerCase().includes(appliedSearch.toLowerCase()))
@@ -116,6 +121,9 @@ export default function Colores() {
           </div>
           <Button variant="primary" onClick={handleSearch}>
             Filtrar
+          </Button>
+          <Button variant="secondary" onClick={handleClear}>
+            Limpiar
           </Button>
         </div>
       </Card>
