@@ -33,17 +33,19 @@ class MarcaService:
         item = self.repository.get_by_id(db, id)
         if item:
             item.estado = False
-            from sqlalchemy import func
-            item.deleted_at = func.now()
+            from datetime import datetime
+            item.deleted_at = datetime.now()
             db.commit()
+            db.refresh(item)
         return item
 
     def recuperar(self, db: Session, id: int):
-        item = self.repository.get_by_id(db, id)
+        item = self.repository.get_by_id_papelera(db, id)
         if item:
             item.estado = True
             item.deleted_at = None
             db.commit()
+            db.refresh(item)
         return item
 
     def get_all(
@@ -124,6 +126,8 @@ class MarcaService:
             db,
             marca_id,
         )
+        if not marca:
+            marca = self.repository.get_by_id_papelera(db, marca_id if 'marca_id' in locals() else id)
 
         if not marca:
             raise MarcaNoEncontradaException(MARCA_NO_EXISTE)

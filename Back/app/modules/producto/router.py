@@ -102,10 +102,36 @@ def get_all(
 
 @router.get(
     "/papelera",
-    response_model=list, # using list for simplicity since schemas vary slightly
+    response_model=list[ProductoListadoResponse],
 )
-def get_papelera(db: Session = Depends(get_db)):
-    return service.get_papelera(db)
+def get_papelera(
+    codigo: str | None = None,
+    marca_id: int | None = None,
+    marca: str | None = None,
+    color_id: int | None = None,
+    color: str | None = None,
+    material_id: int | None = None,
+    material: str | None = None,
+    talla_id: int | None = None,
+    talla: str | None = None,
+    tipo_calzado_id: int | None = None,
+    tipo: str | None = None,
+    db: Session = Depends(get_db),
+):
+    return service.get_papelera(
+        db,
+        codigo=codigo,
+        marca_id=marca_id,
+        marca=marca,
+        color_id=color_id,
+        color=color,
+        material_id=material_id,
+        material=material,
+        talla_id=talla_id,
+        talla=talla,
+        tipo_calzado_id=tipo_calzado_id,
+        tipo=tipo,
+    )
 
 @router.get(
     "/{producto_id}/dependencias",
@@ -115,12 +141,14 @@ def get_dependencias(producto_id: int, db: Session = Depends(get_db)):
 
 @router.patch(
     "/{producto_id}/desactivar",
+    response_model=ProductoResponse,
 )
 def desactivar(producto_id: int, db: Session = Depends(get_db)):
     return service.desactivar(db, producto_id)
 
 @router.patch(
     "/{producto_id}/recuperar",
+    response_model=ProductoResponse,
 )
 def recuperar(producto_id: int, db: Session = Depends(get_db)):
     return service.recuperar(db, producto_id)

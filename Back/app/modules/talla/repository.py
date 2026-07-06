@@ -55,6 +55,19 @@ class TallaRepository:
 
         return db.scalar(statement)
 
+    
+    def get_by_id_papelera(
+        self,
+        db: Session,
+        talla_id: int, # or just id
+    ) -> Talla | None:
+        statement = (
+            select(Talla)
+            .where(Talla.estado == False)
+            .where(Talla.id == talla_id)
+        )
+        return db.scalar(statement)
+
     def create(
         self,
         db: Session,

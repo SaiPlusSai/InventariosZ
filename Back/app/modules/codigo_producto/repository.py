@@ -66,6 +66,19 @@ class CodigoProductoRepository:
 
         return db.scalars(statement).all()
 
+    
+    def get_by_id_papelera(
+        self,
+        db: Session,
+        codigo_producto_id: int, # or just id
+    ) -> CodigoProducto | None:
+        statement = (
+            select(CodigoProducto)
+            .where(CodigoProducto.estado == False)
+            .where(CodigoProducto.id == codigo_producto_id)
+        )
+        return db.scalar(statement)
+
     def create(
         self,
         db: Session,

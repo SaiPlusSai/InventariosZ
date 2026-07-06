@@ -41,7 +41,7 @@ def get_all(
 
 @router.get(
     "/papelera",
-    response_model=list, # using list for simplicity since schemas vary slightly
+    response_model=list[TipoCalzadoResponse],
 )
 def get_papelera(db: Session = Depends(get_db)):
     return service.get_papelera(db)
@@ -54,12 +54,14 @@ def get_dependencias(tipo_calzado_id: int, db: Session = Depends(get_db)):
 
 @router.patch(
     "/{tipo_calzado_id}/desactivar",
+    response_model=TipoCalzadoResponse,
 )
 def desactivar(tipo_calzado_id: int, db: Session = Depends(get_db)):
     return service.desactivar(db, tipo_calzado_id)
 
 @router.patch(
     "/{tipo_calzado_id}/recuperar",
+    response_model=TipoCalzadoResponse,
 )
 def recuperar(tipo_calzado_id: int, db: Session = Depends(get_db)):
     return service.recuperar(db, tipo_calzado_id)

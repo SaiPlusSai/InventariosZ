@@ -33,17 +33,19 @@ class MaterialService:
         item = self.repository.get_by_id(db, id)
         if item:
             item.estado = False
-            from sqlalchemy import func
-            item.deleted_at = func.now()
+            from datetime import datetime
+            item.deleted_at = datetime.now()
             db.commit()
+            db.refresh(item)
         return item
 
     def recuperar(self, db: Session, id: int):
-        item = self.repository.get_by_id(db, id)
+        item = self.repository.get_by_id_papelera(db, id)
         if item:
             item.estado = True
             item.deleted_at = None
             db.commit()
+            db.refresh(item)
         return item
 
     def get_all(
@@ -124,6 +126,8 @@ class MaterialService:
             db,
             material_id,
         )
+        if not material:
+            material = self.repository.get_by_id_papelera(db, material_id if 'material_id' in locals() else id)
 
         if not material:
             raise MaterialNoEncontradoException(

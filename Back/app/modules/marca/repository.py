@@ -55,6 +55,19 @@ class MarcaRepository:
 
         return db.scalar(statement)
 
+    
+    def get_by_id_papelera(
+        self,
+        db: Session,
+        marca_id: int, # or just id
+    ) -> Marca | None:
+        statement = (
+            select(Marca)
+            .where(Marca.estado == False)
+            .where(Marca.id == marca_id)
+        )
+        return db.scalar(statement)
+
     def create(
         self,
         db: Session,

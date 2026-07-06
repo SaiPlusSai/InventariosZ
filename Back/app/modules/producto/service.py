@@ -73,8 +73,74 @@ class ProductoService:
         self.talla_repository = TallaRepository()
 
     
-    def get_papelera(self, db: Session) -> list[Producto]:
-        return self.repository.get_papelera(db)
+    def get_papelera(
+        self,
+        db: Session,
+        codigo: str | None = None,
+        marca_id: int | None = None,
+        marca: str | None = None,
+        color_id: int | None = None,
+        color: str | None = None,
+        material_id: int | None = None,
+        material: str | None = None,
+        talla_id: int | None = None,
+        talla: str | None = None,
+        tipo_calzado_id: int | None = None,
+        tipo: str | None = None,
+    ) -> list[ProductoListadoResponse]:
+        productos = self.repository.get_papelera(
+            db,
+            codigo=codigo,
+            marca_id=marca_id,
+            marca=marca,
+            color_id=color_id,
+            color=color,
+            material_id=material_id,
+            material=material,
+            talla_id=talla_id,
+            talla=talla,
+            tipo_calzado_id=tipo_calzado_id,
+            tipo=tipo,
+        )
+
+        return [
+            ProductoListadoResponse(
+                id=producto["id"],
+                codigo_producto_id=producto["codigo_producto_id"],
+                codigo=producto["codigo"],
+                descripcion=producto["descripcion"],
+                marca=MarcaInfo(
+                    id=producto["marca_id"],
+                    nombre=producto["marca_nombre"],
+                ),
+                tipo_calzado=TipoCalzadoInfo(
+                    id=producto["tipo_calzado_id"],
+                    nombre=producto["tipo_calzado_nombre"],
+                ),
+                material=MaterialInfo(
+                    id=producto["material_id"],
+                    nombre=producto["material_nombre"],
+                ),
+                color=ColorInfo(
+                    id=producto["color_id"],
+                    nombre=producto["color_nombre"],
+                ),
+                talla=TallaInfo(
+                    id=producto["talla_id"],
+                    nombre=producto["talla_nombre"],
+                ),
+                stock_actual=producto["stock_actual"],
+                stock_minimo=producto["stock_minimo"],
+                stock_maximo=producto["stock_maximo"],
+                precio_compra=producto["precio_compra"],
+                precio_venta=producto["precio_venta"],
+                imagen_principal=producto["imagen_principal"],
+                estado=producto["estado"],
+                created_at=producto["created_at"],
+                updated_at=producto["updated_at"],
+            )
+            for producto in productos
+        ]
 
     def get_dependencias(self, db: Session, id: int) -> dict:
         return self.repository.get_dependencias(db, id)
@@ -83,17 +149,18 @@ class ProductoService:
         item = self.repository.get_by_id(db, id)
         if item:
             item.estado = False
-            from sqlalchemy import func
-            item.deleted_at = func.now()
+            item.deleted_at = datetime.now()
             db.commit()
+            db.refresh(item)
         return item
 
     def recuperar(self, db: Session, id: int):
-        item = self.repository.get_by_id(db, id)
+        item = self.repository.get_by_id_papelera(db, id)
         if item:
             item.estado = True
             item.deleted_at = None
             db.commit()
+            db.refresh(item)
         return item
 
     def get_all(
@@ -176,6 +243,8 @@ class ProductoService:
             producto_id,
         )
 
+        if not producto:
+            producto = self.repository.get_by_id_papelera(db, producto_id)
         if not producto:
             raise ProductoNoEncontradoException(
                 PRODUCTO_NO_EXISTE
@@ -613,6 +682,8 @@ class ProductoService:
         )
 
         if not producto:
+            producto = self.repository.get_by_id_papelera(db, producto_id)
+        if not producto:
             raise ProductoNoEncontradoException(
                 PRODUCTO_NO_EXISTE
             )
@@ -644,6 +715,10 @@ class ProductoService:
             producto_id,
         )
 
+        if not producto:
+            producto = self.repository.get_by_id_papelera(db, producto_id)
+        if not producto:
+            producto = self.repository.get_by_id_papelera(db, producto_id if 'producto_id' in locals() else id)
         if not producto:
             raise ProductoNoEncontradoException(
                 PRODUCTO_NO_EXISTE

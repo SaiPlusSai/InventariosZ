@@ -55,6 +55,19 @@ class TipoCalzadoRepository:
 
         return db.scalar(statement)
 
+    
+    def get_by_id_papelera(
+        self,
+        db: Session,
+        tipo_calzado_id: int, # or just id
+    ) -> TipoCalzado | None:
+        statement = (
+            select(TipoCalzado)
+            .where(TipoCalzado.estado == False)
+            .where(TipoCalzado.id == tipo_calzado_id)
+        )
+        return db.scalar(statement)
+
     def create(
         self,
         db: Session,
