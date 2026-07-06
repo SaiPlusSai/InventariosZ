@@ -1083,32 +1083,80 @@ class ProductoService:
             Producto.codigo_producto_id == codigo_producto_id,
             Producto.color_id == color_id
         ).all()
-        for v in variantes_actuales:
-            db.delete(v)
-        db.commit()
+        
+        mapa_existentes = {p.talla_id: p for p in variantes_actuales}
+        variantes_entrantes_claves = set()
         
         for variante in data.variantes:
-            nuevo = Producto(
-                codigo_producto_id=codigo_producto_id,
-                tipo_calzado_id=data.tipo_calzado_id,
-                material_id=data.material_id,
-                color_id=color_id,
-                talla_id=variante.talla_id,
-                descripcion=data.descripcion,
-                stock_actual=variante.stock_actual,
-                stock_minimo=variante.stock_minimo,
-                stock_maximo=variante.stock_maximo,
-                estado=variante.estado,
-            )
-            db.add(nuevo)
-            db.flush()
-            
-            precio = PrecioProducto(
-                producto_id=nuevo.id,
-                precio_compra=variante.precio_compra,
-                precio_venta=variante.precio_venta,
-            )
-            db.add(precio)
-            
+            variantes_entrantes_claves.add(variante.talla_id)
+
+            if variante.talla_id in mapa_existentes:
+                producto = mapa_existentes[variante.talla_id]
+                # Upsert (Actualizacion in-place)
+                producto.tipo_calzado_id = data.tipo_calzado_id
+                producto.material_id = data.material_id
+                producto.descripcion = data.descripcion
+                producto.stock_actual = variante.stock_actual
+                producto.stock_minimo = variante.stock_minimo
+                producto.stock_maximo = variante.stock_maximo
+                producto.estado = variante.estado
+                
+                # Logica de Precio: 
+                precio_actual = None
+                for p in producto.precios:
+                    if p.estado and p.vigente_hasta is None:
+                        precio_actual = p
+                        break
+                        
+                if not precio_actual or precio_actual.precio_compra != variante.precio_compra or precio_actual.precio_venta != variante.precio_venta:
+                    if precio_actual:
+                        precio_actual.vigente_hasta = datetime.now()
+                        precio_actual.estado = False
+                        
+                    nuevo_precio = PrecioProducto(
+                        precio_compra=variante.precio_compra,
+                        precio_venta=variante.precio_venta,
+                        vigente_desde=datetime.now(),
+                        estado=True,
+                    )
+                    producto.precios.append(nuevo_precio)
+            else:
+                # Insert (Nuevo)
+                producto = Producto(
+                    codigo_producto_id=codigo_producto_id,
+                    tipo_calzado_id=data.tipo_calzado_id,
+                    material_id=data.material_id,
+                    color_id=color_id,
+                    talla_id=variante.talla_id,
+                    descripcion=data.descripcion,
+                    stock_actual=variante.stock_actual,
+                    stock_minimo=variante.stock_minimo,
+                    stock_maximo=variante.stock_maximo,
+                    estado=variante.estado,
+                )
+                
+                nuevo_precio = PrecioProducto(
+                    precio_compra=variante.precio_compra,
+                    precio_venta=variante.precio_venta,
+                    vigente_desde=datetime.now(),
+                    estado=True,
+                )
+                producto.precios.append(nuevo_precio)
+                db.add(producto)
+                
+        # Desactivar variantes que no vinieron en el payload
+        for talla_id, producto in mapa_existentes.items():
+            if talla_id not in variantes_entrantes_claves:
+                producto.estado = False
+
+        # Procesar actualizaciones de metadata de las imagenes
+        if getattr(data, 'imagenes', None):
+            for img_data in data.imagenes:
+                if img_data.id:
+                    imagen = db.query(ProductoImagen).filter(ProductoImagen.id == img_data.id).first()
+                    if imagen:
+                        imagen.es_principal = img_data.es_principal
+                        imagen.orden = img_data.orden
+
         db.commit()
         return {'msg': 'Color actualizado correctamente'}
