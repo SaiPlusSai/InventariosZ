@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
 import { useProductoStore } from '../../store/productoStore'
 import { productoService } from '../../services/productoService'
@@ -21,11 +22,21 @@ const cleanFilters = (filters) =>
   )
 
 export default function Productos() {
+  const [searchParams] = useSearchParams()
+  const initialFilters = {
+    ...emptyFilters,
+    marca_id: searchParams.get('marca_id') || '',
+    color_id: searchParams.get('color_id') || '',
+    material_id: searchParams.get('material_id') || '',
+    talla_id: searchParams.get('talla_id') || '',
+    tipo_calzado_id: searchParams.get('tipo_calzado_id') || '',
+    codigo: searchParams.get('codigo') || '',
+  }
 
   const [showWizard, setShowWizard] = useState(false)
   const [showDetalle, setShowDetalle] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [filters, setFilters] = useState(emptyFilters)
+  const [filters, setFilters] = useState(initialFilters)
 
  const {
   productos,
@@ -61,7 +72,7 @@ const { cargarProductoEditar } = useWizardStore()
 
 useEffect(() => {
 
-  loadProductos()
+  loadProductos(cleanFilters(filters))
 
   const socket = new WebSocket(
     "ws://localhost:8000/productos/ws"
