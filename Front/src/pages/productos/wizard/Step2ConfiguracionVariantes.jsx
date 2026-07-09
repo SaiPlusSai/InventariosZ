@@ -5,13 +5,27 @@ import { useTallaStore } from '../../../store/tallaStore'
 import { colorService } from '../../../services/colorService'
 import { tallaService } from '../../../services/tallaService'
 import { productoImagenService } from '../../../services/productoImagenService'
-import { Input, Button } from '../../../components/ui'
+import { Input, Button, FastCreateModal } from '../../../components/ui'
+import { Plus } from 'lucide-react'
 
 export default function Step2ConfiguracionVariantes() {
   const { formData, setFormData } = useWizardStore()
   const { colores: dbColores, setColores: setDbColores } = useColorStore()
   const { tallas: dbTallas, setTallas: setDbTallas } = useTallaStore()
   const [loading, setLoading] = useState(true)
+
+  const [fastCreate, setFastCreate] = useState({ isOpen: false, type: null })
+
+  const handleFastCreateSuccess = (newElement, type) => {
+    if (type === 'color') {
+      setDbColores([...dbColores, newElement])
+      setFormData({ ...formData, colores: [...formData.colores, newElement.id] })
+    } else if (type === 'talla') {
+      setDbTallas([...dbTallas, newElement])
+      setFormData({ ...formData, tallas: [...formData.tallas, newElement.id] })
+    }
+    setFastCreate({ isOpen: false, type: null })
+  }
 
   // Masive apply states (by color)
   const [masivo, setMasivo] = useState({})
@@ -222,6 +236,14 @@ export default function Step2ConfiguracionVariantes() {
                 {c.nombre}
               </label>
             ))}
+              <button 
+                type="button" 
+                onClick={() => setFastCreate({ isOpen: true, type: 'color' })}
+                className="flex items-center gap-1 px-4 py-2 border border-dashed border-gray-400 rounded-full text-gray-500 hover:text-gray-700 hover:border-gray-600 transition-colors"
+                title="Añadir nuevo Color"
+              >
+                <Plus size={16} /> Añadir
+              </button>
           </div>
         </div>
 
@@ -239,9 +261,38 @@ export default function Step2ConfiguracionVariantes() {
                 {t.nombre}
               </label>
             ))}
+              <button 
+                type="button" 
+                onClick={() => setFastCreate({ isOpen: true, type: 'talla' })}
+                className="flex items-center gap-1 px-4 py-2 border border-dashed border-gray-400 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-600 transition-colors"
+                title="Añadir nueva Talla"
+              >
+                <Plus size={16} /> Añadir
+              </button>
           </div>
         </div>
       </div>
+
+      {fastCreate.isOpen && fastCreate.type === 'color' && (
+        <FastCreateModal
+          isOpen={true}
+          onClose={() => setFastCreate({ isOpen: false, type: null })}
+          title="Nuevo Color"
+          inputLabel="Nombre del color"
+          apiService={colorService}
+          onSuccess={(el) => handleFastCreateSuccess(el, 'color')}
+        />
+      )}
+      {fastCreate.isOpen && fastCreate.type === 'talla' && (
+        <FastCreateModal
+          isOpen={true}
+          onClose={() => setFastCreate({ isOpen: false, type: null })}
+          title="Nueva Talla"
+          inputLabel="Nombre o número de la talla"
+          apiService={tallaService}
+          onSuccess={(el) => handleFastCreateSuccess(el, 'talla')}
+        />
+      )}
 
       {/* 3. BLOQUES POR COLOR */}
       {formData.colores.length > 0 && formData.tallas.length > 0 && (
