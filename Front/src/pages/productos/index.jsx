@@ -157,7 +157,7 @@ export default function Productos() {
       await productoService.recuperarColor(codigo_producto_id, color_id)
       loadProductos(cleanFilters(filters), isPapeleraMode)
     } catch (err) {
-      alert('Error al recuperar el color')
+      alert('Error al recuperar el producto')
     }
   }
 
@@ -305,26 +305,27 @@ export default function Productos() {
       })()}
 
       {/* Delete Modal custom for Colors */}
+      {/* Delete Modal custom for Products */}
       {itemToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
             <div className={`px-6 py-4 border-b ${isPapeleraMode ? 'bg-red-50' : 'bg-orange-50'}`}>
               <h2 className={`text-xl font-bold ${isPapeleraMode ? 'text-red-700' : 'text-orange-700'}`}>
-                {isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Color'}
+                {isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
               </h2>
             </div>
             <div className="p-6">
               <p className="text-gray-800 text-lg">
-                ¿Estás seguro de desactivar <strong>todas las tallas</strong> del color <span className="font-bold text-primary-600">{itemToDelete.colorNombre}</span> para el producto <strong>{itemToDelete.nombre}</strong>?
+                ¿Estás seguro de desactivar el producto <strong>{itemToDelete.nombre}</strong> (Color <span className="font-bold text-primary-600">{itemToDelete.colorNombre}</span>), incluyendo todas sus tallas?
               </p>
               <p className="text-sm text-gray-500 mt-4">
-                El color dejará de mostrarse en el catálogo principal, pero podrás recuperarlo desde la papelera.
+                El producto dejará de mostrarse en el catálogo principal, pero podrás recuperarlo desde la papelera.
               </p>
             </div>
-            <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3">
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
               <Button variant="ghost" onClick={() => setItemToDelete(null)}>Cancelar</Button>
               <Button variant="primary" className="bg-orange-500 hover:bg-orange-600 border-none" onClick={confirmDelete}>
-                Desactivar Color
+                Desactivar Producto
               </Button>
             </div>
           </div>

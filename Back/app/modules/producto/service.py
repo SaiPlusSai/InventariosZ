@@ -1179,4 +1179,4 @@ class ProductoService:
                         imagen.orden = img_data.orden
 
         db.commit()
-        return {'msg': 'Color actualizado correctamente'}
+        return {'msg': 'Producto actualizado correctamente'}
