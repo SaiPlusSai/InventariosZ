@@ -4,6 +4,7 @@ import { Card, Button, Input } from '../../components/ui'
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useMaterialStore } from '../../store/materialStore'
 import { materialService } from '../../services/materialService'
+import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 
 export default function Materiales() {
   const navigate = useNavigate()
@@ -21,6 +22,12 @@ export default function Materiales() {
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [errorModal, setErrorModal] = useState(null)
+
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(materialService, () => {
+    handleCloseModal()
+    loadMateriales()
+  })
 
   const loadMateriales = async (papelera = isPapeleraMode) => {
     try {
@@ -67,8 +74,9 @@ export default function Materiales() {
       handleCloseModal()
       loadMateriales()
     } catch (err) {
-      console.error(err)
-      alert('Error al guardar el material')
+      if (!handleRecoveryError(err, formData.nombre)) {
+        setErrorModal(err.customMessage || 'Error al guardar el material')
+      }
     } finally {
       setSaving(false)
     }
@@ -201,6 +209,11 @@ export default function Materiales() {
               <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <div className="p-6 flex flex-col gap-4">
+              {errorModal && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  {errorModal}
+                </div>
+              )}
               <Input
                 label="Nombre"
                 value={formData.nombre}
@@ -220,8 +233,8 @@ export default function Materiales() {
             </div>
           </div>
         </div>
-      )}
-
+      )}{/* Reusable Recovery Modal Component */}
+      {RecoveryComponent}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}

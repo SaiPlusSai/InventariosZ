@@ -5,6 +5,7 @@ import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal
 import { useColorStore } from '../../store/colorStore'
 import { colorService } from '../../services/colorService'
 import { getHexFromColorName } from '../../utils/colorDictionary'
+import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 
 export default function Colores() {
   const navigate = useNavigate()
@@ -22,6 +23,12 @@ export default function Colores() {
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [errorModal, setErrorModal] = useState(null)
+
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(colorService, () => {
+    handleCloseModal()
+    loadColores()
+  })
 
   const loadColores = async (papelera = isPapeleraMode) => {
     try {
@@ -68,8 +75,9 @@ export default function Colores() {
       handleCloseModal()
       loadColores()
     } catch (err) {
-      console.error(err)
-      alert('Error al guardar el color')
+      if (!handleRecoveryError(err, formData.nombre)) {
+        setErrorModal(err.customMessage || 'Error al guardar el color')
+      }
     } finally {
       setSaving(false)
     }
@@ -208,6 +216,11 @@ export default function Colores() {
               <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <div className="p-6 flex flex-col gap-4">
+              {errorModal && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  {errorModal}
+                </div>
+              )}
               <Input
                 label="Nombre"
                 value={formData.nombre}
@@ -222,11 +235,10 @@ export default function Colores() {
                 }}
                 autoFocus
               />
-              
-              <div className="flex gap-3 items-end">
+              <div className="flex gap-4 items-end">
                 <div className="flex-1">
                   <Input
-                    label="Código Hex (ej. #FF0000)"
+                    label="Código Hex"
                     value={formData.codigo_hex}
                     onChange={(e) => setFormData({ ...formData, codigo_hex: e.target.value })}
                   />
@@ -237,7 +249,6 @@ export default function Colores() {
                     value={formData.codigo_hex || '#000000'} 
                     onChange={(e) => setFormData({ ...formData, codigo_hex: e.target.value })}
                     className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
-                    title="Seleccionar color visualmente"
                   />
                 </div>
               </div>
@@ -252,6 +263,8 @@ export default function Colores() {
         </div>
       )}
 
+      {/* Reusable Recovery Modal Component */}
+      {RecoveryComponent}
       <DeleteConfirmationModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}

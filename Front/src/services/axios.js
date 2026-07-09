@@ -41,11 +41,13 @@ axiosInstance.interceptors.response.use(
 
     const data = error.response.data;
     
-    // Add logic to check for REGISTRO_EN_PAPELERA
-    if (error.response.status === 409 && data?.error?.code === 'REGISTRO_EN_PAPELERA') {
+    // Add logic to check for REGISTRO_EN_PAPELERA or REGISTRO_EXISTENTE
+    if (error.response.status === 409 && data?.error === 'REGISTRO_EN_PAPELERA') {
       error.isPapelera = true;
-      error.papeleraData = data.error.details;
-      error.customMessage = data.error.message || 'El registro se encuentra en la papelera.';
+      error.papeleraData = { id_registro: data.id };
+      error.customMessage = data.message || 'El registro se encuentra en la papelera.';
+    } else if (error.response.status === 409 && data?.error === 'REGISTRO_EXISTENTE') {
+      error.customMessage = data.message || 'El registro ya existe.';
     } else if (data && data.error && data.error.message) {
       error.customMessage = data.error.message;
     } else if (data && data.detail && typeof data.detail === 'string') {

@@ -7,7 +7,6 @@ from app.modules.tipo_calzado.constants import (
 )
 from app.modules.tipo_calzado.exceptions import (
     TipoCalzadoNoEncontradoException,
-    TipoCalzadoYaExisteException,
 )
 from app.modules.tipo_calzado.models import TipoCalzado
 from app.modules.tipo_calzado.repository import TipoCalzadoRepository
@@ -76,11 +75,12 @@ class TipoCalzadoService:
 
         if tipo_existente:
             if tipo_existente.estado:
-                raise TipoCalzadoYaExisteException(TIPO_CALZADO_YA_EXISTE)
+                from app.core.exceptions import RegistroYaExisteException
+                raise RegistroYaExisteException("El tipo de calzado ya existe.")
             else:
                 from app.core.exceptions import RegistroEnPapeleraException
                 raise RegistroEnPapeleraException(
-                    message=f"El tipo de calzado '{data.nombre}' se encuentra en la papelera.",
+                    message=f"El tipo de calzado '{data.nombre}' existe en la Papelera.",
                     id_registro=tipo_existente.id,
                     tipo_registro="tipo_calzado"
                 )

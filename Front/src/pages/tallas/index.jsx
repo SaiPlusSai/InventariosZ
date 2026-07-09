@@ -4,6 +4,7 @@ import { Card, Button, Input } from '../../components/ui'
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useTallaStore } from '../../store/tallaStore'
 import { tallaService } from '../../services/tallaService'
+import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 
 export default function Tallas() {
   const navigate = useNavigate()
@@ -21,6 +22,12 @@ export default function Tallas() {
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [errorModal, setErrorModal] = useState(null)
+
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(tallaService, () => {
+    handleCloseModal()
+    loadTallas()
+  })
 
   const loadTallas = async (papelera = isPapeleraMode) => {
     try {
@@ -72,8 +79,9 @@ export default function Tallas() {
       handleCloseModal()
       loadTallas()
     } catch (err) {
-      console.error(err)
-      alert('Error al guardar la talla')
+      if (!handleRecoveryError(err, formData.numero)) {
+        setErrorModal(err.customMessage || 'Error al guardar la talla')
+      }
     } finally {
       setSaving(false)
     }
@@ -203,10 +211,16 @@ export default function Tallas() {
               <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <div className="p-6 flex flex-col gap-4">
+              {errorModal && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  {errorModal}
+                </div>
+              )}
               <Input
-                label="Número"
+                label="Número de Talla"
                 value={formData.numero}
-                onChange={(e) => setFormData({ ...formData, numero: e.target.value })}
+                onChange={(e) => setFormData({ numero: e.target.value })}
+                placeholder="Ej. 38, 40, S, M, L..."
               />
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-3">
@@ -218,6 +232,9 @@ export default function Tallas() {
           </div>
         </div>
       )}
+
+      {/* Reusable Recovery Modal Component */}
+      {RecoveryComponent}
 
       <DeleteConfirmationModal
         isOpen={showDeleteModal}

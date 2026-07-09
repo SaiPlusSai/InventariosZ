@@ -7,7 +7,6 @@ from app.modules.talla.constants import (
 )
 from app.modules.talla.exceptions import (
     TallaNoEncontradaException,
-    TallaYaExisteException,
 )
 from app.modules.talla.models import Talla
 from app.modules.talla.repository import TallaRepository
@@ -76,11 +75,12 @@ class TallaService:
 
         if talla_existente:
             if talla_existente.estado:
-                raise TallaYaExisteException(TALLA_YA_EXISTE)
+                from app.core.exceptions import RegistroYaExisteException
+                raise RegistroYaExisteException("La talla ya existe.")
             else:
                 from app.core.exceptions import RegistroEnPapeleraException
                 raise RegistroEnPapeleraException(
-                    message=f"La talla '{data.nombre}' se encuentra en la papelera.",
+                    message=f"La talla '{data.nombre}' existe en la Papelera.",
                     id_registro=talla_existente.id,
                     tipo_registro="talla"
                 )

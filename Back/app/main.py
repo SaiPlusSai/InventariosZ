@@ -8,7 +8,7 @@ import traceback
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.metrics import DBProfilerMiddleware
-from app.core.exceptions import ValidacionDatosException, RegistroEnPapeleraException
+from app.core.exceptions import ValidacionDatosException, RegistroEnPapeleraException, RegistroYaExisteException
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -79,20 +79,24 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         },
     )
 
+@app.exception_handler(RegistroYaExisteException)
+async def registro_ya_existe_handler(request: Request, exc: RegistroYaExisteException):
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": "REGISTRO_EXISTENTE",
+            "message": str(exc)
+        },
+    )
+
 @app.exception_handler(RegistroEnPapeleraException)
 async def registro_en_papelera_handler(request: Request, exc: RegistroEnPapeleraException):
     return JSONResponse(
         status_code=409,
         content={
-            "success": False,
-            "error": {
-                "code": "REGISTRO_EN_PAPELERA",
-                "message": exc.message,
-                "details": {
-                    "id_registro": exc.id_registro,
-                    "tipo_registro": exc.tipo_registro
-                }
-            }
+            "error": "REGISTRO_EN_PAPELERA",
+            "message": exc.message,
+            "id": exc.id_registro
         },
     )
 

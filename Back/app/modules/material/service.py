@@ -7,7 +7,6 @@ from app.modules.material.constants import (
 )
 from app.modules.material.exceptions import (
     MaterialNoEncontradoException,
-    MaterialYaExisteException,
 )
 from app.modules.material.models import Material
 from app.modules.material.repository import MaterialRepository
@@ -76,11 +75,12 @@ class MaterialService:
 
         if material_existente:
             if material_existente.estado:
-                raise MaterialYaExisteException(MATERIAL_YA_EXISTE)
+                from app.core.exceptions import RegistroYaExisteException
+                raise RegistroYaExisteException("El material ya existe.")
             else:
                 from app.core.exceptions import RegistroEnPapeleraException
                 raise RegistroEnPapeleraException(
-                    message=f"El material '{data.nombre}' se encuentra en la papelera.",
+                    message=f"El material '{data.nombre}' existe en la Papelera.",
                     id_registro=material_existente.id,
                     tipo_registro="material"
                 )

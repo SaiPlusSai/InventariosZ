@@ -7,7 +7,6 @@ from app.modules.marca.constants import (
 
 from app.modules.marca.exceptions import (
     MarcaNoEncontradaException,
-    MarcaYaExisteException,
 )
 from app.modules.marca.models import Marca
 from app.modules.marca.repository import MarcaRepository
@@ -76,11 +75,12 @@ class MarcaService:
 
         if marca_existente:
             if marca_existente.estado:
-                raise MarcaYaExisteException(MARCA_YA_EXISTE)
+                from app.core.exceptions import RegistroYaExisteException
+                raise RegistroYaExisteException("La marca ya existe.")
             else:
                 from app.core.exceptions import RegistroEnPapeleraException
                 raise RegistroEnPapeleraException(
-                    message=f"La marca '{data.nombre}' se encuentra en la papelera.",
+                    message=f"La marca '{data.nombre}' existe en la Papelera.",
                     id_registro=marca_existente.id,
                     tipo_registro="marca"
                 )

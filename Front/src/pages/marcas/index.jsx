@@ -4,6 +4,7 @@ import { Card, Button, Input } from '../../components/ui'
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useMarcaStore } from '../../store/marcaStore'
 import { marcaService } from '../../services/marcaService'
+import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 
 export default function Marcas() {
   const navigate = useNavigate()
@@ -21,6 +22,12 @@ export default function Marcas() {
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
+  const [errorModal, setErrorModal] = useState(null)
+
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(marcaService, () => {
+    handleCloseModal()
+    loadMarcas()
+  })
 
   const loadMarcas = async (papelera = isPapeleraMode) => {
     try {
@@ -67,8 +74,9 @@ export default function Marcas() {
       handleCloseModal()
       loadMarcas()
     } catch (err) {
-      console.error(err)
-      alert('Error al guardar la marca')
+      if (!handleRecoveryError(err, formData.nombre)) {
+        setErrorModal(err.customMessage || 'Error al guardar la marca')
+      }
     } finally {
       setSaving(false)
     }
@@ -201,6 +209,11 @@ export default function Marcas() {
               <button onClick={handleCloseModal} className="text-gray-500 hover:text-gray-700 text-2xl">&times;</button>
             </div>
             <div className="p-6 flex flex-col gap-4">
+              {errorModal && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                  {errorModal}
+                </div>
+              )}
               <Input
                 label="Nombre"
                 value={formData.nombre}
@@ -221,6 +234,9 @@ export default function Marcas() {
           </div>
         </div>
       )}
+
+      {/* Reusable Recovery Modal Component */}
+      {RecoveryComponent}
 
       <DeleteConfirmationModal
         isOpen={showDeleteModal}

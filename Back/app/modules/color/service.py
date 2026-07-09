@@ -7,7 +7,6 @@ from app.modules.color.constants import (
 )
 from app.modules.color.exceptions import (
     ColorNoEncontradoException,
-    ColorYaExisteException,
 )
 from app.modules.color.models import Color
 from app.modules.color.repository import ColorRepository
@@ -76,11 +75,12 @@ class ColorService:
 
         if color_existente:
             if color_existente.estado:
-                raise ColorYaExisteException(COLOR_YA_EXISTE)
+                from app.core.exceptions import RegistroYaExisteException
+                raise RegistroYaExisteException("El color ya existe.")
             else:
                 from app.core.exceptions import RegistroEnPapeleraException
                 raise RegistroEnPapeleraException(
-                    message=f"El color '{data.nombre}' se encuentra en la papelera.",
+                    message=f"El color '{data.nombre}' existe en la Papelera.",
                     id_registro=color_existente.id,
                     tipo_registro="color"
                 )
