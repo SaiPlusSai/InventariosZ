@@ -1,4 +1,4 @@
-from app.core.exceptions import RegistroActivoNoPuedeEliminarseException
+from app.core.exceptions import RegistroActivoNoPuedeEliminarseException, ValidacionDatosException
 from datetime import datetime
 
 from sqlalchemy.orm import Session
@@ -78,7 +78,17 @@ class ProductoService:
         self.color_repository = ColorRepository()
         self.talla_repository = TallaRepository()
 
-    
+    def _validar_variantes(self, variantes):
+        for idx, v in enumerate(variantes):
+            if v.stock_actual < 0:
+                raise ValidacionDatosException(f"El stock actual en la fila {idx+1} no puede ser negativo.")
+            if v.stock_minimo < 0:
+                raise ValidacionDatosException(f"El stock mínimo en la fila {idx+1} no puede ser negativo.")
+            if getattr(v, "precio_compra", None) is not None and v.precio_compra < 0:
+                raise ValidacionDatosException(f"El precio de compra en la fila {idx+1} no puede ser negativo.")
+            if getattr(v, "precio_venta", 1) <= 0:
+                raise ValidacionDatosException(f"El precio de venta en la fila {idx+1} debe ser mayor a 0.")
+
     def get_catalogo(
         self,
         db: Session,
@@ -622,6 +632,7 @@ class ProductoService:
         codigo_producto_id: int,
         data: ProductoCompletoUpdate,
     ):
+        self._validar_variantes(data.variantes)
         """
         Edita completamente un producto.
         La estrategia consiste en actualizar el código y recrear todas las
@@ -928,7 +939,9 @@ class ProductoService:
         self,
         db: Session,
         data: ProductoCompletoCreate,
-    ):
+    ) -> dict:
+        
+        self._validar_variantes(data.variantes)
         """
         Crea un producto completo en una sola transaccion.
         """
@@ -1095,6 +1108,7 @@ class ProductoService:
         color_id: int,
         data: ProductoColorUpdate,
     ):
+        self._validar_variantes(data.variantes)
         codigo_producto = self.codigo_repository.get_by_id(db, codigo_producto_id)
         if not codigo_producto:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)

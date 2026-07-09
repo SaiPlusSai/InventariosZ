@@ -21,3 +21,7 @@ class RegistroYaEliminadoException(CoreException):
 class RegistroNoEstaEnPapeleraException(CoreException):
     """El registro no se encuentra en la papelera."""
     pass
+
+class ValidacionDatosException(CoreException):
+    """Error de validacion de datos de negocio."""
+    pass

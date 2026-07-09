@@ -54,6 +54,12 @@ from app.modules.producto.schemas import (
     ProductoCompletoCreate,
     ProductoCompletoResponse,
 )
+from app.core.exceptions import (
+    RegistroActivoNoPuedeEliminarseException,
+    RegistroNoEstaEnPapeleraException,
+    RegistroYaEliminadoException,
+    ValidacionDatosException
+)
 from app.modules.producto.exceptions import (
     ProductoNoEncontradoException,
     ProductoYaExisteException,
@@ -227,6 +233,12 @@ def create(
             data,
         )
 
+    except ValidacionDatosException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
     except (
         CodigoProductoNoEncontradoException,
         TipoCalzadoNoEncontradoException,
@@ -237,6 +249,12 @@ def create(
 
         raise HTTPException(
             status_code=404,
+            detail=str(e),
+        )
+
+    except ValidacionDatosException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
 

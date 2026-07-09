@@ -305,6 +305,7 @@ export default function Step2ConfiguracionVariantes() {
                         step="0.01"
                         value={masivo[colorId]?.precio_compra || ''}
                         onChange={(e) => handleMasivoChange(colorId, 'precio_compra', e.target.value)}
+                        error={masivo[colorId]?.precio_compra !== undefined && masivo[colorId].precio_compra !== '' && Number(masivo[colorId].precio_compra) < 0 ? "Debe ser >= 0" : null}
                       />
                     </div>
                     <div className="flex-1 min-w-[120px]">
@@ -314,6 +315,7 @@ export default function Step2ConfiguracionVariantes() {
                         step="0.01"
                         value={masivo[colorId]?.precio_venta || ''}
                         onChange={(e) => handleMasivoChange(colorId, 'precio_venta', e.target.value)}
+                        error={masivo[colorId]?.precio_venta !== undefined && masivo[colorId].precio_venta !== '' && Number(masivo[colorId].precio_venta) <= 0 ? "Debe ser > 0" : null}
                       />
                     </div>
                     <div className="flex-1 min-w-[120px]">
@@ -322,6 +324,7 @@ export default function Step2ConfiguracionVariantes() {
                         type="number"
                         value={masivo[colorId]?.stock_actual || ''}
                         onChange={(e) => handleMasivoChange(colorId, 'stock_actual', e.target.value)}
+                        error={masivo[colorId]?.stock_actual !== undefined && masivo[colorId].stock_actual !== '' && Number(masivo[colorId].stock_actual) < 0 ? "Debe ser >= 0" : null}
                       />
                     </div>
                     <div className="flex-1 min-w-[120px]">
@@ -330,6 +333,7 @@ export default function Step2ConfiguracionVariantes() {
                         type="number"
                         value={masivo[colorId]?.stock_minimo || ''}
                         onChange={(e) => handleMasivoChange(colorId, 'stock_minimo', e.target.value)}
+                        error={masivo[colorId]?.stock_minimo !== undefined && masivo[colorId].stock_minimo !== '' && Number(masivo[colorId].stock_minimo) < 0 ? "Debe ser >= 0" : null}
                       />
                     </div>
                     <Button variant="secondary" onClick={() => aplicarMasivo(colorId)} className="h-10">
@@ -354,44 +358,53 @@ export default function Step2ConfiguracionVariantes() {
                     <tbody className="divide-y divide-gray-100">
                       {variantesColor.map((v) => {
                         const tallaObj = dbTallas.find(t => t.id === v.talla_id)
+                        const errStock = Number(v.stock_actual) < 0;
+                        const errMinimo = Number(v.stock_minimo) < 0;
+                        const errCompra = v.precio_compra !== null && v.precio_compra !== '' && Number(v.precio_compra) < 0;
+                        const errVenta = Number(v.precio_venta) <= 0;
+
                         return (
                           <tr key={v.talla_id} className="hover:bg-gray-50 transition-colors">
                             <td className="px-4 py-3 font-semibold text-gray-900">{tallaObj?.nombre}</td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
-                                className="w-full p-2 border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errStock ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
                                 value={v.stock_actual}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'stock_actual', e.target.value)}
                               />
+                              {errStock && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt;= 0</span>}
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
-                                className="w-full p-2 border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errMinimo ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
                                 value={v.stock_minimo}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'stock_minimo', e.target.value)}
                               />
+                              {errMinimo && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt;= 0</span>}
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
                                 step="0.01"
-                                className="w-full p-2 border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errCompra ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
                                 value={v.precio_compra || ''}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'precio_compra', e.target.value)}
                               />
+                              {errCompra && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt;= 0</span>}
                             </td>
-                            <td className="px-4 py-2">
+                            <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
                                 step="0.01"
-                                className="w-full p-2 border border-gray-300 rounded focus:ring-primary-500 focus:border-primary-500"
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errVenta ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
                                 value={v.precio_venta}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'precio_venta', e.target.value)}
                               />
+                              {errVenta && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt; 0</span>}
                             </td>
-                            <td className="px-4 py-2 text-center">
+                            <td className="px-4 py-2 text-center align-top pt-4">
                               <label className="relative inline-flex items-center cursor-pointer">
                                 <input 
                                   type="checkbox" 

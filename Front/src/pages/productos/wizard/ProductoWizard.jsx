@@ -60,6 +60,22 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         throw new Error("Debes configurar al menos una variante (color y talla).")
       }
 
+      // Validacion de consistencia numérica en variantes
+      for (const [idx, v] of formData.variantes.entries()) {
+        if (Number(v.stock_actual) < 0) {
+          throw new Error("Existen campos con errores. Corrija los valores negativos en stock antes de continuar.")
+        }
+        if (Number(v.stock_minimo) < 0) {
+          throw new Error("Existen campos con errores. Corrija los valores negativos en stock mínimo antes de continuar.")
+        }
+        if (v.precio_compra !== null && v.precio_compra !== '' && Number(v.precio_compra) < 0) {
+          throw new Error("Existen campos con errores. Corrija los valores negativos en precio de compra antes de continuar.")
+        }
+        if (Number(v.precio_venta) <= 0) {
+          throw new Error("Existen campos con errores. Corrija los precios de venta (deben ser mayores a 0) antes de continuar.")
+        }
+      }
+
       // 2. Preparar el payload global para el backend
       const dataToSend = {
         codigo: String(formData.codigo).trim(),

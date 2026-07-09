@@ -1,9 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.metrics import DBProfilerMiddleware
+from app.core.exceptions import ValidacionDatosException
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -34,6 +36,13 @@ app.add_middleware(
 # ==========================================
 
 app.include_router(api_router)
+
+@app.exception_handler(ValidacionDatosException)
+async def validacion_datos_exception_handler(request: Request, exc: ValidacionDatosException):
+    return JSONResponse(
+        status_code=400,
+        content={"detail": str(exc)},
+    )
 
 
 @app.get("/")
