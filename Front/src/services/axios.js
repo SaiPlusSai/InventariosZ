@@ -28,12 +28,35 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle errors globally
+    if (!error.response) {
+      error.customMessage = "No fue posible conectar con el servidor.";
+      return Promise.reject(error);
+    }
+
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('token')
       window.location.href = '/login'
     }
+
+    const data = error.response.data;
+    if (data && data.error && data.error.message) {
+      error.customMessage = data.error.message;
+    } else if (data && data.detail && typeof data.detail === 'string') {
+      error.customMessage = data.detail;
+    } else {
+      error.customMessage = "Ocurrió un error inesperado. Inténtelo nuevamente.";
+    }
+
+    // Retro-compatibility hack for existing components using err.response?.data?.detail
+    if (error.response) {
+      if (!error.response.data) error.response.data = {};
+      error.response.data.detail = error.customMessage;
+    }
+    
+    // Override native message for components that fallback to err.message (which was 'Network Error')
+    error.message = error.customMessage;
+
     return Promise.reject(error)
   }
 )

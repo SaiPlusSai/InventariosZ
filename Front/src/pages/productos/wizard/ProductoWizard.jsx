@@ -183,11 +183,10 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     } catch (err) {
       console.error(err)
       setError(
-        err.message || 
-        err.response?.data?.detail ||
-          (modo === 'editar'
-            ? 'Error al actualizar el producto.'
-            : 'Error al crear el producto.')
+        err.customMessage ||
+        (modo === 'editar'
+          ? 'Error al actualizar el producto.'
+          : 'Error al crear el producto.')
       )
     } finally {
       setLoading(false)
