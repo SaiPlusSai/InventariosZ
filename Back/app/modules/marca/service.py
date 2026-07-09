@@ -69,13 +69,21 @@ class MarcaService:
         data: MarcaCreate,
     ) -> Marca:
 
-        marca_existente = self.repository.get_by_nombre(
+        marca_existente = self.repository.get_by_nombre_any_state(
             db,
             data.nombre,
         )
 
         if marca_existente:
-            raise MarcaYaExisteException(MARCA_YA_EXISTE)
+            if marca_existente.estado:
+                raise MarcaYaExisteException(MARCA_YA_EXISTE)
+            else:
+                from app.core.exceptions import RegistroEnPapeleraException
+                raise RegistroEnPapeleraException(
+                    message=f"La marca '{data.nombre}' se encuentra en la papelera.",
+                    id_registro=marca_existente.id,
+                    tipo_registro="marca"
+                )
 
         nueva_marca = Marca(
             nombre=data.nombre,

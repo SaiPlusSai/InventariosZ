@@ -8,7 +8,7 @@ import traceback
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.metrics import DBProfilerMiddleware
-from app.core.exceptions import ValidacionDatosException
+from app.core.exceptions import ValidacionDatosException, RegistroEnPapeleraException
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -75,6 +75,23 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
             "error": {
                 "code": "VALIDATION_ERROR",
                 "message": "Los datos enviados no cumplen con el formato requerido."
+            }
+        },
+    )
+
+@app.exception_handler(RegistroEnPapeleraException)
+async def registro_en_papelera_handler(request: Request, exc: RegistroEnPapeleraException):
+    return JSONResponse(
+        status_code=409,
+        content={
+            "success": False,
+            "error": {
+                "code": "REGISTRO_EN_PAPELERA",
+                "message": exc.message,
+                "details": {
+                    "id_registro": exc.id_registro,
+                    "tipo_registro": exc.tipo_registro
+                }
             }
         },
     )

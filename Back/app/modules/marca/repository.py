@@ -54,6 +54,19 @@ class MarcaRepository:
         )
 
         return db.scalar(statement)
+        
+    def get_by_nombre_any_state(
+        self,
+        db: Session,
+        nombre: str,
+    ) -> Marca | None:
+
+        statement = (
+            select(Marca)
+            .where(Marca.nombre == nombre)
+        )
+
+        return db.scalar(statement)
 
     
     def get_by_id_papelera(

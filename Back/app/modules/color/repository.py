@@ -54,6 +54,19 @@ class ColorRepository:
         )
 
         return db.scalar(statement)
+        
+    def get_by_nombre_any_state(
+        self,
+        db: Session,
+        nombre: str,
+    ) -> Color | None:
+
+        statement = (
+            select(Color)
+            .where(Color.nombre == nombre)
+        )
+
+        return db.scalar(statement)
 
     
     def get_by_id_papelera(

@@ -54,6 +54,19 @@ class MaterialRepository:
         )
 
         return db.scalar(statement)
+        
+    def get_by_nombre_any_state(
+        self,
+        db: Session,
+        nombre: str,
+    ) -> Material | None:
+
+        statement = (
+            select(Material)
+            .where(Material.nombre == nombre)
+        )
+
+        return db.scalar(statement)
 
     
     def get_by_id_papelera(

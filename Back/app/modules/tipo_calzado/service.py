@@ -69,13 +69,21 @@ class TipoCalzadoService:
         data: TipoCalzadoCreate,
     ) -> TipoCalzado:
 
-        tipo_calzado_existente = self.repository.get_by_nombre(
+        tipo_existente = self.repository.get_by_nombre_any_state(
             db,
             data.nombre,
         )
 
-        if tipo_calzado_existente:
-            raise TipoCalzadoYaExisteException(TIPO_CALZADO_YA_EXISTE)
+        if tipo_existente:
+            if tipo_existente.estado:
+                raise TipoCalzadoYaExisteException(TIPO_CALZADO_YA_EXISTE)
+            else:
+                from app.core.exceptions import RegistroEnPapeleraException
+                raise RegistroEnPapeleraException(
+                    message=f"El tipo de calzado '{data.nombre}' se encuentra en la papelera.",
+                    id_registro=tipo_existente.id,
+                    tipo_registro="tipo_calzado"
+                )
 
         nuevo_tipo_calzado = TipoCalzado(
             nombre=data.nombre,

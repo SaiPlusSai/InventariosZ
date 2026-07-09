@@ -69,13 +69,21 @@ class MaterialService:
         data: MaterialCreate,
     ) -> Material:
 
-        material_existente = self.repository.get_by_nombre(
+        material_existente = self.repository.get_by_nombre_any_state(
             db,
             data.nombre,
         )
 
         if material_existente:
-            raise MaterialYaExisteException(MATERIAL_YA_EXISTE)
+            if material_existente.estado:
+                raise MaterialYaExisteException(MATERIAL_YA_EXISTE)
+            else:
+                from app.core.exceptions import RegistroEnPapeleraException
+                raise RegistroEnPapeleraException(
+                    message=f"El material '{data.nombre}' se encuentra en la papelera.",
+                    id_registro=material_existente.id,
+                    tipo_registro="material"
+                )
 
         nuevo_material = Material(
             nombre=data.nombre,

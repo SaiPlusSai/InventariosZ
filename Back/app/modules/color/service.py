@@ -69,13 +69,21 @@ class ColorService:
         data: ColorCreate,
     ) -> Color:
 
-        color_existente = self.repository.get_by_nombre(
+        color_existente = self.repository.get_by_nombre_any_state(
             db,
             data.nombre,
         )
 
         if color_existente:
-            raise ColorYaExisteException(COLOR_YA_EXISTE)
+            if color_existente.estado:
+                raise ColorYaExisteException(COLOR_YA_EXISTE)
+            else:
+                from app.core.exceptions import RegistroEnPapeleraException
+                raise RegistroEnPapeleraException(
+                    message=f"El color '{data.nombre}' se encuentra en la papelera.",
+                    id_registro=color_existente.id,
+                    tipo_registro="color"
+                )
 
         nuevo_color = Color(
             nombre=data.nombre,

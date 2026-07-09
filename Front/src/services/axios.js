@@ -40,7 +40,13 @@ axiosInstance.interceptors.response.use(
     }
 
     const data = error.response.data;
-    if (data && data.error && data.error.message) {
+    
+    // Add logic to check for REGISTRO_EN_PAPELERA
+    if (error.response.status === 409 && data?.error?.code === 'REGISTRO_EN_PAPELERA') {
+      error.isPapelera = true;
+      error.papeleraData = data.error.details;
+      error.customMessage = data.error.message || 'El registro se encuentra en la papelera.';
+    } else if (data && data.error && data.error.message) {
       error.customMessage = data.error.message;
     } else if (data && data.detail && typeof data.detail === 'string') {
       error.customMessage = data.detail;

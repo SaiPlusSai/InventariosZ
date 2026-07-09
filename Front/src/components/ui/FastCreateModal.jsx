@@ -20,6 +20,7 @@ export default function FastCreateModal({
   const [codigoHex, setCodigoHex] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [papeleraError, setPapeleraError] = useState(null)
 
   if (!isOpen) return null
 
@@ -54,10 +55,41 @@ export default function FastCreateModal({
       setNombre('')
       setDescripcion('')
       setCodigoHex('')
+      setPapeleraError(null)
       
       onSuccess(nuevoRegistro)
     } catch (err) {
-      setError(err.customMessage || 'Error al guardar el registro')
+      if (err.isPapelera) {
+        setPapeleraError(err)
+      } else {
+        setError(err.customMessage || 'Error al guardar el registro')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRecuperar = async () => {
+    if (!papeleraError || !apiService.recuperar) return
+    setLoading(true)
+    setError(null)
+    try {
+      const idRegistro = papeleraError.papeleraData.id_registro
+      await apiService.recuperar(idRegistro)
+      
+      // Intentar obtener el registro ya recuperado (o delegar al padre si re-fetchea)
+      // Como el FastCreateModal espera devolver el nuevo registro, lo ideal es obtenerlo:
+      const res = await apiService.getById(idRegistro)
+      const registroRecuperado = res.data?.data || res.data
+
+      setNombre('')
+      setDescripcion('')
+      setCodigoHex('')
+      setPapeleraError(null)
+
+      onSuccess(registroRecuperado)
+    } catch (err) {
+      setError(err.customMessage || 'Error al recuperar el registro')
     } finally {
       setLoading(false)
     }
@@ -73,7 +105,23 @@ export default function FastCreateModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="p-6 flex flex-col gap-4">
+          
+          {papeleraError && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-2">
+              <div className="flex">
+                <div className="ml-3">
+                  <p className="text-sm text-yellow-700">
+                    {papeleraError.customMessage}
+                  </p>
+                  <p className="text-sm font-medium text-yellow-700 mt-2">
+                    ¿Deseas recuperarlo?
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && (
             <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
               {error}
@@ -127,9 +175,15 @@ export default function FastCreateModal({
             <Button type="button" variant="secondary" onClick={onClose} disabled={loading}>
               Cancelar
             </Button>
-            <Button type="submit" variant="primary" disabled={loading || !nombre.trim()}>
-              {loading ? 'Guardando...' : 'Guardar'}
-            </Button>
+            {papeleraError ? (
+              <Button type="button" variant="primary" onClick={handleRecuperar} disabled={loading}>
+                {loading ? 'Recuperando...' : 'Sí, Recuperar'}
+              </Button>
+            ) : (
+              <Button type="submit" variant="primary" disabled={loading}>
+                {loading ? 'Guardando...' : 'Guardar'}
+              </Button>
+            )}
           </div>
         </form>
       </div>

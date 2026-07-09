@@ -69,13 +69,21 @@ class TallaService:
         data: TallaCreate,
     ) -> Talla:
 
-        talla_existente = self.repository.get_by_nombre(
+        talla_existente = self.repository.get_by_nombre_any_state(
             db,
             data.nombre,
         )
 
         if talla_existente:
-            raise TallaYaExisteException(TALLA_YA_EXISTE)
+            if talla_existente.estado:
+                raise TallaYaExisteException(TALLA_YA_EXISTE)
+            else:
+                from app.core.exceptions import RegistroEnPapeleraException
+                raise RegistroEnPapeleraException(
+                    message=f"La talla '{data.nombre}' se encuentra en la papelera.",
+                    id_registro=talla_existente.id,
+                    tipo_registro="talla"
+                )
 
         nueva_talla = Talla(
             nombre=data.nombre,
