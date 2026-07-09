@@ -1,9 +1,9 @@
 import React, { useState } from 'react'
 import { X } from 'lucide-react'
-import { Input } from './Input'
-import { Button } from './Button'
+import Input from './Input'
+import Button from './Button'
 
-export function FastCreateModal({ isOpen, onClose, title, inputLabel, apiService, onSuccess }) {
+export default function FastCreateModal({ isOpen, onClose, title, inputLabel, apiService, onSuccess }) {
   const [nombre, setNombre] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
