@@ -369,40 +369,40 @@ export default function Step2ConfiguracionVariantes() {
                             <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
-                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errStock ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errStock ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                                 value={v.stock_actual}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'stock_actual', e.target.value)}
                               />
-                              {errStock && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt;= 0</span>}
+                              <span className={`text-xs mt-1 block h-4 ${errStock ? 'text-red-500 visible' : 'invisible'}`}>Debe ser &gt;= 0</span>
                             </td>
                             <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
-                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errMinimo ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errMinimo ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                                 value={v.stock_minimo}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'stock_minimo', e.target.value)}
                               />
-                              {errMinimo && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt;= 0</span>}
+                              <span className={`text-xs mt-1 block h-4 ${errMinimo ? 'text-red-500 visible' : 'invisible'}`}>Debe ser &gt;= 0</span>
                             </td>
                             <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
                                 step="0.01"
-                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errCompra ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errCompra ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                                 value={v.precio_compra || ''}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'precio_compra', e.target.value)}
                               />
-                              {errCompra && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt;= 0</span>}
+                              <span className={`text-xs mt-1 block h-4 ${errCompra ? 'text-red-500 visible' : 'invisible'}`}>Debe ser &gt;= 0</span>
                             </td>
                             <td className="px-4 py-2 align-top">
                               <input
                                 type="number"
                                 step="0.01"
-                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errVenta ? 'border-red-500 bg-red-50 text-red-900' : 'border-gray-300'}`}
+                                className={`w-full p-2 border rounded focus:ring-primary-500 focus:border-primary-500 ${errVenta ? 'border-red-500 bg-red-50 text-red-900 focus:border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                                 value={v.precio_venta}
                                 onChange={(e) => updateVariante(colorId, v.talla_id, 'precio_venta', e.target.value)}
                               />
-                              {errVenta && <span className="text-xs text-red-500 mt-1 block">Debe ser &gt; 0</span>}
+                              <span className={`text-xs mt-1 block h-4 ${errVenta ? 'text-red-500 visible' : 'invisible'}`}>Debe ser &gt; 0</span>
                             </td>
                             <td className="px-4 py-2 text-center align-top pt-4">
                               <label className="relative inline-flex items-center cursor-pointer">

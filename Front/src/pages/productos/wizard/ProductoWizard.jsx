@@ -44,38 +44,46 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     }
   }
 
+  const triggerFocusError = (msg) => {
+    setError(msg)
+    setLoading(false)
+    setTimeout(() => {
+      const el = document.querySelector('.border-red-500')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        el.focus()
+      }
+    }, 100)
+  }
+
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
 
+    // 1. Validaciones basicas
+    if (!formData.codigo || formData.codigo.trim().length < 2) {
+      return triggerFocusError("El código debe tener al menos 2 caracteres.")
+    }
+    if (!formData.marca_id || !formData.tipo_calzado_id || !formData.material_id) {
+      return triggerFocusError("Faltan datos en la Información General (Marca, Tipo o Material).")
+    }
+    if (formData.variantes.length === 0) {
+      return triggerFocusError("Debes configurar al menos una variante (color y talla).")
+    }
+
+    // Validacion de consistencia numérica en variantes
+    for (const [idx, v] of formData.variantes.entries()) {
+      if (
+        Number(v.stock_actual) < 0 ||
+        Number(v.stock_minimo) < 0 ||
+        (v.precio_compra !== null && v.precio_compra !== '' && Number(v.precio_compra) < 0) ||
+        Number(v.precio_venta) <= 0
+      ) {
+        return triggerFocusError("No es posible guardar el producto. Corrige los campos resaltados antes de continuar.")
+      }
+    }
+
     try {
-      // 1. Validaciones basicas
-      if (!formData.codigo || formData.codigo.trim().length < 2) {
-        throw new Error("El código debe tener al menos 2 caracteres.")
-      }
-      if (!formData.marca_id || !formData.tipo_calzado_id || !formData.material_id) {
-        throw new Error("Faltan datos en la Información General (Marca, Tipo o Material).")
-      }
-      if (formData.variantes.length === 0) {
-        throw new Error("Debes configurar al menos una variante (color y talla).")
-      }
-
-      // Validacion de consistencia numérica en variantes
-      for (const [idx, v] of formData.variantes.entries()) {
-        if (Number(v.stock_actual) < 0) {
-          throw new Error("Existen campos con errores. Corrija los valores negativos en stock antes de continuar.")
-        }
-        if (Number(v.stock_minimo) < 0) {
-          throw new Error("Existen campos con errores. Corrija los valores negativos en stock mínimo antes de continuar.")
-        }
-        if (v.precio_compra !== null && v.precio_compra !== '' && Number(v.precio_compra) < 0) {
-          throw new Error("Existen campos con errores. Corrija los valores negativos en precio de compra antes de continuar.")
-        }
-        if (Number(v.precio_venta) <= 0) {
-          throw new Error("Existen campos con errores. Corrija los precios de venta (deben ser mayores a 0) antes de continuar.")
-        }
-      }
-
       // 2. Preparar el payload global para el backend
       const dataToSend = {
         codigo: String(formData.codigo).trim(),
