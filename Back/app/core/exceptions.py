@@ -32,3 +32,9 @@ class RegistroEnPapeleraException(CoreException):
         self.message = message
         self.id_registro = id_registro
         self.tipo_registro = tipo_registro
+
+class RecuperacionConflictivaException(CoreException):
+    """Excepcion para cuando la recuperacion choca con un registro activo."""
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message

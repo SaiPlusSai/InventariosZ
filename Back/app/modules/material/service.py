@@ -41,6 +41,13 @@ class MaterialService:
     def recuperar(self, db: Session, id: int):
         item = self.repository.get_by_id_papelera(db, id)
         if item:
+            conflicto = self.repository.get_by_nombre(db, item.nombre)
+            if conflicto and conflicto.id != item.id:
+                from app.core.exceptions import RecuperacionConflictivaException
+                raise RecuperacionConflictivaException(
+                    f"No se puede recuperar. Ya existe un material activo con el nombre '{item.nombre}'."
+                )
+
             item.estado = True
             item.deleted_at = None
             db.commit()

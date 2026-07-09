@@ -8,7 +8,7 @@ import traceback
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.metrics import DBProfilerMiddleware
-from app.core.exceptions import ValidacionDatosException, RegistroEnPapeleraException, RegistroYaExisteException
+from app.core.exceptions import ValidacionDatosException, RegistroEnPapeleraException, RegistroYaExisteException, RecuperacionConflictivaException
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -86,6 +86,16 @@ async def registro_ya_existe_handler(request: Request, exc: RegistroYaExisteExce
         content={
             "error": "REGISTRO_EXISTENTE",
             "message": str(exc)
+        },
+    )
+
+@app.exception_handler(RecuperacionConflictivaException)
+async def recuperacion_conflictiva_handler(request: Request, exc: RecuperacionConflictivaException):
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": "CONFLICTO_RECUPERACION",
+            "message": exc.message
         },
     )
 

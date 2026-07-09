@@ -48,6 +48,8 @@ axiosInstance.interceptors.response.use(
       error.customMessage = data.message || 'El registro se encuentra en la papelera.';
     } else if (error.response.status === 409 && data?.error === 'REGISTRO_EXISTENTE') {
       error.customMessage = data.message || 'El registro ya existe.';
+    } else if (error.response.status === 409 && data?.error === 'CONFLICTO_RECUPERACION') {
+      error.customMessage = data.message || 'Error de conflicto al recuperar el registro.';
     } else if (data && data.error && data.error.message) {
       error.customMessage = data.error.message;
     } else if (data && data.detail && typeof data.detail === 'string') {

@@ -49,6 +49,13 @@ class CodigoProductoService:
     def recuperar(self, db: Session, id: int):
         item = self.repository.get_by_id_papelera(db, id)
         if item:
+            conflicto = self.repository.get_by_codigo(db, item.codigo)
+            if conflicto and conflicto.id != item.id:
+                from app.core.exceptions import RecuperacionConflictivaException
+                raise RecuperacionConflictivaException(
+                    f"No se puede recuperar. Ya existe un código activo con el valor '{item.codigo}'."
+                )
+
             item.estado = True
             item.deleted_at = None
             db.commit()
