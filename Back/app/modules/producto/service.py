@@ -30,6 +30,7 @@ from app.modules.producto.constants import (
 from app.modules.producto.exceptions import (
     ProductoNoEncontradoException,
     ProductoYaExisteException,
+    StockInsuficienteException
 )
 from app.modules.producto.models import Producto
 from app.modules.producto.repository import ProductoRepository
@@ -904,9 +905,16 @@ class ProductoService:
         )
 
         if stock is None:
-            raise ProductoNoEncontradoException(
-                PRODUCTO_NO_EXISTE
-            )
+            # Check if product exists but has 0 stock
+            prod = self.repository.get_by_id(db, producto_id)
+            if not prod:
+                raise ProductoNoEncontradoException(
+                    PRODUCTO_NO_EXISTE
+                )
+            else:
+                raise StockInsuficienteException(
+                    "No es posible disminuir el inventario porque el stock ya es cero."
+                )
         await manager.broadcast_stock(
             producto_id,
             stock,

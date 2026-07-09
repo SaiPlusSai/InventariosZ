@@ -67,8 +67,9 @@ export default function ProductoCard({
                 <div className="flex items-center gap-3">
                   <Button
                     variant="secondary"
-                    className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md"
+                    className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     onClick={() => onDecrementar && onDecrementar(v.id)}
+                    disabled={v.stock_actual <= 0}
                   >
                     -
                   </Button>
