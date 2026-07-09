@@ -4,6 +4,7 @@ import { Card, Button, Input } from '../../components/ui'
 import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
 import { useColorStore } from '../../store/colorStore'
 import { colorService } from '../../services/colorService'
+import { getHexFromColorName } from '../../utils/colorDictionary'
 
 export default function Colores() {
   const navigate = useNavigate()
@@ -210,13 +211,36 @@ export default function Colores() {
               <Input
                 label="Nombre"
                 value={formData.nombre}
-                onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                onChange={(e) => {
+                  const val = e.target.value
+                  const hex = getHexFromColorName(val)
+                  setFormData({ 
+                    ...formData, 
+                    nombre: val,
+                    codigo_hex: hex ? hex : formData.codigo_hex
+                  })
+                }}
+                autoFocus
               />
-              <Input
-                label="Código Hex (ej. #FF0000)"
-                value={formData.codigo_hex}
-                onChange={(e) => setFormData({ ...formData, codigo_hex: e.target.value })}
-              />
+              
+              <div className="flex gap-3 items-end">
+                <div className="flex-1">
+                  <Input
+                    label="Código Hex (ej. #FF0000)"
+                    value={formData.codigo_hex}
+                    onChange={(e) => setFormData({ ...formData, codigo_hex: e.target.value })}
+                  />
+                </div>
+                <div className="mb-1 flex items-center justify-center">
+                  <input 
+                    type="color" 
+                    value={formData.codigo_hex || '#000000'} 
+                    onChange={(e) => setFormData({ ...formData, codigo_hex: e.target.value })}
+                    className="w-10 h-10 p-0 border-0 rounded cursor-pointer"
+                    title="Seleccionar color visualmente"
+                  />
+                </div>
+              </div>
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-3">
               <Button variant="ghost" onClick={handleCloseModal} disabled={saving}>Cancelar</Button>

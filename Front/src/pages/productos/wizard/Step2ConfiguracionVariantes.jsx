@@ -21,7 +21,11 @@ export default function Step2ConfiguracionVariantes() {
       setDbColores([...dbColores, newElement])
       setFormData({ ...formData, colores: [...formData.colores, newElement.id] })
     } else if (type === 'talla') {
-      setDbTallas([...dbTallas, newElement])
+      const newTallas = [...dbTallas, newElement].sort((a, b) => {
+        if (a.orden === b.orden) return a.nombre.localeCompare(b.nombre)
+        return a.orden - b.orden
+      })
+      setDbTallas(newTallas)
       setFormData({ ...formData, tallas: [...formData.tallas, newElement.id] })
     }
     setFastCreate({ isOpen: false, type: null })
@@ -281,6 +285,7 @@ export default function Step2ConfiguracionVariantes() {
           inputLabel="Nombre del color"
           apiService={colorService}
           onSuccess={(el) => handleFastCreateSuccess(el, 'color')}
+          isColor={true}
         />
       )}
       {fastCreate.isOpen && fastCreate.type === 'talla' && (
@@ -291,6 +296,7 @@ export default function Step2ConfiguracionVariantes() {
           inputLabel="Nombre o número de la talla"
           apiService={tallaService}
           onSuccess={(el) => handleFastCreateSuccess(el, 'talla')}
+          transformPayload={(data) => ({ nombre: data.nombre, orden: parseInt(data.nombre, 10) || 0 })}
         />
       )}
 

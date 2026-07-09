@@ -174,6 +174,7 @@ export default function Step1InformacionGeneral() {
           inputLabel="Nombre de la marca"
           apiService={marcaService}
           onSuccess={(el) => handleFastCreateSuccess(el, 'marca')}
+          hasDescription={true}
         />
       )}
       {fastCreate.isOpen && fastCreate.type === 'tipo' && (
@@ -184,6 +185,7 @@ export default function Step1InformacionGeneral() {
           inputLabel="Nombre del tipo"
           apiService={tipoCalzadoService}
           onSuccess={(el) => handleFastCreateSuccess(el, 'tipo')}
+          hasDescription={true}
         />
       )}
       {fastCreate.isOpen && fastCreate.type === 'material' && (
@@ -194,6 +196,7 @@ export default function Step1InformacionGeneral() {
           inputLabel="Nombre del material"
           apiService={materialService}
           onSuccess={(el) => handleFastCreateSuccess(el, 'material')}
+          hasDescription={true}
         />
       )}
       </div>
