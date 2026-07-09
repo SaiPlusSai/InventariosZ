@@ -126,7 +126,7 @@ export default function ImageGallery({
 
       </div>
 
-      <div className="grid grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
+      <div className="flex flex-wrap gap-3 mt-4">
 
         {imagenes.map((img) => (
 
@@ -135,17 +135,21 @@ export default function ImageGallery({
             onClick={() => setActual(img)}
             className={`
               relative
-              rounded-xl
+              w-20
+              h-20
+              sm:w-[84px]
+              sm:h-[84px]
+              flex-shrink-0
+              rounded-lg
               overflow-hidden
-              border-2
               transition-all
               duration-200
               hover:scale-105
 
               ${
                 actual.id === img.id
-                  ? 'border-blue-600 ring-2 ring-blue-200'
-                  : 'border-slate-200'
+                  ? 'border-[3px] border-blue-600 shadow-md ring-2 ring-blue-100 ring-offset-1'
+                  : 'border border-slate-200 hover:border-blue-400 opacity-80 hover:opacity-100'
               }
             `}
           >
@@ -157,15 +161,14 @@ export default function ImageGallery({
                 w-full
                 h-full
                 object-cover
-                aspect-square
               "
             />
 
             {img.es_principal && (
 
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-1.5 right-1.5">
 
-                <div className="bg-blue-600 text-white rounded-full p-1">
+                <div className="bg-blue-600 text-white rounded-full p-1 shadow-sm">
 
                   <Star
                     size={11}
