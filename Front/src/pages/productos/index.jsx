@@ -28,6 +28,8 @@ const agruparProductosPlanos = (productosPlanos) => {
     const color_id = p.color.id
     if (!catalogoDict[cp_id].colores[color_id]) {
       catalogoDict[cp_id].colores[color_id] = { color_id: color_id, color: p.color, imagen_principal: p.imagen_principal, variantes: [] }
+    } else if (p.imagen_principal && !catalogoDict[cp_id].colores[color_id].imagen_principal) {
+      catalogoDict[cp_id].colores[color_id].imagen_principal = p.imagen_principal
     }
     catalogoDict[cp_id].colores[color_id].variantes.push({
       id: p.id, talla: p.talla, stock_actual: p.stock_actual, stock_minimo: p.stock_minimo,

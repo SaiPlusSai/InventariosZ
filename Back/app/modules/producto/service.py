@@ -133,6 +133,8 @@ class ProductoService:
                     "imagen_principal": p["imagen_principal"],
                     "variantes": []
                 }
+            elif p["imagen_principal"] and not colores_dict[color_id]["imagen_principal"]:
+                colores_dict[color_id]["imagen_principal"] = p["imagen_principal"]
 
             variante = VarianteCatalogoResponse(
                 id=p["id"],
