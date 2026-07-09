@@ -67,7 +67,7 @@ export default function ImageGallery({
 
       </div>
 
-      <div className="relative rounded-2xl overflow-hidden border shadow-md bg-slate-100 h-[520px]">
+      <div className="relative rounded-2xl overflow-hidden border shadow-md bg-slate-100 h-[400px] md:h-[480px] flex items-center justify-center">
 
         <AnimatePresence mode="wait">
 
@@ -92,7 +92,7 @@ export default function ImageGallery({
             className="
               w-full
               h-full
-              object-cover
+              object-contain
               transition-transform
               duration-300
               hover:scale-105
@@ -155,8 +155,9 @@ export default function ImageGallery({
               alt=""
               className="
                 w-full
-                h-24
+                h-full
                 object-cover
+                aspect-square
               "
             />
 
