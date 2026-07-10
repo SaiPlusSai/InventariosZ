@@ -47,7 +47,13 @@ export default function DeleteConfirmationModal({
       onClose()
     } catch (err) {
       console.error(err)
-      alert(err.response?.data?.detail || 'Error al eliminar el registro')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          err.response?.data?.detail || err.customMessage || 'Error al eliminar el registro'
+        )
+      })
     } finally {
       setProcessing(false)
     }

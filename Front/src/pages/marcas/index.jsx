@@ -93,7 +93,13 @@ export default function Marcas() {
       loadMarcas()
     } catch (err) {
       console.error(err)
-      alert('Error al recuperar la marca')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error al recuperar la marca'
+        )
+      })
     }
   }
 

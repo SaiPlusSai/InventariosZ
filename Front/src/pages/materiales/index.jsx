@@ -93,7 +93,13 @@ export default function Materiales() {
       loadMateriales()
     } catch (err) {
       console.error(err)
-      alert('Error al recuperar el material')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error al recuperar el material'
+        )
+      })
     }
   }
 

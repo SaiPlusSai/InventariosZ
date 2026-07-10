@@ -31,7 +31,13 @@ export function useWarningManager(onConfirmRetry) {
       setWarningState({ isOpen: false, warningData: null, originalData: null })
     } catch (error) {
       // Si falla incluso con force, mostramos el mensaje que venga del backend
-      alert(error.customMessage || 'Error al guardar el registro')
+      import('../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          error.customMessage || 'Error al guardar el registro'
+        )
+      })
     } finally {
       setLoading(false)
     }

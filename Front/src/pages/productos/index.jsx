@@ -148,7 +148,13 @@ export default function Productos() {
         setItemToDelete(null)
       }
     } catch (err) {
-      alert('Error eliminando: ' + (err.response?.data?.detail || err.message))
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error eliminando: ' + (err.response?.data?.detail || err.message)
+        )
+      })
     }
   }
 
@@ -157,7 +163,13 @@ export default function Productos() {
       await productoService.recuperarColor(codigo_producto_id, color_id)
       loadProductos(cleanFilters(filters), isPapeleraMode)
     } catch (err) {
-      alert('Error al recuperar el producto')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error al recuperar el producto'
+        )
+      })
     }
   }
 

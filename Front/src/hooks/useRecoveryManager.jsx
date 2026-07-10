@@ -26,7 +26,13 @@ export function useRecoveryManager(apiService, onSuccess) {
       
       if (onSuccess) onSuccess(registroRecuperado)
     } catch (error) {
-      alert(error.customMessage || 'Error al recuperar el registro')
+      import('../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error de recuperación',
+          error.customMessage || 'Error al recuperar el registro'
+        )
+      })
     } finally {
       setRecovering(false)
     }

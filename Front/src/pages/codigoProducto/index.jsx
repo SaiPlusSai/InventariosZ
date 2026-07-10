@@ -95,7 +95,13 @@ export default function CodigoProducto() {
         codigo: formData.codigo
       })
       if (!isWarning) {
-        alert(err.customMessage || 'Error al guardar el código de producto')
+        import('../../store/notificationStore').then(store => {
+          store.useNotificationStore.getState().showNotification(
+            'error',
+            'Error',
+            err.customMessage || 'Error al guardar el código de producto'
+          )
+        })
       }
     } finally {
       setSaving(false)
@@ -113,7 +119,13 @@ export default function CodigoProducto() {
       loadData()
     } catch (err) {
       console.error(err)
-      alert('Error al recuperar el código')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          err.customMessage || 'Error al recuperar el código'
+        )
+      })
     }
   }
 

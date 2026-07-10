@@ -94,7 +94,13 @@ export default function Colores() {
       loadColores()
     } catch (err) {
       console.error(err)
-      alert('Error al recuperar el color')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error al recuperar el color'
+        )
+      })
     }
   }
 

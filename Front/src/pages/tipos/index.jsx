@@ -93,7 +93,13 @@ export default function Tipos() {
       loadTipos()
     } catch (err) {
       console.error(err)
-      alert('Error al recuperar el tipo de calzado')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error al recuperar el tipo de calzado'
+        )
+      })
     }
   }
 

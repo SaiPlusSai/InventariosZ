@@ -98,7 +98,13 @@ export default function Tallas() {
       loadTallas()
     } catch (err) {
       console.error(err)
-      alert('Error al recuperar la talla')
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error al recuperar la talla'
+        )
+      })
     }
   }
 
