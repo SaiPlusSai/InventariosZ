@@ -1,4 +1,5 @@
 import { Card, Button } from '../../components/ui'
+import { ExpandableInventory } from '../../components/ui/ExpandableInventory'
 import { formatCurrency } from '../../utils/helpers'
 
 export default function ProductoCard({ 
@@ -56,38 +57,11 @@ export default function ProductoCard({
         </div>
 
         {/* Tallas disponibles con controles de stock */}
-        <div className="mt-3">
-          <p className="text-xs text-gray-500 mb-2">Inventario por talla:</p>
-          <div className="space-y-2">
-            {color.variantes.map(v => (
-              <div key={v.id} className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100">
-                <span className="text-sm font-medium text-gray-700 min-w-[3rem]">
-                  {v.talla.nombre}
-                </span>
-                <div className="flex items-center gap-3">
-                  <Button
-                    variant="secondary"
-                    className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                    onClick={() => onDecrementar && onDecrementar(v.id)}
-                    disabled={v.stock_actual <= 0}
-                  >
-                    -
-                  </Button>
-                  <span className={`text-sm font-bold w-6 text-center ${v.stock_actual > 0 ? 'text-green-600' : 'text-red-500'}`}>
-                    {v.stock_actual}
-                  </span>
-                  <Button
-                    variant="secondary"
-                    className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md"
-                    onClick={() => onIncrementar && onIncrementar(v.id)}
-                  >
-                    +
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ExpandableInventory 
+          variantes={color.variantes} 
+          onIncrementar={onIncrementar} 
+          onDecrementar={onDecrementar} 
+        />
       </div>
 
       {/* Info footer: Stock & Precios */}
