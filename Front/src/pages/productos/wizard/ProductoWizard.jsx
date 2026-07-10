@@ -3,6 +3,8 @@ import { useWizardStore } from '../../../store/wizardStore'
 import { productoService } from '../../../services/productoService'
 import { productoImagenService } from '../../../services/productoImagenService'
 import { useWarningManager } from '../../../hooks/useWarningManager'
+import toast from 'react-hot-toast'
+import { Loader2 } from 'lucide-react'
 
 import Step1InformacionGeneral from './Step1InformacionGeneral'
 import Step2ConfiguracionVariantes from './Step2ConfiguracionVariantes'
@@ -115,6 +117,11 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     }
 
     // 5. Finalizar
+    if (modo === 'editar') {
+      toast.success('Producto actualizado correctamente')
+    } else {
+      toast.success('Producto creado correctamente')
+    }
     resetWizard()
     if (onSuccess) {
       onSuccess()
@@ -304,13 +311,14 @@ export default function ProductoWizard({ onClose, onSuccess }) {
               disabled={loading}
               className="min-w-[150px]"
             >
-              {loading
-                ? modo === 'editar'
-                  ? 'Actualizando...'
-                  : 'Guardando...'
-                : modo === 'editar'
-                ? '💾 Actualizar Producto'
-                : '💾 Guardar Producto'}
+              {loading ? (
+                <div className="flex items-center justify-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>{modo === 'editar' ? 'Actualizando...' : 'Guardando...'}</span>
+                </div>
+              ) : (
+                <span>{modo === 'editar' ? '💾 Actualizar Producto' : '💾 Guardar Producto'}</span>
+              )}
             </Button>
           ) : (
             <Button

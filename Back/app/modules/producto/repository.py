@@ -1,9 +1,4 @@
-from sqlalchemy import and_
-from sqlalchemy import func
-from sqlalchemy import or_
-from sqlalchemy import select
-from sqlalchemy import update
-from sqlalchemy import select
+from sqlalchemy import and_, func, or_, select, update, delete
 from sqlalchemy.orm import Session, joinedload, selectinload
 import time
 
@@ -16,12 +11,7 @@ from app.modules.producto.models import Producto
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.models import Talla
 from app.modules.tipo_calzado.models import TipoCalzado
-from sqlalchemy import delete
-from sqlalchemy import select
 
-from app.modules.codigo_producto.models import CodigoProducto
-from app.modules.precio_producto.models import PrecioProducto
-from app.modules.producto_imagen.models import ProductoImagen
 
 
 class ProductoRepository:
