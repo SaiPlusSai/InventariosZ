@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
-import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
+import { ConfirmModal, EmptyState } from '../../components/ui'
 import { useMarcaStore } from '../../store/marcaStore'
 import { marcaService } from '../../services/marcaService'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
+import toast from 'react-hot-toast'
+import { Loader2 } from 'lucide-react'
 
 export default function Marcas() {
   const navigate = useNavigate()
@@ -68,8 +70,10 @@ export default function Marcas() {
       setSaving(true)
       if (editingMarca) {
         await marcaService.update(editingMarca.id, formData)
+        toast.success('Marca actualizada correctamente')
       } else {
         await marcaService.create(formData)
+        toast.success('Marca creada correctamente')
       }
       handleCloseModal()
       loadMarcas()
@@ -90,6 +94,7 @@ export default function Marcas() {
   const handleRecuperar = async (id) => {
     try {
       await marcaService.recuperar(id)
+      toast.success('Marca recuperada correctamente')
       loadMarcas()
     } catch (err) {
       console.error(err)
@@ -167,7 +172,12 @@ export default function Marcas() {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : marcas.length === 0 ? (
-          <p className="text-gray-500">No hay marcas registradas</p>
+          <EmptyState 
+            title={isPapeleraMode ? "Papelera vacía" : "No hay marcas registradas"}
+            description={isPapeleraMode ? "No hay marcas eliminadas." : "Registra la primera marca para comenzar."}
+            actionLabel={!isPapeleraMode ? "Nueva Marca" : undefined}
+            onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -233,8 +243,13 @@ export default function Marcas() {
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-3">
               <Button variant="ghost" onClick={handleCloseModal} disabled={saving}>Cancelar</Button>
-              <Button variant="primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
+              <Button variant="primary" onClick={handleSave} disabled={saving} className="min-w-[100px]">
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Guardando</span>
+                  </div>
+                ) : 'Guardar'}
               </Button>
             </div>
           </div>
@@ -244,13 +259,30 @@ export default function Marcas() {
       {/* Reusable Recovery Modal Component */}
       {RecoveryComponent}
 
-      <DeleteConfirmationModal
+      <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
-        onConfirm={() => loadMarcas()}
-        service={marcaService}
-        item={itemToDelete}
-        isPhysicalDelete={isPapeleraMode}
+        onConfirm={async () => {
+          if (isPapeleraMode) {
+            await marcaService.delete(itemToDelete.id)
+            toast.success('Marca eliminada permanentemente')
+          } else {
+            await marcaService.desactivar(itemToDelete.id)
+            toast.success('Marca enviada a la papelera')
+          }
+          loadMarcas()
+          setShowDeleteModal(false)
+          setItemToDelete(null)
+        }}
+        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Eliminar Marca'}
+        message={`¿Está seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'eliminar'} la marca "${itemToDelete?.nombre}"?`}
+        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Enviar a Papelera'}
+        variant="danger"
+        dependencyConfig={{
+          service: marcaService,
+          itemId: itemToDelete?.id,
+          isPhysicalDelete: isPapeleraMode
+        }}
       />
     </div>
   )

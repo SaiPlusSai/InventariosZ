@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
-import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
+import { ConfirmModal, EmptyState } from '../../components/ui'
 import { useCodigoProductoStore } from '../../store/codigoProductoStore'
 import { codigoProductoService } from '../../services/codigoProductoService'
 import { marcaService } from '../../services/marcaService'
@@ -67,8 +67,10 @@ export default function CodigoProducto() {
     // Esta función se llama si el usuario confirma "Guardar de todas formas"
     if (editingCodigo) {
       await codigoProductoService.update(editingCodigo.id, payloadWithForce)
+        toast.success('Registro actualizado correctamente')
     } else {
       await codigoProductoService.create(payloadWithForce)
+        toast.success('Registro creado correctamente')
     }
     handleCloseModal()
     loadData()
@@ -83,8 +85,10 @@ export default function CodigoProducto() {
       }
       if (editingCodigo) {
         await codigoProductoService.update(editingCodigo.id, payload)
+        toast.success('Registro actualizado correctamente')
       } else {
         await codigoProductoService.create(payload)
+        toast.success('Registro creado correctamente')
       }
       handleCloseModal()
       loadData()
@@ -116,6 +120,7 @@ export default function CodigoProducto() {
   const handleRecuperar = async (id) => {
     try {
       await codigoProductoService.recuperar(id)
+      toast.success('Registro recuperado correctamente')
       loadData()
     } catch (err) {
       console.error(err)
@@ -195,7 +200,12 @@ export default function CodigoProducto() {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : codigos.length === 0 ? (
-          <p className="text-gray-500">No hay códigos registrados</p>
+          <EmptyState 
+            title={isPapeleraMode ? "Papelera vacía" : "No hay registros"}
+            description={isPapeleraMode ? "No hay registros eliminados." : "Crea el primer registro para comenzar."}
+            actionLabel={!isPapeleraMode ? "Nuevo Registro" : undefined}
+            onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -277,13 +287,30 @@ export default function CodigoProducto() {
         </div>
       )}
 
-      <DeleteConfirmationModal
+      <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
-        onConfirm={() => loadData()}
-        service={codigoProductoService}
-        item={itemToDelete}
-        isPhysicalDelete={isPapeleraMode}
+        onConfirm={async () => {
+          if (isPapeleraMode) {
+            await codigoProductoService.delete(itemToDelete.id)
+            toast.success('Registro eliminado permanentemente')
+          } else {
+            await codigoProductoService.desactivar(itemToDelete.id)
+            toast.success('Registro enviado a la papelera')
+          }
+          loadData()
+          setShowDeleteModal(false)
+          setItemToDelete(null)
+        }}
+        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Eliminar Registro'}
+        message={`¿Está seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'eliminar'} el registro "${itemToDelete?.nombre || itemToDelete?.codigo}"?`}
+        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Enviar a Papelera'}
+        variant="danger"
+        dependencyConfig={{
+          service: codigoProductoService,
+          itemId: itemToDelete?.id,
+          isPhysicalDelete: isPapeleraMode
+        }}
       />
       {WarningComponent}
     </div>

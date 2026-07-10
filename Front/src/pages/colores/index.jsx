@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
-import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
+import { ConfirmModal, EmptyState } from '../../components/ui'
 import { useColorStore } from '../../store/colorStore'
 import { colorService } from '../../services/colorService'
 import { getHexFromColorName } from '../../utils/colorDictionary'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
+import toast from 'react-hot-toast'
+import { Loader2 } from 'lucide-react'
 
 export default function Colores() {
   const navigate = useNavigate()
@@ -69,8 +71,10 @@ export default function Colores() {
       setSaving(true)
       if (editingColor) {
         await colorService.update(editingColor.id, formData)
+        toast.success('Registro actualizado correctamente')
       } else {
         await colorService.create(formData)
+        toast.success('Registro creado correctamente')
       }
       handleCloseModal()
       loadColores()
@@ -91,6 +95,7 @@ export default function Colores() {
   const handleRecuperar = async (id) => {
     try {
       await colorService.recuperar(id)
+      toast.success('Registro recuperado correctamente')
       loadColores()
     } catch (err) {
       console.error(err)
@@ -168,7 +173,12 @@ export default function Colores() {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : colores.length === 0 ? (
-          <p className="text-gray-500">No hay colores registrados</p>
+          <EmptyState 
+            title={isPapeleraMode ? "Papelera vacía" : "No hay registros"}
+            description={isPapeleraMode ? "No hay registros eliminados." : "Crea el primer registro para comenzar."}
+            actionLabel={!isPapeleraMode ? "Nuevo Registro" : undefined}
+            onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -261,8 +271,13 @@ export default function Colores() {
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-3">
               <Button variant="ghost" onClick={handleCloseModal} disabled={saving}>Cancelar</Button>
-              <Button variant="primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
+              <Button variant="primary" onClick={handleSave} disabled={saving} className="min-w-[100px]">
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Guardando</span>
+                  </div>
+                ) : 'Guardar'}
               </Button>
             </div>
           </div>
@@ -271,13 +286,30 @@ export default function Colores() {
 
       {/* Reusable Recovery Modal Component */}
       {RecoveryComponent}
-      <DeleteConfirmationModal
+      <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
-        onConfirm={() => loadColores()}
-        service={colorService}
-        item={itemToDelete}
-        isPhysicalDelete={isPapeleraMode}
+        onConfirm={async () => {
+          if (isPapeleraMode) {
+            await colorService.delete(itemToDelete.id)
+            toast.success('Registro eliminado permanentemente')
+          } else {
+            await colorService.desactivar(itemToDelete.id)
+            toast.success('Registro enviado a la papelera')
+          }
+          loadColores()
+          setShowDeleteModal(false)
+          setItemToDelete(null)
+        }}
+        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Eliminar Registro'}
+        message={`¿Está seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'eliminar'} el registro "${itemToDelete?.nombre || itemToDelete?.codigo}"?`}
+        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Enviar a Papelera'}
+        variant="danger"
+        dependencyConfig={{
+          service: colorService,
+          itemId: itemToDelete?.id,
+          isPhysicalDelete: isPapeleraMode
+        }}
       />
     </div>
   )

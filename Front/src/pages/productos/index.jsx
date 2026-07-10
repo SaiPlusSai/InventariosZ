@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Card, Button, Input } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState } from '../../components/ui'
 import { useProductoStore } from '../../store/productoStore'
 import { useWizardStore } from '../../store/wizardStore'
 import { productoService } from '../../services/productoService'
@@ -8,6 +8,7 @@ import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
 import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 const emptyFilters = {
   codigo: '', marca: '', tipo: '', material: '', color: '', talla: '',
@@ -138,12 +139,14 @@ export default function Productos() {
   const confirmDelete = async () => {
     if (!itemToDelete) return
     try {
-      if (isPapeleraMode) {
+        if (isPapeleraMode) {
         await productoService.eliminarColorPermanente(itemToDelete.codigoProductoId, itemToDelete.colorId)
+        toast.success('Producto eliminado permanentemente')
         loadProductos(cleanFilters(filters), true)
         setItemToDelete(null)
       } else {
         await productoService.desactivarColor(itemToDelete.codigoProductoId, itemToDelete.colorId)
+        toast.success('Producto enviado a la papelera')
         loadProductos(cleanFilters(filters), false)
         setItemToDelete(null)
       }
@@ -161,6 +164,7 @@ export default function Productos() {
   const handleRecuperar = async (codigo_producto_id, color_id) => {
     try {
       await productoService.recuperarColor(codigo_producto_id, color_id)
+      toast.success('Producto recuperado correctamente')
       loadProductos(cleanFilters(filters), isPapeleraMode)
     } catch (err) {
       import('../../store/notificationStore').then(store => {
@@ -277,15 +281,13 @@ export default function Productos() {
 
         if (filteredProductos.length === 0) {
           return (
-            <div className="text-center py-24 bg-white rounded-2xl border border-dashed border-gray-300">
-              <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package size={32} className="text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900">No se encontraron productos</h3>
-              <p className="mt-1 text-gray-500">
-                {isPapeleraMode ? 'La papelera está vacía.' : 'Intenta ajustar los filtros de búsqueda.'}
-              </p>
-            </div>
+            <EmptyState 
+              icon={Package}
+              title={isPapeleraMode ? "La papelera está vacía" : "No se encontraron productos"}
+              description={isPapeleraMode ? "No hay productos eliminados temporalmente." : "Intenta ajustar los filtros de búsqueda o crea uno nuevo."}
+              actionLabel={!isPapeleraMode ? "Nuevo Producto" : undefined}
+              onAction={!isPapeleraMode ? () => setShowNewWizard(true) : undefined}
+            />
           )
         }
 
@@ -318,31 +320,20 @@ export default function Productos() {
 
       {/* Delete Modal custom for Colors */}
       {/* Delete Modal custom for Products */}
-      {itemToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden">
-            <div className={`px-6 py-4 border-b ${isPapeleraMode ? 'bg-red-50' : 'bg-orange-50'}`}>
-              <h2 className={`text-xl font-bold ${isPapeleraMode ? 'text-red-700' : 'text-orange-700'}`}>
-                {isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
-              </h2>
-            </div>
-            <div className="p-6">
-              <p className="text-gray-800 text-lg">
-                ¿Estás seguro de desactivar el producto <strong>{itemToDelete.nombre}</strong> (Color <span className="font-bold text-primary-600">{itemToDelete.colorNombre}</span>), incluyendo todas sus tallas?
-              </p>
-              <p className="text-sm text-gray-500 mt-4">
-                El producto dejará de mostrarse en el catálogo principal, pero podrás recuperarlo desde la papelera.
-              </p>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-              <Button variant="ghost" onClick={() => setItemToDelete(null)}>Cancelar</Button>
-              <Button variant="primary" className="bg-orange-500 hover:bg-orange-600 border-none" onClick={confirmDelete}>
-                Desactivar Producto
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={confirmDelete}
+        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
+        message={`¿Estás seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'desactivar'} el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?${isPapeleraMode ? '\nEsta acción no se puede deshacer.' : ''}`}
+        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Desactivar Producto'}
+        variant="danger"
+        dependencyConfig={{
+          service: productoService,
+          itemId: itemToDelete?.colorId, 
+          isPhysicalDelete: isPapeleraMode
+        }}
+      />
 
       {/* Creacion de todo el Producto (Wizard Antiguo de Creacion Completa) */}
       {showNewWizard && (

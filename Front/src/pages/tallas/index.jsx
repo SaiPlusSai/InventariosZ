@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Card, Button, Input } from '../../components/ui'
-import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal'
+import { ConfirmModal, EmptyState } from '../../components/ui'
 import { useTallaStore } from '../../store/tallaStore'
 import { tallaService } from '../../services/tallaService'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
+import toast from 'react-hot-toast'
+import { Loader2 } from 'lucide-react'
 
 export default function Tallas() {
   const navigate = useNavigate()
@@ -73,8 +75,10 @@ export default function Tallas() {
       }
       if (editingTalla) {
         await tallaService.update(editingTalla.id, payload)
+        toast.success('Registro actualizado correctamente')
       } else {
         await tallaService.create(payload)
+        toast.success('Registro creado correctamente')
       }
       handleCloseModal()
       loadTallas()
@@ -95,6 +99,7 @@ export default function Tallas() {
   const handleRecuperar = async (id) => {
     try {
       await tallaService.recuperar(id)
+      toast.success('Registro recuperado correctamente')
       loadTallas()
     } catch (err) {
       console.error(err)
@@ -171,7 +176,12 @@ export default function Tallas() {
         ) : error ? (
           <p className="text-red-500">{error}</p>
         ) : tallas.length === 0 ? (
-          <p className="text-gray-500">No hay tallas registradas</p>
+          <EmptyState 
+            title={isPapeleraMode ? "Papelera vacía" : "No hay registros"}
+            description={isPapeleraMode ? "No hay registros eliminados." : "Crea el primer registro para comenzar."}
+            actionLabel={!isPapeleraMode ? "Nuevo Registro" : undefined}
+            onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -231,8 +241,13 @@ export default function Tallas() {
             </div>
             <div className="border-t px-6 py-4 flex justify-end gap-3">
               <Button variant="ghost" onClick={handleCloseModal} disabled={saving}>Cancelar</Button>
-              <Button variant="primary" onClick={handleSave} disabled={saving}>
-                {saving ? 'Guardando...' : 'Guardar'}
+              <Button variant="primary" onClick={handleSave} disabled={saving} className="min-w-[100px]">
+                {saving ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Guardando</span>
+                  </div>
+                ) : 'Guardar'}
               </Button>
             </div>
           </div>
@@ -242,13 +257,30 @@ export default function Tallas() {
       {/* Reusable Recovery Modal Component */}
       {RecoveryComponent}
 
-      <DeleteConfirmationModal
+      <ConfirmModal
         isOpen={showDeleteModal}
         onClose={() => { setShowDeleteModal(false); setItemToDelete(null); }}
-        onConfirm={() => loadTallas()}
-        service={tallaService}
-        item={itemToDelete}
-        isPhysicalDelete={isPapeleraMode}
+        onConfirm={async () => {
+          if (isPapeleraMode) {
+            await tallaService.delete(itemToDelete.id)
+            toast.success('Registro eliminado permanentemente')
+          } else {
+            await tallaService.desactivar(itemToDelete.id)
+            toast.success('Registro enviado a la papelera')
+          }
+          loadTallas()
+          setShowDeleteModal(false)
+          setItemToDelete(null)
+        }}
+        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Eliminar Registro'}
+        message={`¿Está seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'eliminar'} el registro "${itemToDelete?.nombre || itemToDelete?.codigo}"?`}
+        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Enviar a Papelera'}
+        variant="danger"
+        dependencyConfig={{
+          service: tallaService,
+          itemId: itemToDelete?.id,
+          isPhysicalDelete: isPapeleraMode
+        }}
       />
     </div>
   )
