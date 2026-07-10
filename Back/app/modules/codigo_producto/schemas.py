@@ -19,7 +19,7 @@ class CodigoProductoBase(BaseModel):
 
 
 class CodigoProductoCreate(CodigoProductoBase):
-    pass
+    force: bool = Field(default=False, description="Si es true, ignora la advertencia de código duplicado en otra marca")
 
 
 class CodigoProductoUpdate(BaseModel):
@@ -35,6 +35,7 @@ class CodigoProductoUpdate(BaseModel):
     )
 
     estado: bool | None = None
+    force: bool = Field(default=False, description="Si es true, ignora la advertencia de código duplicado en otra marca")
 
 
 class CodigoProductoResponse(CodigoProductoBase):

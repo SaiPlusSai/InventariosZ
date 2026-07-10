@@ -58,7 +58,7 @@ class ProductoBase(BaseModel):
 
 
 class ProductoCreate(ProductoBase):
-    pass
+    force: bool = Field(default=False, description="Si es true, ignora la advertencia de código duplicado en otra marca")
 
 
 class ProductoUpdate(BaseModel):
@@ -94,6 +94,7 @@ class ProductoUpdate(BaseModel):
     )
 
     estado: bool | None = None
+    force: bool = Field(default=False, description="Si es true, ignora la advertencia de código duplicado en otra marca")
 
 
 class ProductoResponse(ProductoBase):
@@ -222,6 +223,8 @@ class ProductoCompletoCreate(BaseModel):
         ...,
         min_length=1,
     )
+    
+    force: bool = Field(default=False, description="Si es true, ignora la advertencia de código duplicado en otra marca")
 
     imagenes: list[ImagenProductoCreate] = Field(
         default_factory=list,
@@ -534,6 +537,8 @@ class ProductoCompletoUpdate(BaseModel):
     imagenes: list[ImagenProductoUpdate] = Field(
         default_factory=list,
     )
+    
+    force: bool = Field(default=False, description="Si es true, ignora la advertencia de código duplicado en otra marca")
 
 
 # ==========================================================

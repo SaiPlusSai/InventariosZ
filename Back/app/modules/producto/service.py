@@ -704,18 +704,30 @@ class ProductoService:
                         raise TallaNoEncontradaException(TALLA_NO_EXISTE)
                     cache_tallas[variante.talla_id] = talla_obj
 
-            existente = self.codigo_repository.get_by_codigo(
-                db,
-                data.codigo,
-            )
-
-            if (
-                existente
-                and existente.id != codigo_producto.id
-            ):
-                raise CodigoProductoYaExisteException(
-                    CODIGO_PRODUCTO_YA_EXISTE
+            exacto = self.codigo_repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
+            if exacto and exacto.id != codigo_producto.id:
+                marca_obj = self.marca_repository.get_by_id(db, data.marca_id)
+                marca_nombre = marca_obj.nombre if marca_obj else "la marca especificada"
+                from app.core.exceptions import CodigoProductoDuplicadoException
+                raise CodigoProductoDuplicadoException(
+                    f"El código '{data.codigo}' ya existe para la marca '{marca_nombre}'."
                 )
+
+            if data.codigo != codigo_producto.codigo:
+                otros = self.codigo_repository.get_all_by_codigo(db, data.codigo)
+                otros_filtrados = [o for o in otros if o.id != codigo_producto.id and o.marca_id != data.marca_id]
+                if otros_filtrados and not getattr(data, 'force', False):
+                    marca_conflicto_obj = self.marca_repository.get_by_id(db, otros_filtrados[0].marca_id)
+                    marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"
+                    marca_destino_obj = self.marca_repository.get_by_id(db, data.marca_id)
+                    marca_destino_nombre = marca_destino_obj.nombre if marca_destino_obj else "la marca especificada"
+                    from app.core.exceptions import CodigoProductoOtraMarcaWarning
+                    raise CodigoProductoOtraMarcaWarning(
+                        f"El código '{data.codigo}' ya se encuentra registrado para la marca '{marca_conflicto_nombre}'.",
+                        codigo=data.codigo,
+                        marca_conflicto=marca_conflicto_nombre,
+                        marca_destino=marca_destino_nombre
+                    )
 
             codigo_producto.codigo = data.codigo
             codigo_producto.marca_id = data.marca_id
@@ -1000,12 +1012,27 @@ class ProductoService:
                         raise TallaNoEncontradaException(TALLA_NO_EXISTE)
                     cache_tallas[variante.talla_id] = talla_obj
 
-            if self.codigo_repository.get_by_codigo(
-                db,
-                data.codigo,
-            ):
-                raise CodigoProductoYaExisteException(
-                    CODIGO_PRODUCTO_YA_EXISTE
+            exacto = self.codigo_repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
+            if exacto:
+                marca_obj = self.marca_repository.get_by_id(db, data.marca_id)
+                marca_nombre = marca_obj.nombre if marca_obj else "la marca especificada"
+                from app.core.exceptions import CodigoProductoDuplicadoException
+                raise CodigoProductoDuplicadoException(
+                    f"El código '{data.codigo}' ya existe para la marca '{marca_nombre}'."
+                )
+
+            otros = self.codigo_repository.get_all_by_codigo(db, data.codigo)
+            if otros and not getattr(data, 'force', False):
+                marca_conflicto_obj = self.marca_repository.get_by_id(db, otros[0].marca_id)
+                marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"
+                marca_destino_obj = self.marca_repository.get_by_id(db, data.marca_id)
+                marca_destino_nombre = marca_destino_obj.nombre if marca_destino_obj else "la marca especificada"
+                from app.core.exceptions import CodigoProductoOtraMarcaWarning
+                raise CodigoProductoOtraMarcaWarning(
+                    f"El código '{data.codigo}' ya se encuentra registrado para la marca '{marca_conflicto_nombre}'.",
+                    codigo=data.codigo,
+                    marca_conflicto=marca_conflicto_nombre,
+                    marca_destino=marca_destino_nombre
                 )
 
             codigo_producto = CodigoProducto(
@@ -1113,9 +1140,30 @@ class ProductoService:
         if not codigo_producto:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         
-        existente = self.codigo_repository.get_by_codigo(db, data.codigo)
-        if existente and existente.id != codigo_producto.id:
-            raise CodigoProductoYaExisteException(CODIGO_PRODUCTO_YA_EXISTE)
+        exacto = self.codigo_repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
+        if exacto and exacto.id != codigo_producto.id:
+            marca_obj = self.marca_repository.get_by_id(db, data.marca_id)
+            marca_nombre = marca_obj.nombre if marca_obj else "la marca especificada"
+            from app.core.exceptions import CodigoProductoDuplicadoException
+            raise CodigoProductoDuplicadoException(
+                f"El código '{data.codigo}' ya existe para la marca '{marca_nombre}'."
+            )
+
+        if data.codigo != codigo_producto.codigo:
+            otros = self.codigo_repository.get_all_by_codigo(db, data.codigo)
+            otros_filtrados = [o for o in otros if o.id != codigo_producto.id and o.marca_id != data.marca_id]
+            if otros_filtrados and not getattr(data, 'force', False):
+                marca_conflicto_obj = self.marca_repository.get_by_id(db, otros_filtrados[0].marca_id)
+                marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"
+                marca_destino_obj = self.marca_repository.get_by_id(db, data.marca_id)
+                marca_destino_nombre = marca_destino_obj.nombre if marca_destino_obj else "la marca especificada"
+                from app.core.exceptions import CodigoProductoOtraMarcaWarning
+                raise CodigoProductoOtraMarcaWarning(
+                    f"El código '{data.codigo}' ya se encuentra registrado para la marca '{marca_conflicto_nombre}'.",
+                    codigo=data.codigo,
+                    marca_conflicto=marca_conflicto_nombre,
+                    marca_destino=marca_destino_nombre
+                )
             
         codigo_producto.codigo = data.codigo
         codigo_producto.marca_id = data.marca_id

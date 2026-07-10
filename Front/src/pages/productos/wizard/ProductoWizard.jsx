@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useWizardStore } from '../../../store/wizardStore'
 import { productoService } from '../../../services/productoService'
 import { productoImagenService } from '../../../services/productoImagenService'
+import { useWarningManager } from '../../../hooks/useWarningManager'
 
 import Step1InformacionGeneral from './Step1InformacionGeneral'
 import Step2ConfiguracionVariantes from './Step2ConfiguracionVariantes'
@@ -56,6 +57,84 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     }, 100)
   }
 
+  const processSave = async (dataToSend) => {
+    let codigoID = null;
+
+    // 3. Crear o Actualizar Producto Base
+    if (modo === 'editar') {
+      if (targetColorId) {
+        dataToSend.imagenes = Object.entries(formData.imagenesPorColor).flatMap(([colorId, imgs]) => 
+          imgs.filter(img => img.id).map(img => ({
+            id: img.id,
+            es_principal: img.es_principal,
+            orden: img.orden
+          }))
+        )
+        await productoService.updateColor(
+          codigoProductoId,
+          targetColorId,
+          dataToSend
+        )
+        codigoID = codigoProductoId
+      } else {
+        await productoService.updateCompleto(
+          codigoProductoId,
+          dataToSend
+        )
+        codigoID = codigoProductoId
+      }
+    } else {
+      const res = await productoService.createCompleto(dataToSend)
+      codigoID = res.data.codigo_producto_id
+    }
+
+    // 4. Procesar Imagenes Nuevas
+    const edicionRes = await productoService.getEditarCompleto(codigoID);
+    const variantesGuardadas = edicionRes.data.variantes;
+
+    for (const colorIdStr of Object.keys(formData.imagenesPorColor)) {
+      const colorId = Number(colorIdStr);
+      if (targetColorId && colorId !== targetColorId) continue;
+
+      const imagenesDelColor = formData.imagenesPorColor[colorId];
+      const imagenesNuevas = imagenesDelColor.filter(img => img.file);
+      
+      if (imagenesNuevas.length > 0) {
+        const varianteRepresentante = variantesGuardadas.find(v => v.color_id === colorId);
+        if (varianteRepresentante) {
+          for (const img of imagenesNuevas) {
+            const formDataFile = new FormData()
+            formDataFile.append('archivo', img.file)
+            formDataFile.append('es_principal', img.es_principal)
+            formDataFile.append('orden', img.orden)
+            
+            await productoImagenService.subirImagen(varianteRepresentante.id, formDataFile)
+          }
+        }
+      }
+    }
+
+    // 5. Finalizar
+    resetWizard()
+    if (onSuccess) {
+      onSuccess()
+    } else {
+      onClose()
+    }
+  }
+
+  const { handleWarningError, WarningComponent } = useWarningManager(async (dataToSendWithForce) => {
+    try {
+      await processSave(dataToSendWithForce)
+    } catch (err) {
+      console.error(err)
+      setError(
+        err.customMessage ||
+        (modo === 'editar' ? 'Error al actualizar el producto.' : 'Error al crear el producto.')
+      )
+    }
+  })
+
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
@@ -106,88 +185,39 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         imagenes: [], // Las enviamos despues
       }
 
-      let codigoID = null;
+      await processSave(dataToSend)
 
-      // 3. Crear o Actualizar Producto Base
-      if (modo === 'editar') {
-        if (targetColorId) {
-          // Actualización de un color en específico
-          // Las imagenes que ya existen (tienen ID) van al Payload para conservar su orden y flag principal
-          dataToSend.imagenes = Object.entries(formData.imagenesPorColor).flatMap(([colorId, imgs]) => 
-            imgs.filter(img => img.id).map(img => ({
-              id: img.id,
-              es_principal: img.es_principal,
-              orden: img.orden
-            }))
-          )
-          await productoService.updateColor(
-            codigoProductoId,
-            targetColorId,
-            dataToSend
-          )
-          codigoID = codigoProductoId
-        } else {
-          // Actualización completa de múltiples colores
-          await productoService.updateCompleto(
-            codigoProductoId,
-            dataToSend
-          )
-          codigoID = codigoProductoId
-        }
-      } else {
-        const res = await productoService.createCompleto(
-          dataToSend
-        )
-        codigoID = res.data.codigo_producto_id
-      }
-
-      
-      // 4. Procesar Imagenes Nuevas
-      // Para saber los IDs de las variantes creadas por color, llamamos a getEditarCompleto
-      const edicionRes = await productoService.getEditarCompleto(codigoID);
-      const variantesGuardadas = edicionRes.data.variantes;
-
-      for (const colorIdStr of Object.keys(formData.imagenesPorColor)) {
-        const colorId = Number(colorIdStr);
-        // Si estamos editando un color en especifico, ignoramos el resto
-        if (targetColorId && colorId !== targetColorId) continue;
-
-        const imagenesDelColor = formData.imagenesPorColor[colorId];
-        
-        // Filtramos imagenes nuevas que vienen con "file" (las viejas ya estan en backend)
-        const imagenesNuevas = imagenesDelColor.filter(img => img.file);
-        
-        if (imagenesNuevas.length > 0) {
-          // Buscamos el ID de la primera variante que tenga este color para atar las imagenes
-          const varianteRepresentante = variantesGuardadas.find(v => v.color_id === colorId);
-          if (varianteRepresentante) {
-            for (const img of imagenesNuevas) {
-              const formDataFile = new FormData()
-              formDataFile.append('archivo', img.file)
-              formDataFile.append('es_principal', img.es_principal)
-              formDataFile.append('orden', img.orden)
-              
-              await productoImagenService.subirImagen(varianteRepresentante.id, formDataFile)
-            }
-          }
-        }
-      }
-
-      // 5. Finalizar
-      resetWizard()
-      if (onSuccess) {
-        onSuccess()
-      } else {
-        onClose()
-      }
     } catch (err) {
       console.error(err)
-      setError(
-        err.customMessage ||
-        (modo === 'editar'
-          ? 'Error al actualizar el producto.'
-          : 'Error al crear el producto.')
-      )
+      // dataToSend está dentro de este closure, la recuperamos interceptando el warning
+      const dataToSend = {
+        codigo: String(formData.codigo).trim(),
+        marca_id: Number(formData.marca_id),
+        tipo_calzado_id: Number(formData.tipo_calzado_id),
+        material_id: Number(formData.material_id),
+        descripcion: formData.descripcion ? String(formData.descripcion).trim() : null,
+        variantes: formData.variantes.map((v) => ({
+          color_id: Number(v.color_id),
+          talla_id: Number(v.talla_id),
+          stock_actual: parseInt(v.stock_actual) || 0,
+          stock_minimo: parseInt(v.stock_minimo) || 0,
+          stock_maximo: v.stock_maximo !== null && v.stock_maximo !== '' ? parseInt(v.stock_maximo) : null,
+          precio_compra: v.precio_compra !== null && v.precio_compra !== '' ? parseFloat(v.precio_compra) : null,
+          precio_venta: parseFloat(v.precio_venta) || 0,
+          estado: v.estado ?? true,
+        })),
+        imagenes: [],
+      }
+
+      const isWarning = handleWarningError(err, dataToSend)
+      if (!isWarning) {
+        setError(
+          err.customMessage ||
+          (modo === 'editar'
+            ? 'Error al actualizar el producto.'
+            : 'Error al crear el producto.')
+        )
+      }
     } finally {
       setLoading(false)
     }
@@ -294,6 +324,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
           )}
         </div>
       </div>
+      {WarningComponent}
     </div>
   )
 }

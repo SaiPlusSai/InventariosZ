@@ -5,6 +5,7 @@ import DeleteConfirmationModal from '../../components/ui/DeleteConfirmationModal
 import { useCodigoProductoStore } from '../../store/codigoProductoStore'
 import { codigoProductoService } from '../../services/codigoProductoService'
 import { marcaService } from '../../services/marcaService'
+import { useWarningManager } from '../../hooks/useWarningManager'
 
 export default function CodigoProducto() {
   const navigate = useNavigate()
@@ -62,6 +63,17 @@ export default function CodigoProducto() {
     setFormData({ marca_id: '', codigo: '' })
   }
 
+  const { handleWarningError, WarningComponent } = useWarningManager(async (payloadWithForce) => {
+    // Esta función se llama si el usuario confirma "Guardar de todas formas"
+    if (editingCodigo) {
+      await codigoProductoService.update(editingCodigo.id, payloadWithForce)
+    } else {
+      await codigoProductoService.create(payloadWithForce)
+    }
+    handleCloseModal()
+    loadData()
+  })
+
   const handleSave = async () => {
     try {
       setSaving(true)
@@ -78,7 +90,13 @@ export default function CodigoProducto() {
       loadData()
     } catch (err) {
       console.error(err)
-      alert('Error al guardar el código de producto')
+      const isWarning = handleWarningError(err, {
+        marca_id: parseInt(formData.marca_id, 10),
+        codigo: formData.codigo
+      })
+      if (!isWarning) {
+        alert(err.customMessage || 'Error al guardar el código de producto')
+      }
     } finally {
       setSaving(false)
     }
@@ -255,6 +273,7 @@ export default function CodigoProducto() {
         item={itemToDelete}
         isPhysicalDelete={isPapeleraMode}
       />
+      {WarningComponent}
     </div>
   )
 }

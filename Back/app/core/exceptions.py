@@ -38,3 +38,18 @@ class RecuperacionConflictivaException(CoreException):
     def __init__(self, message: str):
         super().__init__(message)
         self.message = message
+
+class CodigoProductoDuplicadoException(CoreException):
+    """El código de producto ya existe para la marca especificada."""
+    def __init__(self, message: str):
+        super().__init__(message)
+        self.message = message
+
+class CodigoProductoOtraMarcaWarning(CoreException):
+    """El código de producto ya existe pero para otra marca."""
+    def __init__(self, message: str, codigo: str, marca_conflicto: str, marca_destino: str):
+        super().__init__(message)
+        self.message = message
+        self.codigo = codigo
+        self.marca_conflicto = marca_conflicto
+        self.marca_destino = marca_destino

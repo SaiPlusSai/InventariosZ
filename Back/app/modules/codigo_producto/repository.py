@@ -50,16 +50,32 @@ class CodigoProductoRepository:
 
         return db.scalar(statement)
 
-    def get_by_codigo(
+    def get_all_by_codigo(
         self,
         db: Session,
         codigo: str,
+    ) -> list[CodigoProducto]:
+
+        statement = (
+            select(CodigoProducto)
+            .where(CodigoProducto.estado == True)
+            .where(CodigoProducto.codigo == codigo)
+        )
+
+        return db.scalars(statement).all()
+
+    def get_by_codigo_y_marca(
+        self,
+        db: Session,
+        codigo: str,
+        marca_id: int,
     ) -> CodigoProducto | None:
 
         statement = (
             select(CodigoProducto)
             .where(CodigoProducto.estado == True)
             .where(CodigoProducto.codigo == codigo)
+            .where(CodigoProducto.marca_id == marca_id)
         )
 
         return db.scalar(statement)

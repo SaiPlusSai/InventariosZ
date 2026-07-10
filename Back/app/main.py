@@ -8,7 +8,14 @@ import traceback
 from app.api.router import api_router
 from app.core.config import settings
 from app.core.metrics import DBProfilerMiddleware
-from app.core.exceptions import ValidacionDatosException, RegistroEnPapeleraException, RegistroYaExisteException, RecuperacionConflictivaException
+from app.core.exceptions import (
+    ValidacionDatosException, 
+    RegistroEnPapeleraException, 
+    RegistroYaExisteException, 
+    RecuperacionConflictivaException,
+    CodigoProductoDuplicadoException,
+    CodigoProductoOtraMarcaWarning
+)
 
 app = FastAPI(
     title=settings.APP_NAME,
@@ -96,6 +103,29 @@ async def recuperacion_conflictiva_handler(request: Request, exc: RecuperacionCo
         content={
             "error": "CONFLICTO_RECUPERACION",
             "message": exc.message
+        },
+    )
+
+@app.exception_handler(CodigoProductoDuplicadoException)
+async def codigo_duplicado_handler(request: Request, exc: CodigoProductoDuplicadoException):
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": "CODIGO_PRODUCTO_DUPLICADO",
+            "message": exc.message
+        },
+    )
+
+@app.exception_handler(CodigoProductoOtraMarcaWarning)
+async def codigo_otra_marca_warning_handler(request: Request, exc: CodigoProductoOtraMarcaWarning):
+    return JSONResponse(
+        status_code=409,
+        content={
+            "error": "WARNING_CODIGO_OTRA_MARCA",
+            "message": exc.message,
+            "codigo": exc.codigo,
+            "marca_conflicto": exc.marca_conflicto,
+            "marca_destino": exc.marca_destino
         },
     )
 

@@ -46,6 +46,16 @@ axiosInstance.interceptors.response.use(
       error.isPapelera = true;
       error.papeleraData = { id_registro: data.id };
       error.customMessage = data.message || 'El registro se encuentra en la papelera.';
+    } else if (error.response.status === 409 && data?.error === 'WARNING_CODIGO_OTRA_MARCA') {
+      error.isWarning = true;
+      error.warningData = {
+        codigo: data.codigo,
+        marca_conflicto: data.marca_conflicto,
+        marca_destino: data.marca_destino
+      };
+      error.customMessage = data.message || 'Advertencia: el código ya existe en otra marca.';
+    } else if (error.response.status === 409 && data?.error === 'CODIGO_PRODUCTO_DUPLICADO') {
+      error.customMessage = data.message || 'El código ya existe para esta marca.';
     } else if (error.response.status === 409 && data?.error === 'REGISTRO_EXISTENTE') {
       error.customMessage = data.message || 'El registro ya existe.';
     } else if (error.response.status === 409 && data?.error === 'CONFLICTO_RECUPERACION') {
