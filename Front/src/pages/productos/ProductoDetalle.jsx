@@ -8,7 +8,6 @@ import TabsDetalle from './detalle/TabsDetalle'
 import GeneralTab from './detalle/GeneralTab'
 import InventarioTab from './detalle/InventarioTab'
 import PreciosTab from './detalle/PreciosTab'
-import GaleriaTab from './detalle/GaleriaTab'
 
 export default function ProductoDetalle({
   producto,
@@ -90,14 +89,6 @@ export default function ProductoDetalle({
               {tab === 'precios' && (
 
                 <PreciosTab
-                  producto={producto}
-                />
-
-              )}
-
-              {tab === 'galeria' && (
-
-                <GaleriaTab
                   producto={producto}
                 />
 

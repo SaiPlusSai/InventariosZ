@@ -23,11 +23,6 @@ export default function TabsDetalle({
       label: 'Precios',
     },
 
-    {
-      id: 'imagenes',
-      label: 'Galería',
-    },
-
   ]
 
   return (

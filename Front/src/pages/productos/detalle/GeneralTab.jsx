@@ -46,104 +46,61 @@ export default function GeneralTab({
 
         </h2>
 
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
 
           <InfoCard
-
-            icon={<Tag size={18}/>}
-
+            icon={<Tag size={18} className="text-gray-400" />}
             title="Marca"
-
           >
-
             {producto.marca?.nombre}
-
           </InfoCard>
 
           <InfoCard
-
-            icon={<Package size={18}/>}
-
+            icon={<Package size={18} className="text-gray-400" />}
             title="Código"
-
           >
-
             {producto.codigo}
-
           </InfoCard>
 
           <InfoCard
-
-            icon={<Shirt size={18}/>}
-
+            icon={<Shirt size={18} className="text-gray-400" />}
             title="Tipo"
-
           >
-
             {producto.tipo_calzado?.nombre}
-
           </InfoCard>
 
           <InfoCard
-
-            icon={<Package size={18}/>}
-
+            icon={<Package size={18} className="text-gray-400" />}
             title="Material"
-
           >
-
             {producto.material?.nombre}
-
           </InfoCard>
 
-          <div className="rounded-xl border p-5">
-
-            <div className="flex items-center gap-2 mb-3">
-
-              <Palette size={18}/>
-
-              <span className="font-semibold">
-
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-2 mb-2 text-gray-500">
+              <Palette size={16} />
+              <span className="text-xs font-semibold uppercase tracking-wider">
                 Color
-
               </span>
-
             </div>
-
             <div className="flex items-center gap-3">
-
               <div
-
-                className="w-5 h-5 rounded-full border"
-
+                className="w-6 h-6 rounded-full border shadow-sm ring-2 ring-white"
                 style={{
-
-                  background:
-
-                  producto.color?.codigo_hex ||
-
-                  '#ccc',
-
+                  background: producto.color?.codigo_hex || '#ccc',
                 }}
-
               />
-
-              {producto.color?.nombre}
-
+              <span className="font-medium text-gray-800">
+                {producto.color?.nombre}
+              </span>
             </div>
-
           </div>
 
           <InfoCard
-
-            icon={<Ruler size={18}/>}
-
+            icon={<Ruler size={18} className="text-gray-400" />}
             title="Talla"
-
           >
-
             {producto.talla?.nombre}
-
           </InfoCard>
 
         </div>
