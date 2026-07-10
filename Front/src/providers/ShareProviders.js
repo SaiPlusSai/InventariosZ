@@ -9,11 +9,42 @@ export class WebShareProvider {
     if (!navigator.share) {
       throw new Error('Web Share API no soportado');
     }
-    await navigator.share({
+
+    const shareData = {
       title: payload.title,
       text: payload.text,
       url: payload.url,
-    });
+    };
+
+    // Intentar adjuntar la imagen si el navegador soporta compartir archivos (Web Share API Level 2)
+    // y si la imagen realmente existe en el payload.
+    if (payload.image && navigator.canShare) {
+      try {
+        // Descargar la imagen pública desde Supabase
+        const response = await fetch(payload.image);
+        if (response.ok) {
+          const blob = await response.blob();
+          
+          // Extraer extensión o usar jpg por defecto
+          const contentType = blob.type || 'image/jpeg';
+          const extension = contentType.split('/')[1] || 'jpg';
+          const filename = `producto.${extension}`;
+
+          const file = new File([blob], filename, { type: contentType });
+
+          // Verificar si el sistema operativo permite compartir este archivo específico
+          if (navigator.canShare({ files: [file] })) {
+            shareData.files = [file];
+          }
+        }
+      } catch (error) {
+        console.warn('No se pudo adjuntar la imagen al Web Share API, cayendo a texto plano.', error);
+        // Fallback silencioso: shareData se queda sin la propiedad "files"
+      }
+    }
+
+    // Ejecutar el share nativo (con o sin imagen)
+    await navigator.share(shareData);
   }
 }
 
