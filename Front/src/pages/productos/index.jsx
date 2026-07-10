@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Card, Button, Input, ConfirmModal, EmptyState } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal } from '../../components/ui'
 import { useProductoStore } from '../../store/productoStore'
 import { useWizardStore } from '../../store/wizardStore'
 import { productoService } from '../../services/productoService'
@@ -63,6 +63,10 @@ export default function Productos() {
   const [showNewWizard, setShowNewWizard] = useState(false)
   const [showDetalle, setShowDetalle] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null) // { codigoProductoId, colorId, nombre, colorNombre }
+  
+  // Share States
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [itemToShare, setItemToShare] = useState(null) // { producto, colorInfo }
   
   const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
 
@@ -302,6 +306,10 @@ export default function Productos() {
                   isPapeleraMode={isPapeleraMode}
                   onVer={() => handleVer(producto, colorInfo)}
                   onEditar={() => handleEditar(producto, colorInfo)}
+                  onCompartir={() => {
+                    setItemToShare({ producto, colorInfo })
+                    setShowShareModal(true)
+                  }}
                   onEliminar={() => setItemToDelete({
                     codigoProductoId: producto.codigo_producto_id, 
                     colorId: colorInfo.color_id, 
@@ -332,6 +340,33 @@ export default function Productos() {
           service: productoService,
           itemId: itemToDelete?.colorId, 
           isPhysicalDelete: isPapeleraMode
+        }}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false)
+          setItemToShare(null)
+        }}
+        onShare={async (providerId) => {
+          if (!itemToShare) return;
+          try {
+            // Importación dinámica para mantener el bundle pequeño
+            const { ShareFactory } = await import('../../providers/ShareProviders');
+            const { shareService } = await import('../../services/shareService');
+            
+            const payload = shareService.prepareSharePayload(itemToShare.producto, itemToShare.colorInfo);
+            const provider = ShareFactory.getProvider(providerId);
+            
+            await provider.share(payload);
+            toast.success('¡Compartido exitosamente!');
+          } catch (error) {
+            console.error('Error al compartir:', error);
+            toast.error(error.message || 'Error al intentar compartir.');
+          } finally {
+            setShowShareModal(false);
+          }
         }}
       />
 

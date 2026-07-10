@@ -8,6 +8,7 @@ export default function ProductoCard({
   isPapeleraMode,
   onVer,
   onEditar,
+  onCompartir,
   onEliminar,
   onRecuperar,
   onIncrementar,
@@ -81,17 +82,19 @@ export default function ProductoCard({
       </div>
 
       {/* Acciones */}
-      <div className="flex gap-2 mt-auto">
+      <div className="grid grid-cols-2 gap-2 mt-auto">
         {!isPapeleraMode ? (
           <>
-            <Button variant="ghost" className="flex-1 text-xs" onClick={() => onVer(color.color_id)}>
+            <Button variant="ghost" className="text-xs w-full" onClick={() => onVer(color.color_id)}>
               Ver
             </Button>
-            <Button variant="secondary" className="flex-1 text-xs" onClick={() => onEditar()}>
+            <Button variant="ghost" className="text-xs w-full" onClick={() => onCompartir && onCompartir()}>
+              Compartir
+            </Button>
+            <Button variant="secondary" className="text-xs w-full" onClick={() => onEditar()}>
               Editar
             </Button>
-            {/* Opcional: Eliminar todo el producto (no solo la variante). Ajustar si es necesario */}
-            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 flex-1 text-xs" onClick={() => onEliminar()}>
+            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50 text-xs w-full" onClick={() => onEliminar()}>
               Eliminar
             </Button>
           </>
