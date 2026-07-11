@@ -1,110 +1,255 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dashboardService } from '../../services/dashboardService';
-import { Package, ShoppingBag, ShoppingCart, AlertTriangle, CheckCircle, Tag, TrendingUp, TrendingDown } from 'lucide-react';
+import { 
+  Package, LayoutGrid, CheckCircle, XCircle, Trash2, 
+  Archive, AlertTriangle, ArrowDownToLine, ArrowUpToLine,
+  Tags, Layers, Palette, Ruler, FileImage, DollarSign,
+  Activity
+} from 'lucide-react';
+import toast from 'react-hot-toast';
 
-export default function Dashboard() {
-  const [stats, setStats] = useState({
-    ventas_hoy: 0,
-    compras_hoy: 0,
-    perdidas_hoy: 0,
-    total_productos: 0,
-    total_marcas: 0,
-    stock_total: 0,
-    sin_stock: 0
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    loadStats();
-  }, []);
-
-  const loadStats = async () => {
-    try {
-      const data = await dashboardService.getStats();
-      setStats(data);
-    } catch (error) {
-      console.error("Error cargando dashboard:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) return <div className="p-8 text-center text-gray-500">Cargando dashboard...</div>;
-
-  return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6 text-gray-800">Dashboard</h1>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Métricas del día */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden group">
-          <div className="absolute right-0 top-0 opacity-5 transform group-hover:scale-110 transition-transform">
-            <ShoppingBag size={120} />
-          </div>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-              <TrendingUp size={24} />
+// Componente para Skeleton Loading
+const DashboardSkeleton = () => (
+  <div className="space-y-8 animate-pulse">
+    {[1, 2, 3, 4].map(section => (
+      <div key={section}>
+        <div className="h-6 bg-gray-200 rounded w-1/4 mb-4"></div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(card => (
+            <div key={card} className="bg-white p-4 rounded-xl border border-gray-100 h-28">
+              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
             </div>
-            <h3 className="text-gray-600 font-medium">Ventas de Hoy</h3>
-          </div>
-          <p className="text-4xl font-bold text-blue-700">{stats.ventas_hoy} <span className="text-lg font-normal text-gray-400">unid.</span></p>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden group">
-          <div className="absolute right-0 top-0 opacity-5 transform group-hover:scale-110 transition-transform">
-            <ShoppingCart size={120} />
-          </div>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-              <TrendingDown size={24} />
-            </div>
-            <h3 className="text-gray-600 font-medium">Compras de Hoy</h3>
-          </div>
-          <p className="text-4xl font-bold text-green-700">{stats.compras_hoy} <span className="text-lg font-normal text-gray-400">unid.</span></p>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 relative overflow-hidden group">
-          <div className="absolute right-0 top-0 opacity-5 transform group-hover:scale-110 transition-transform">
-            <AlertTriangle size={120} />
-          </div>
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-red-50 text-red-600 rounded-lg">
-              <AlertTriangle size={24} />
-            </div>
-            <h3 className="text-gray-600 font-medium">Mermas / Pérdidas</h3>
-          </div>
-          <p className="text-4xl font-bold text-red-700">{stats.perdidas_hoy} <span className="text-lg font-normal text-gray-400">unid.</span></p>
+          ))}
         </div>
       </div>
+    ))}
+  </div>
+);
 
-      <h2 className="text-xl font-bold mb-4 text-gray-700">Estado del Inventario</h2>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col items-center justify-center text-center">
-          <Package className="text-primary-500 mb-2" size={32} />
-          <h3 className="text-gray-500 text-sm font-medium">Total Productos</h3>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total_productos}</p>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col items-center justify-center text-center">
-          <Tag className="text-indigo-500 mb-2" size={32} />
-          <h3 className="text-gray-500 text-sm font-medium">Total Marcas</h3>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{stats.total_marcas}</p>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 flex flex-col items-center justify-center text-center">
-          <CheckCircle className="text-green-500 mb-2" size={32} />
-          <h3 className="text-gray-500 text-sm font-medium">Stock Total Físico</h3>
-          <p className="text-2xl font-bold text-gray-800 mt-1">{stats.stock_total}</p>
-        </div>
-        
-        <div className="bg-white rounded-xl shadow-sm p-6 border border-red-100 bg-red-50 flex flex-col items-center justify-center text-center">
-          <AlertTriangle className="text-red-500 mb-2" size={32} />
-          <h3 className="text-red-700 text-sm font-medium">Productos Sin Stock</h3>
-          <p className="text-2xl font-bold text-red-700 mt-1">{stats.sin_stock}</p>
-        </div>
-
+// Componente Tarjeta KPI
+const KpiCard = ({ title, value, icon: Icon, colorClass, bgColorClass }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-start justify-between">
+      <div>
+        <p className="text-sm font-medium text-gray-500 mb-1">{title}</p>
+        <h3 className="text-2xl font-bold text-gray-800">{value}</h3>
+      </div>
+      <div className={`p-3 rounded-lg ${bgColorClass}`}>
+        <Icon className={`w-5 h-5 ${colorClass}`} />
       </div>
     </div>
+  </div>
+);
+
+const Dashboard = () => {
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        const data = await dashboardService.getStats();
+        setStats(data);
+        setError(false);
+      } catch (err) {
+        console.error('Error cargando stats', err);
+        toast.error('Error al cargar el dashboard');
+        setError(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchStats();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto space-y-6">
+        <div className="flex items-center gap-2 mb-8">
+          <Activity className="w-6 h-6 text-blue-600 animate-spin" />
+          <h1 className="text-2xl font-bold text-gray-800">Cargando Indicadores...</h1>
+        </div>
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+
+  if (error || !stats) {
+    return (
+      <div className="p-6 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
+        <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
+        <h2 className="text-xl font-bold text-gray-800 mb-2">Error de Conexión</h2>
+        <p className="text-gray-500">No se pudieron cargar los indicadores ejecutivos.</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-8">
+      
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Dashboard Ejecutivo</h1>
+          <p className="text-sm text-gray-500 mt-1">Visión general del estado actual del sistema</p>
+        </div>
+      </div>
+
+      {/* SECCIÓN 1: PRODUCTOS */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Package className="w-5 h-5 text-indigo-600" />
+          Resumen de Productos
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard 
+            title="Total Productos" 
+            value={stats.productos.total} 
+            icon={LayoutGrid} 
+            colorClass="text-indigo-600" 
+            bgColorClass="bg-indigo-50" 
+          />
+          <KpiCard 
+            title="Activos" 
+            value={stats.productos.activos} 
+            icon={CheckCircle} 
+            colorClass="text-green-600" 
+            bgColorClass="bg-green-50" 
+          />
+          <KpiCard 
+            title="Inactivos" 
+            value={stats.productos.inactivos} 
+            icon={XCircle} 
+            colorClass="text-gray-600" 
+            bgColorClass="bg-gray-100" 
+          />
+          <KpiCard 
+            title="En Papelera" 
+            value={stats.productos.eliminados} 
+            icon={Trash2} 
+            colorClass="text-red-600" 
+            bgColorClass="bg-red-50" 
+          />
+        </div>
+      </section>
+
+      {/* SECCIÓN 2: INVENTARIO */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Archive className="w-5 h-5 text-emerald-600" />
+          Estado del Inventario
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <KpiCard 
+            title="Stock Total" 
+            value={stats.inventario.stock_total} 
+            icon={Archive} 
+            colorClass="text-emerald-600" 
+            bgColorClass="bg-emerald-50" 
+          />
+          <KpiCard 
+            title="Sin Stock" 
+            value={stats.inventario.sin_stock} 
+            icon={AlertTriangle} 
+            colorClass="text-red-600" 
+            bgColorClass="bg-red-50" 
+          />
+          <KpiCard 
+            title="Stock Bajo (Crítico)" 
+            value={stats.inventario.stock_bajo} 
+            icon={ArrowDownToLine} 
+            colorClass="text-orange-600" 
+            bgColorClass="bg-orange-50" 
+          />
+          <KpiCard 
+            title="Stock Máximo" 
+            value={stats.inventario.stock_maximo} 
+            icon={ArrowUpToLine} 
+            colorClass="text-blue-600" 
+            bgColorClass="bg-blue-50" 
+          />
+        </div>
+      </section>
+
+      {/* SECCIÓN 3: CATÁLOGO */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Layers className="w-5 h-5 text-purple-600" />
+          Composición del Catálogo (Vigentes)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <KpiCard 
+            title="Marcas" 
+            value={stats.catalogo.marcas} 
+            icon={Tags} 
+            colorClass="text-purple-600" 
+            bgColorClass="bg-purple-50" 
+          />
+          <KpiCard 
+            title="Tipos" 
+            value={stats.catalogo.tipos_calzado} 
+            icon={LayoutGrid} 
+            colorClass="text-purple-600" 
+            bgColorClass="bg-purple-50" 
+          />
+          <KpiCard 
+            title="Materiales" 
+            value={stats.catalogo.materiales} 
+            icon={Layers} 
+            colorClass="text-purple-600" 
+            bgColorClass="bg-purple-50" 
+          />
+          <KpiCard 
+            title="Colores" 
+            value={stats.catalogo.colores} 
+            icon={Palette} 
+            colorClass="text-purple-600" 
+            bgColorClass="bg-purple-50" 
+          />
+          <KpiCard 
+            title="Tallas" 
+            value={stats.catalogo.tallas} 
+            icon={Ruler} 
+            colorClass="text-purple-600" 
+            bgColorClass="bg-purple-50" 
+          />
+        </div>
+      </section>
+
+      {/* SECCIÓN 4: CALIDAD DEL CATÁLOGO */}
+      <section>
+        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <Activity className="w-5 h-5 text-amber-600" />
+          Calidad de Datos (Acción Requerida)
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <KpiCard 
+            title="Productos sin Imagen Principal" 
+            value={stats.calidad.sin_imagen_principal} 
+            icon={FileImage} 
+            colorClass="text-amber-600" 
+            bgColorClass="bg-amber-50" 
+          />
+          <KpiCard 
+            title="Productos sin Precio Vigente" 
+            value={stats.calidad.sin_precio_vigente} 
+            icon={DollarSign} 
+            colorClass="text-amber-600" 
+            bgColorClass="bg-amber-50" 
+          />
+        </div>
+      </section>
+
+    </div>
   );
-}
+};
+
+export default Dashboard;
