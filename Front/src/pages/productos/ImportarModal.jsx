@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { UploadCloud, FileText, CheckCircle, AlertCircle, X, Loader2 } from 'lucide-react'
+import { Upload, FileText, CheckCircle, AlertCircle, X, Loader2, Download } from 'lucide-react'
 import Button from '../../components/ui/Button'
 import { productoService } from '../../services/productoService'
 import toast from 'react-hot-toast'
@@ -94,13 +94,13 @@ const ImportarModal = ({ onClose, onImportSuccess }) => {
                   <h3 className="font-semibold text-blue-900">Paso 1: Descarga la plantilla</h3>
                   <p className="text-sm text-blue-700 mt-1 mb-3">Utiliza nuestra plantilla oficial para asegurarte de que los datos tengan el formato correcto.</p>
                   <Button variant="secondary" onClick={handleDescargarPlantilla} className="bg-white border-blue-200 hover:bg-blue-50">
-                    Descargar Plantilla Excel
+                    <Download size={16} className="mr-2 inline" /> Descargar Plantilla Excel
                   </Button>
                 </div>
               </div>
 
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <UploadCloud size={48} className="mx-auto text-gray-400 mb-4" />
+                <Upload size={48} className="mx-auto text-gray-400 mb-4" />
                 <h3 className="font-medium text-gray-900 mb-1">Paso 2: Sube tu archivo</h3>
                 <p className="text-sm text-gray-500 mb-4">Selecciona el archivo Excel completado (.xlsx)</p>
                 <input 
@@ -182,7 +182,7 @@ const ImportarModal = ({ onClose, onImportSuccess }) => {
           </Button>
           {previaData && !loading && (
             <Button variant="primary" onClick={handleConfirmar} disabled={previaData.validos === 0}>
-              Importar {previaData.validos} Válidos
+              <Upload size={16} className="mr-2 inline" /> Importar {previaData.validos} Válidos
             </Button>
           )}
         </div>
