@@ -7,7 +7,7 @@ import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
-import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package } from 'lucide-react'
+import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const emptyFilters = {
@@ -181,6 +181,50 @@ export default function Productos() {
     }
   }
 
+  const handleExportarExcel = async () => {
+    try {
+      const loadingToast = toast.loading('Generando Excel...');
+      const response = await productoService.exportarExcel(cleanFilters(filters));
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'productos_inventario.xlsx');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.dismiss(loadingToast);
+      toast.success('Excel exportado correctamente');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Error al exportar a Excel');
+      console.error(error);
+    }
+  }
+
+  const handleExportarPdf = async () => {
+    try {
+      const loadingToast = toast.loading('Generando PDF...');
+      const response = await productoService.exportarPdf(cleanFilters(filters));
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', 'productos_inventario.pdf');
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.dismiss(loadingToast);
+      toast.success('PDF exportado correctamente');
+    } catch (error) {
+      toast.dismiss();
+      toast.error('Error al exportar a PDF');
+      console.error(error);
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto pb-12">
       {/* Header */}
@@ -202,9 +246,17 @@ export default function Productos() {
             {isPapeleraMode ? <><RotateCcw size={16} className="mr-2"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2"/> Ver Papelera</>}
           </Button>
           {!isPapeleraMode && (
-            <Button variant="primary" onClick={() => setShowNewWizard(true)} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
-              <Plus size={16} className="mr-2"/> Nuevo Producto
-            </Button>
+            <>
+              <Button variant="secondary" onClick={handleExportarPdf} className="flex-1 md:flex-none" title="Exportar a PDF">
+                <FileText size={16} className="mr-2"/> PDF
+              </Button>
+              <Button variant="secondary" onClick={handleExportarExcel} className="flex-1 md:flex-none" title="Exportar a Excel">
+                <Download size={16} className="mr-2"/> Excel
+              </Button>
+              <Button variant="primary" onClick={() => setShowNewWizard(true)} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
+                <Plus size={16} className="mr-2"/> Nuevo Producto
+              </Button>
+            </>
           )}
         </div>
       </div>

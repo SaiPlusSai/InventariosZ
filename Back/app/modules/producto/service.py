@@ -1,7 +1,16 @@
 from app.core.exceptions import RegistroActivoNoPuedeEliminarseException, ValidacionDatosException
 from datetime import datetime
+from io import BytesIO
 
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+from openpyxl import Workbook
+from reportlab.lib.pagesizes import letter, landscape
+from reportlab.lib import colors
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.units import inch
+
 from app.modules.producto.websocket import manager
 from app.modules.codigo_producto.constants import (
     CODIGO_PRODUCTO_NO_EXISTE,
@@ -183,6 +192,154 @@ class ProductoService:
             )
 
         return respuestas
+
+    def exportar_excel(
+        self,
+        db: Session,
+        codigo: str | None = None,
+        marca_id: int | None = None,
+        marca: str | None = None,
+        color_id: int | None = None,
+        color: str | None = None,
+        material_id: int | None = None,
+        material: str | None = None,
+        talla_id: int | None = None,
+        talla: str | None = None,
+        tipo_calzado_id: int | None = None,
+        tipo: str | None = None,
+    ) -> BytesIO:
+        productos_planos = self.repository.get_all(
+            db,
+            codigo=codigo,
+            marca_id=marca_id,
+            marca=marca,
+            color_id=color_id,
+            color=color,
+            material_id=material_id,
+            material=material,
+            talla_id=talla_id,
+            talla=talla,
+            tipo_calzado_id=tipo_calzado_id,
+            tipo=tipo,
+        )
+
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Productos"
+
+        headers = [
+            "Código", "Marca", "Tipo", "Material", "Color", 
+            "Talla", "Stock", "Precio Venta", "Estado"
+        ]
+        ws.append(headers)
+
+        for p in productos_planos:
+            ws.append([
+                p["codigo"],
+                p["marca_nombre"],
+                p["tipo_calzado_nombre"],
+                p["material_nombre"],
+                p["color_nombre"],
+                p["talla_nombre"],
+                p["stock_actual"],
+                p["precio_venta"],
+                "Activo" if p["estado"] else "Inactivo"
+            ])
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    def exportar_pdf(
+        self,
+        db: Session,
+        codigo: str | None = None,
+        marca_id: int | None = None,
+        marca: str | None = None,
+        color_id: int | None = None,
+        color: str | None = None,
+        material_id: int | None = None,
+        material: str | None = None,
+        talla_id: int | None = None,
+        talla: str | None = None,
+        tipo_calzado_id: int | None = None,
+        tipo: str | None = None,
+    ) -> BytesIO:
+        productos_planos = self.repository.get_all(
+            db,
+            codigo=codigo,
+            marca_id=marca_id,
+            marca=marca,
+            color_id=color_id,
+            color=color,
+            material_id=material_id,
+            material=material,
+            talla_id=talla_id,
+            talla=talla,
+            tipo_calzado_id=tipo_calzado_id,
+            tipo=tipo,
+        )
+
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        elements = []
+        styles = getSampleStyleSheet()
+
+        # Cabecera genérica fácil de cambiar
+        nombre_negocio = "MI NEGOCIO S.A."
+        titulo_reporte = "Catálogo General de Productos"
+        fecha_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+        elements.append(Paragraph(f"<b>{nombre_negocio}</b>", styles['Heading1']))
+        elements.append(Paragraph(f"{titulo_reporte}", styles['Heading2']))
+        elements.append(Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal']))
+        elements.append(Paragraph(f"Total de productos: {len(productos_planos)}", styles['Normal']))
+        elements.append(Spacer(1, 0.25 * inch))
+
+        # Tabla
+        data = [[
+            "Código", "Marca", "Tipo", "Material", "Color", 
+            "Talla", "Stock", "Precio Venta", "Estado"
+        ]]
+
+        for p in productos_planos:
+            data.append([
+                p["codigo"],
+                p["marca_nombre"],
+                p["tipo_calzado_nombre"],
+                p["material_nombre"],
+                p["color_nombre"],
+                p["talla_nombre"],
+                str(p["stock_actual"]),
+                f"${p['precio_venta']:.2f}",
+                "Activo" if p["estado"] else "Inactivo"
+            ])
+
+        t = Table(data, repeatRows=1)
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2C3E50")),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#ECF0F1")),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+            ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ('GRID', (0, 0), (-1, -1), 1, colors.white),
+        ]))
+        elements.append(t)
+
+        def add_page_number(canvas, doc):
+            page_num = canvas.getPageNumber()
+            text = f"Página {page_num}"
+            canvas.drawRightString(10.5*inch, 0.5*inch, text)
+
+        doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+        buffer.seek(0)
+        return buffer
 
     def get_papelera(
         self,

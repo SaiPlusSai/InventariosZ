@@ -19,9 +19,17 @@ const updateColor = (codigoProductoId, colorId, data) =>
 const getCatalogo = (params = {}) =>
   axiosInstance.get('/productos/catalogo', { params })
 
+const exportarExcel = (params = {}) =>
+  axiosInstance.get('/productos/exportar/excel', { params, responseType: 'blob' })
+
+const exportarPdf = (params = {}) =>
+  axiosInstance.get('/productos/exportar/pdf', { params, responseType: 'blob' })
+
 export const productoService = {
   getAll,
   getCatalogo,
+  exportarExcel,
+  exportarPdf,
   desactivarColor,
   recuperarColor,
   eliminarColorPermanente,

@@ -2,6 +2,7 @@ from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from fastapi import status
+from fastapi.responses import StreamingResponse
 
 from sqlalchemy.orm import Session
 
@@ -139,6 +140,79 @@ def get_catalogo(
         tipo=tipo,
     )
 
+@router.get(
+    "/exportar/excel",
+)
+def exportar_excel(
+    codigo: str | None = None,
+    marca_id: int | None = None,
+    marca: str | None = None,
+    color_id: int | None = None,
+    color: str | None = None,
+    material_id: int | None = None,
+    material: str | None = None,
+    talla_id: int | None = None,
+    talla: str | None = None,
+    tipo_calzado_id: int | None = None,
+    tipo: str | None = None,
+    db: Session = Depends(get_db),
+):
+    buffer = service.exportar_excel(
+        db,
+        codigo=codigo,
+        marca_id=marca_id,
+        marca=marca,
+        color_id=color_id,
+        color=color,
+        material_id=material_id,
+        material=material,
+        talla_id=talla_id,
+        talla=talla,
+        tipo_calzado_id=tipo_calzado_id,
+        tipo=tipo,
+    )
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=productos_inventario.xlsx"}
+    )
+
+@router.get(
+    "/exportar/pdf",
+)
+def exportar_pdf(
+    codigo: str | None = None,
+    marca_id: int | None = None,
+    marca: str | None = None,
+    color_id: int | None = None,
+    color: str | None = None,
+    material_id: int | None = None,
+    material: str | None = None,
+    talla_id: int | None = None,
+    talla: str | None = None,
+    tipo_calzado_id: int | None = None,
+    tipo: str | None = None,
+    db: Session = Depends(get_db),
+):
+    buffer = service.exportar_pdf(
+        db,
+        codigo=codigo,
+        marca_id=marca_id,
+        marca=marca,
+        color_id=color_id,
+        color=color,
+        material_id=material_id,
+        material=material,
+        talla_id=talla_id,
+        talla=talla,
+        tipo_calzado_id=tipo_calzado_id,
+        tipo=tipo,
+    )
+    return StreamingResponse(
+        buffer,
+        media_type="application/pdf",
+        headers={"Content-Disposition": "attachment; filename=productos_inventario.pdf"}
+    )
 
 
 @router.get(
