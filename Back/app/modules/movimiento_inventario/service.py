@@ -7,10 +7,12 @@ from app.modules.movimiento_inventario.constants import TipoMovimiento
 from app.modules.movimiento_inventario.validators import validar_coherencia_tipo_origen, validar_origen_observacion
 from app.modules.movimiento_inventario.exceptions import StockInsuficienteException, MovimientoInvalidoException
 from app.modules.producto.models import Producto
+from app.modules.producto.websocket import manager
+from fastapi import BackgroundTasks
 
 class MovimientoInventarioService:
 
-    def registrar_movimiento(self, db: Session, request: MovimientoCreate) -> MovimientoInventario:
+    def registrar_movimiento(self, db: Session, request: MovimientoCreate, background_tasks: BackgroundTasks) -> MovimientoInventario:
         """
         NÚCLEO DEL SISTEMA DE INVENTARIO:
         Registra un movimiento en el Kardex y actualiza el stock físico de manera atómica (Transaccional).
@@ -73,6 +75,29 @@ class MovimientoInventarioService:
         # En la arquitectura estándar usualmente el Depends(get_db) maneja esto, pero para seguridad transaccional:
         db.commit()
         db.refresh(movimiento_creado)
+
+        # 7. Disparar WebSockets en background
+        background_tasks.add_task(
+            manager.broadcast_stock,
+            request.producto_id,
+            stock_nuevo
+        )
+        
+        movimiento_dict = {
+            "id": movimiento_creado.id,
+            "producto_id": request.producto_id,
+            "tipo_movimiento": request.tipo_movimiento.value,
+            "origen": request.origen.value,
+            "cantidad": request.cantidad,
+            "stock_anterior": stock_anterior,
+            "stock_nuevo": stock_nuevo,
+            "created_at": movimiento_creado.created_at.isoformat() if movimiento_creado.created_at else None
+        }
+
+        background_tasks.add_task(
+            manager.broadcast_movimiento,
+            movimiento_dict
+        )
 
         return movimiento_creado
 

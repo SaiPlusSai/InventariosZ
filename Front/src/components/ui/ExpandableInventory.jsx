@@ -34,7 +34,7 @@ export function ExpandableInventory({ variantes, onIncrementar, onDecrementar })
                 <Button
                   variant="secondary"
                   className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => onDecrementar && onDecrementar(v.id)}
+                  onClick={() => onDecrementar && onDecrementar(v.id, v.stock_actual)}
                   disabled={v.stock_actual <= 0}
                 >
                   -
@@ -45,7 +45,7 @@ export function ExpandableInventory({ variantes, onIncrementar, onDecrementar })
                 <Button
                   variant="secondary"
                   className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md"
-                  onClick={() => onIncrementar && onIncrementar(v.id)}
+                  onClick={() => onIncrementar && onIncrementar(v.id, v.stock_actual)}
                 >
                   +
                 </Button>

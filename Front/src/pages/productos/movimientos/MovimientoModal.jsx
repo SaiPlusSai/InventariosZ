@@ -5,9 +5,9 @@ import MovimientoDynamicForm from './MovimientoDynamicForm';
 import useMovimientoStore from '../../../store/movimientoStore';
 import toast from 'react-hot-toast';
 
-const MovimientoModal = ({ isOpen, onClose, productoId, stockActual, onMovimientoRealizado }) => {
-  const [step, setStep] = useState(1);
-  const [selectedType, setSelectedType] = useState(null); // ENTRADA, SALIDA, AJUSTE
+const MovimientoModal = ({ isOpen = true, onClose, productoId, stockActual, onMovimientoRealizado = () => {}, preselectedPolarity }) => {
+  const [step, setStep] = useState(preselectedPolarity ? 2 : 1);
+  const [selectedType, setSelectedType] = useState(preselectedPolarity || null); // ENTRADA, SALIDA, AJUSTE
   const { registrarMovimiento, loading } = useMovimientoStore();
 
   if (!isOpen) return null;
@@ -18,23 +18,31 @@ const MovimientoModal = ({ isOpen, onClose, productoId, stockActual, onMovimient
   };
 
   const handleBack = () => {
-    setStep(1);
-    setSelectedType(null);
+    if (preselectedPolarity) {
+      onClose(); // Si se preseleccionó, el botón de "Atrás" cierra el modal
+    } else {
+      setStep(1);
+      setSelectedType(null);
+    }
   };
 
   const handleSubmit = async (payload) => {
     try {
-      await registrarMovimiento({
+      const resp = await registrarMovimiento({
         ...payload,
         producto_id: productoId,
         cantidad: Number(payload.cantidad)
       });
-      toast.success('Movimiento registrado correctamente');
+      toast.success(
+        <div>
+          <strong>Movimiento Registrado</strong><br/>
+          Tipo: {resp.tipo_movimiento} | Cant: {resp.cantidad}<br/>
+          Stock anterior: {resp.stock_anterior} → Nuevo: {resp.stock_nuevo}
+        </div>,
+        { duration: 5000 }
+      );
       onMovimientoRealizado(); // Refrescar detalles del producto
       onClose();
-      // Reset state for next time
-      setStep(1);
-      setSelectedType(null);
     } catch (error) {
       // Error handled by store/toast
       console.error(error);

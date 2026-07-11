@@ -8,6 +8,7 @@ import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
 import ImportarModal from './ImportarModal'
+import MovimientoModal from './movimientos/MovimientoModal.jsx'
 import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, Upload , FileDown, FileUp} from 'lucide-react'
 import toast from 'react-hot-toast'
 
@@ -64,11 +65,17 @@ export default function Productos() {
   const [showNewWizard, setShowNewWizard] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [showDetalle, setShowDetalle] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState(null) // { codigoProductoId, colorId, nombre, colorNombre }
+  const [itemToDelete, setItemToDelete] = useState(null)
   
   // Share States
   const [showShareModal, setShowShareModal] = useState(false)
-  const [itemToShare, setItemToShare] = useState(null) // { producto, colorInfo }
+  const [itemToShare, setItemToShare] = useState(null)
+  
+  // Movimiento Modal States
+  const [movimientoModalOpen, setMovimientoModalOpen] = useState(false)
+  const [movimientoProductoId, setMovimientoProductoId] = useState(null)
+  const [movimientoStockActual, setMovimientoStockActual] = useState(0)
+  const [movimientoPolaridad, setMovimientoPolaridad] = useState(null)
   
   const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
 
@@ -121,25 +128,22 @@ export default function Productos() {
   const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto } = useWizardStore()
 
   const handleEditar = async (producto, colorInfo) => {
-    // Le decimos al Wizard que queremos editar el color especifico
     await cargarProductoEditarCompleto(producto.codigo_producto_id, colorInfo.color_id)
     setShowNewWizard(true)
   }
 
-  const handleIncrementarStock = async (id) => {
-    try {
-      await productoService.incrementarStock(id)
-    } catch (error) {
-      console.error(error)
-    }
+  const handleIncrementarStock = (id, stock_actual) => {
+    setMovimientoProductoId(id)
+    setMovimientoStockActual(stock_actual)
+    setMovimientoPolaridad('ENTRADA')
+    setMovimientoModalOpen(true)
   }
 
-  const handleDecrementarStock = async (id) => {
-    try {
-      await productoService.decrementarStock(id)
-    } catch (error) {
-      console.error(error)
-    }
+  const handleDecrementarStock = (id, stock_actual) => {
+    setMovimientoProductoId(id)
+    setMovimientoStockActual(stock_actual)
+    setMovimientoPolaridad('SALIDA')
+    setMovimientoModalOpen(true)
   }
 
   const confirmDelete = async () => {
@@ -382,8 +386,6 @@ export default function Productos() {
         )
       })()}
 
-      {/* Delete Modal custom for Colors */}
-      {/* Delete Modal custom for Products */}
       <ConfirmModal
         isOpen={!!itemToDelete}
         onClose={() => setItemToDelete(null)}
@@ -408,7 +410,6 @@ export default function Productos() {
         onShare={async (providerId) => {
           if (!itemToShare) return;
           try {
-            // Importación dinámica para mantener el bundle pequeño
             const { ShareFactory } = await import('../../providers/ShareProviders');
             const { shareService } = await import('../../services/shareService');
             
@@ -426,7 +427,6 @@ export default function Productos() {
         }}
       />
 
-      {/* Creacion de todo el Producto (Wizard Antiguo de Creacion Completa) */}
       {showNewWizard && (
         <ProductoWizard
           onClose={() => setShowNewWizard(false)}
@@ -434,7 +434,6 @@ export default function Productos() {
         />
       )}
 
-      {/* Renderizar el modal original de detalles */}
       {showDetalle && productoDetalle && (
         <ProductoDetalle
           producto={productoDetalle}
@@ -445,12 +444,23 @@ export default function Productos() {
         />
       )}
 
-      {/* Import Modal */}
       {showImportModal && (
         <ImportarModal 
           onClose={() => setShowImportModal(false)}
           onImportSuccess={() => {
             setShowImportModal(false)
+            loadProductos(cleanFilters(filters), isPapeleraMode)
+          }}
+        />
+      )}
+
+      {movimientoModalOpen && (
+        <MovimientoModal
+          productoId={movimientoProductoId}
+          stockActual={movimientoStockActual}
+          preselectedPolarity={movimientoPolaridad}
+          onClose={() => {
+            setMovimientoModalOpen(false)
             loadProductos(cleanFilters(filters), isPapeleraMode)
           }}
         />

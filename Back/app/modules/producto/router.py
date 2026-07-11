@@ -516,28 +516,6 @@ def get_detalle(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=str(e),
         )
-@router.patch(
-    "/{producto_id}/incrementar-stock",
-    response_model=StockResponse,
-)
-async def incrementar_stock(
-    producto_id: int,
-    db: Session = Depends(get_db),
-):
-
-    try:
-
-        return await service.incrementar_stock(
-            db,
-            producto_id,
-        )
-
-    except ProductoNoEncontradoException as e:
-
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
 
 @router.get(
     "/{codigo_producto_id}/editar-completo",
@@ -613,35 +591,7 @@ def update_completo(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-@router.patch(
-    "/{producto_id}/decrementar-stock",
-    response_model=StockResponse,
-)
-async def decrementar_stock(
-    producto_id: int,
-    db: Session = Depends(get_db),
-):
 
-    try:
-
-        return await service.decrementar_stock(
-            db,
-            producto_id,
-        )
-
-    except ProductoNoEncontradoException as e:
-
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
-        )
-
-    except StockInsuficienteException as e:
-
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
 @router.websocket("/ws")
 async def websocket_stock(
     websocket: WebSocket,

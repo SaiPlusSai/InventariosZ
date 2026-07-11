@@ -46,4 +46,24 @@ class ProductoConnectionManager:
             self.disconnect(conexion)
 
 
+    async def broadcast_movimiento(
+        self,
+        movimiento_dict: dict
+    ):
+        mensaje = {
+            "tipo": "movimiento_registrado",
+            "movimiento": movimiento_dict
+        }
+
+        conexiones_caidas = []
+        for conexion in self.active_connections:
+            try:
+                await conexion.send_json(mensaje)
+            except Exception:
+                conexiones_caidas.append(conexion)
+
+        for conexion in conexiones_caidas:
+            self.disconnect(conexion)
+
+
 manager = ProductoConnectionManager()

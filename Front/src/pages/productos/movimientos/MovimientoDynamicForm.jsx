@@ -4,6 +4,7 @@ import Button from '../../../components/ui/Button';
 const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 9999 }) => {
   const [formData, setFormData] = useState({
     origen: '',
+    sub_origen: '',
     cantidad: '',
     observacion: '',
     documento_tipo: '',
@@ -17,43 +18,45 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
 
   const isSalida = tipo === 'SALIDA';
   const isEntrada = tipo === 'ENTRADA';
-  const isAjuste = tipo === 'AJUSTE';
 
   // Opciones de origen basadas en el tipo seleccionado (MVP)
   const origenes = {
     ENTRADA: [
-      { id: 'COMPRA', label: 'Compra a Proveedor' },
-      { id: 'INVENTARIO_INICIAL', label: 'Carga Inicial' }
+      { id: 'COMPRA', label: 'Compra' },
+      { id: 'INVENTARIO_INICIAL', label: 'Inventario Inicial' },
+      { id: 'OTRO', label: 'Otro' }
     ],
     SALIDA: [
-      { id: 'VENTA', label: 'Venta Directa' },
-      { id: 'MERMA_DANO', label: 'Merma (Daño)' },
-      { id: 'MERMA_ROBO', label: 'Merma (Robo)' },
-      { id: 'MERMA_PERDIDA', label: 'Merma (Pérdida)' }
-    ],
-    AJUSTE: [
-      { id: 'SOBRANTE', label: 'Sobrante (Aumentar Stock)' },
-      { id: 'FALTANTE', label: 'Faltante (Disminuir Stock)' }
+      { id: 'VENTA', label: 'Venta' },
+      { id: 'MERMA', label: 'Merma' },
+      { id: 'AJUSTE', label: 'Ajuste Manual' }
     ]
   };
+
+  const subOrigenesMerma = [
+    { id: 'ROBO', label: 'Robo' },
+    { id: 'DANO', label: 'Daño' },
+    { id: 'PERDIDA', label: 'Pérdida' }
+  ];
 
   const handleSubmit = (e) => {
     e.preventDefault();
     let finalPayload = { ...formData, tipo_movimiento: tipo };
 
-    // Mapeo lógico de ajuste
-    if (isAjuste) {
+    // Si es merma, concatenamos el sub_origen al origen
+    if (formData.origen === 'MERMA' && formData.sub_origen) {
+      finalPayload.origen = `MERMA_${formData.sub_origen}`;
+    } else if (formData.origen === 'AJUSTE') {
       finalPayload.origen = 'AJUSTE_MANUAL';
-      if (formData.origen === 'SOBRANTE') finalPayload.tipo_movimiento = 'ENTRADA';
-      if (formData.origen === 'FALTANTE') finalPayload.tipo_movimiento = 'SALIDA';
     }
 
     onSubmit(finalPayload);
   };
 
   const isObservacionRequired = 
-    isAjuste || 
-    (isSalida && formData.origen?.startsWith('MERMA_'));
+    formData.origen === 'MERMA' || 
+    formData.origen === 'AJUSTE' || 
+    formData.origen === 'OTRO';
 
   return (
     <form onSubmit={handleSubmit} className="p-4 space-y-4">
@@ -74,7 +77,10 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
           <select 
             name="origen" 
             value={formData.origen} 
-            onChange={handleChange}
+            onChange={(e) => {
+              handleChange(e);
+              setFormData(prev => ({...prev, sub_origen: ''})); // Reset sub_origen if origen changes
+            }}
             required
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           >
@@ -84,6 +90,25 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
             ))}
           </select>
         </div>
+
+        {/* Sub Origen para Merma */}
+        {formData.origen === 'MERMA' && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Tipo de Merma *</label>
+            <select 
+              name="sub_origen" 
+              value={formData.sub_origen} 
+              onChange={handleChange}
+              required
+              className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Seleccione tipo de merma...</option>
+              {subOrigenesMerma.map(op => (
+                <option key={op.id} value={op.id}>{op.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         {/* Cantidad */}
         <div>
@@ -97,7 +122,7 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
             onChange={handleChange}
             required
             min="1"
-            max={isSalida || (isAjuste && formData.origen === 'FALTANTE') ? maxStock : undefined}
+            max={isSalida ? maxStock : undefined}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             placeholder="Ej: 5"
           />
@@ -126,7 +151,7 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
         <Button type="button" variant="secondary" onClick={onBack} disabled={loading}>
           Cancelar
         </Button>
-        <Button type="submit" variant="primary" disabled={loading || !formData.origen || !formData.cantidad}>
+        <Button type="submit" variant="primary" disabled={loading || !formData.origen || !formData.cantidad || (formData.origen === 'MERMA' && !formData.sub_origen)}>
           {loading ? 'Procesando...' : 'Confirmar Movimiento'}
         </Button>
       </div>

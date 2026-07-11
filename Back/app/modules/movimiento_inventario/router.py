@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.modules.movimiento_inventario.schemas import MovimientoCreate, MovimientoResponse
@@ -8,7 +8,8 @@ router = APIRouter(prefix="/movimientos", tags=["Movimientos de Inventario"])
 
 @router.post("/", response_model=MovimientoResponse, status_code=201)
 def registrar_movimiento(
-    request: MovimientoCreate, 
+    request: MovimientoCreate,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db)
 ):
     """
@@ -16,7 +17,7 @@ def registrar_movimiento(
     """
     # TODO: Inyectar usuario actual cuando exista el módulo de auth
     usuario_id = request.usuario_id 
-    return movimiento_service.registrar_movimiento(db=db, request=request)
+    return movimiento_service.registrar_movimiento(db=db, request=request, background_tasks=background_tasks)
 
 @router.get("/producto/{producto_id}")
 def obtener_kardex(

@@ -1263,60 +1263,7 @@ class ProductoService:
             )
 
         self.repository.delete(db, producto)
-    async def incrementar_stock(
-        self,
-        db: Session,
-        producto_id: int,
-    ):
-        stock = self.repository.incrementar_stock(
-            db,
-            producto_id,
-        )
 
-        if stock is None:
-            raise ProductoNoEncontradoException(
-                PRODUCTO_NO_EXISTE
-            )
-
-        await manager.broadcast_stock(
-            producto_id,
-            stock,
-        )       
-
-        return {
-            "producto_id": producto_id,
-            "stock_actual": stock,
-        }
-    async def decrementar_stock(
-        self,
-        db: Session,
-        producto_id: int,
-    ):
-        stock = self.repository.decrementar_stock(
-            db,
-            producto_id,
-        )
-
-        if stock is None:
-            # Check if product exists but has 0 stock
-            prod = self.repository.get_by_id(db, producto_id)
-            if not prod:
-                raise ProductoNoEncontradoException(
-                    PRODUCTO_NO_EXISTE
-                )
-            else:
-                raise StockInsuficienteException(
-                    "No es posible disminuir el inventario porque el stock ya es cero."
-                )
-        await manager.broadcast_stock(
-            producto_id,
-            stock,
-        )       
-
-        return {
-            "producto_id": producto_id,
-            "stock_actual": stock,
-        }
     def create_completo(
         self,
         db: Session,
