@@ -50,6 +50,23 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
       finalPayload.origen = 'AJUSTE_MANUAL';
     }
 
+    // Saneamiento del payload (Evitar 422 Unprocessable Entity)
+    delete finalPayload.sub_origen;
+
+    if (!finalPayload.documento_id || finalPayload.documento_id.trim() === '') {
+      delete finalPayload.documento_id;
+    } else {
+      finalPayload.documento_id = Number(finalPayload.documento_id);
+    }
+
+    if (!finalPayload.documento_tipo || finalPayload.documento_tipo.trim() === '') {
+      delete finalPayload.documento_tipo;
+    }
+
+    if (!finalPayload.observacion || finalPayload.observacion.trim() === '') {
+      delete finalPayload.observacion;
+    }
+
     onSubmit(finalPayload);
   };
 
