@@ -16,10 +16,13 @@ export class WebShareProvider {
       url: payload.url,
     };
 
+    let fileAttached = false;
+
     // Intentar adjuntar la imagen si el navegador soporta compartir archivos (Web Share API Level 2)
     // y si la imagen realmente existe en el payload.
     if (payload.image && navigator.canShare) {
       try {
+        console.log('WebShareProvider: Intentando descargar imagen pública...', payload.image);
         // Descargar la imagen pública desde Supabase
         const response = await fetch(payload.image);
         if (response.ok) {
@@ -35,14 +38,25 @@ export class WebShareProvider {
           // Verificar si el sistema operativo permite compartir este archivo específico
           if (navigator.canShare({ files: [file] })) {
             shareData.files = [file];
+            // Regla de oro: si enviamos archivo, movemos la URL al texto para evitar conflictos en Android/iOS
+            shareData.text = `${payload.text}\n\nCatálogo: ${payload.url}`;
+            delete shareData.url;
+            fileAttached = true;
+            console.log('WebShareProvider: Archivo adjuntado correctamente al payload.');
           }
         }
       } catch (error) {
-        console.warn('No se pudo adjuntar la imagen al Web Share API, cayendo a texto plano.', error);
-        // Fallback silencioso: shareData se queda sin la propiedad "files"
+        console.warn('WebShareProvider: No se pudo adjuntar la imagen al Web Share API, cayendo a texto plano.', error);
+        // Fallback silencioso: fileAttached queda en false
       }
     }
 
+    // Fallback: si no pudimos adjuntar el archivo físico, metemos la URL pública en el texto para que la app destino pueda generar preview.
+    if (!fileAttached && payload.image) {
+      shareData.text = `${shareData.text}\n\nImagen: ${payload.image}`;
+    }
+
+    console.log('WebShareProvider: Ejecutando navigator.share con:', shareData);
     // Ejecutar el share nativo (con o sin imagen)
     await navigator.share(shareData);
   }
@@ -51,7 +65,8 @@ export class WebShareProvider {
 export class WhatsAppProvider {
   async share(payload) {
     // Para WhatsApp web/app el formato es: wa.me/?text=...
-    const textToShare = `${payload.title}\n\n${payload.text}\n\n${payload.url}`;
+    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
+    const textToShare = `${payload.title}\n\n${payload.text}${imageText}\n\nCatálogo: ${payload.url}`;
     const url = `https://wa.me/?text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
@@ -60,7 +75,9 @@ export class WhatsAppProvider {
 export class TelegramProvider {
   async share(payload) {
     // t.me/share/url?url=...&text=...
-    const url = `https://t.me/share/url?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(payload.title + '\n\n' + payload.text)}`;
+    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
+    const textToShare = `${payload.title}\n\n${payload.text}${imageText}`;
+    const url = `https://t.me/share/url?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
 }
@@ -76,7 +93,9 @@ export class FacebookProvider {
 export class XProvider {
   async share(payload) {
     // Twitter share: intent/tweet?url=...&text=...
-    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(payload.title + '\n' + payload.text)}`;
+    const imageText = payload.image ? `\nImagen: ${payload.image}` : '';
+    const textToShare = `${payload.title}\n${payload.text}${imageText}`;
+    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
 }
@@ -99,7 +118,8 @@ export class PinterestProvider {
 
 export class EmailProvider {
   async share(payload) {
-    const body = `${payload.title}\n\n${payload.text}\n\n${payload.url}`;
+    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
+    const body = `${payload.title}\n\n${payload.text}${imageText}\n\nCatálogo: ${payload.url}`;
     const url = `mailto:?subject=${encodeURIComponent(payload.title)}&body=${encodeURIComponent(body)}`;
     window.location.href = url;
   }
@@ -107,7 +127,8 @@ export class EmailProvider {
 
 export class ClipboardTextProvider {
   async share(payload) {
-    const text = `${payload.title}\n\n${payload.text}\n\n${payload.url}`;
+    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
+    const text = `${payload.title}\n\n${payload.text}${imageText}\n\nCatálogo: ${payload.url}`;
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
     } else {
