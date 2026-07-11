@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func, case, select, desc
 from app.modules.producto.models import Producto
+from app.modules.codigo_producto.models import CodigoProducto
 from app.modules.marca.models import Marca
 from app.modules.tipo_calzado.models import TipoCalzado
 from app.modules.material.models import Material
@@ -58,7 +59,8 @@ class DashboardRepository:
 
         # 5. Distribución de Catálogo (Productos por categoría)
         dist_marcas = db.query(Marca.nombre.label("name"), func.count(Producto.id).label("value"))\
-            .join(Producto, Marca.id == Producto.marca_id)\
+            .join(CodigoProducto, CodigoProducto.id == Producto.codigo_producto_id)\
+            .join(Marca, Marca.id == CodigoProducto.marca_id)\
             .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
             .group_by(Marca.nombre)\
             .order_by(desc("value")).all()
@@ -89,7 +91,8 @@ class DashboardRepository:
 
         # 6. Distribución de Inventario (Stock por categoría)
         stock_marcas = db.query(Marca.nombre.label("name"), func.coalesce(func.sum(Producto.stock_actual), 0).label("value"))\
-            .join(Producto, Marca.id == Producto.marca_id)\
+            .join(CodigoProducto, CodigoProducto.id == Producto.codigo_producto_id)\
+            .join(Marca, Marca.id == CodigoProducto.marca_id)\
             .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
             .group_by(Marca.nombre)\
             .order_by(desc("value")).all()
