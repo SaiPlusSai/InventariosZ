@@ -1,3 +1,5 @@
+import toast from 'react-hot-toast';
+
 /**
  * IShareProvider Interface conceptual:
  * - share(payload): Promise<void>
@@ -29,6 +31,18 @@ export class WebShareProvider {
 
           if (navigator.canShare({ files: [file] })) {
             shareData.files = [file];
+            const isDesktop = /windows|macintosh/i.test(navigator.userAgent.toLowerCase());
+            if (isDesktop && navigator.clipboard && window.isSecureContext) {
+              try {
+                await navigator.clipboard.writeText(shareData.text);
+                toast.success(
+                  'La imagen fue preparada para compartir.\n\nWhatsApp Desktop puede no admitir texto junto con imágenes mediante Web Share API.\n\nLa descripción del producto fue copiada automáticamente al portapapeles para que solo la pegues (Ctrl + V).',
+                  { duration: 8000 }
+                );
+              } catch (e) {
+                // Fallback silencioso del portapapeles
+              }
+            }
           }
         }
       } catch (error) {
@@ -67,6 +81,19 @@ export class WhatsAppProvider {
           const file = new File([blob], filename, { type: contentType });
 
           if (navigator.canShare({ files: [file] })) {
+            const isDesktop = /windows|macintosh/i.test(navigator.userAgent.toLowerCase());
+            if (isDesktop && navigator.clipboard && window.isSecureContext) {
+              try {
+                await navigator.clipboard.writeText(textToShare);
+                toast.success(
+                  'La imagen fue preparada para compartir.\n\nWhatsApp Desktop puede no admitir texto junto con imágenes mediante Web Share API.\n\nLa descripción del producto fue copiada automáticamente al portapapeles para que solo la pegues (Ctrl + V).',
+                  { duration: 8000 }
+                );
+              } catch (e) {
+                // Fallback silencioso del portapapeles
+              }
+            }
+
             await navigator.share({
               title: payload.title,
               text: textToShare,
