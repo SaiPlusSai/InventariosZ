@@ -9,7 +9,7 @@ from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
 from fastapi import UploadFile
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
-from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 
 from app.modules.producto.websocket import manager

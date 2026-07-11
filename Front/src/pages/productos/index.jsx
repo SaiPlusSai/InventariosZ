@@ -239,33 +239,32 @@ export default function Productos() {
             {isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
           </p>
         </div>
-             <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
+        <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
           <Button variant="secondary" onClick={() => {
             setIsPapeleraMode(!isPapeleraMode)
             setFilters(emptyFilters)
             setGlobalSearch('')
           }} className="flex-1 md:flex-none">
-            {isPapeleraMode ? <><RotateCcw size={16} className="mr-2"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2"/> Ver Papelera</>}
+            {isPapeleraMode ? <><RotateCcw size={16} className="mr-2 inline"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2 inline"/> Ver Papelera</>}
           </Button>
           {!isPapeleraMode && (
             <>
               <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-1 md:flex-none" title="Importar Excel">
-                <Upload size={16} className="mr-2"/> Importar
+                <Upload size={16} className="mr-2 inline"/> Importar
               </Button>
               <Button variant="secondary" onClick={handleExportarPdf} className="flex-1 md:flex-none" title="Exportar a PDF">
-                <FileText size={16} className="mr-2"/> PDF
+                <FileText size={16} className="mr-2 inline"/> PDF
               </Button>
               <Button variant="secondary" onClick={handleExportarExcel} className="flex-1 md:flex-none" title="Exportar a Excel">
-                <Download size={16} className="mr-2"/> Excel
+                <Download size={16} className="mr-2 inline"/> Exportar
               </Button>
               <Button variant="primary" onClick={() => setShowNewWizard(true)} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
-                <Plus size={16} className="mr-2"/> Nuevo Producto
+                <Plus size={16} className="mr-2 inline"/> Nuevo Producto
               </Button>
             </>
           )}
         </div>
       </div>
-
       {/* Buscador y Filtros Combinados */}
       <Card className="mb-8 border border-gray-200 shadow-sm bg-white rounded-xl overflow-hidden">
         <div className="flex flex-col md:flex-row items-stretch md:items-center">

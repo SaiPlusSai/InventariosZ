@@ -6,7 +6,7 @@ import { useMaterialStore } from '../../store/materialStore'
 import { materialService } from '../../services/materialService'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 import toast from 'react-hot-toast'
-import { Loader2, Download, Upload } from 'lucide-react'
+import { Trash2, Upload, Download, FileText, RotateCcw, Plus, Loader2 } from 'lucide-react'
 import GenericImportarModal from '../../components/ui/GenericImportarModal'
 
 export default function Materiales() {
@@ -145,32 +145,38 @@ export default function Materiales() {
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{isPapeleraMode ? 'Materiales (Papelera)' : 'Materiales'}</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+            {isPapeleraMode ? 'Materiales (Papelera)' : 'Materiales'}
+          </h1>
+          <p className="text-gray-500 mt-1">
+            {isPapeleraMode ? 'Materiales inactivos' : 'Gestiona los materiales.'}
+          </p>
+        </div>
+        <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
           <Button variant="secondary" onClick={() => {
             setIsPapeleraMode(!isPapeleraMode)
             setSearchTerm('')
             setAppliedSearch('')
-          }}>
-            {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
+          }} className="flex-1 md:flex-none">
+            {isPapeleraMode ? <><RotateCcw size={16} className="mr-2 inline"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2 inline"/> Ver Papelera</>}
           </Button>
           {!isPapeleraMode && (
             <>
-              <Button variant="secondary" onClick={() => setShowImportModal(true)}>
-                <Upload size={16} className="mr-2 inline" /> Importar
+              <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-1 md:flex-none" title="Importar Excel">
+                <Upload size={16} className="mr-2 inline"/> Importar
               </Button>
-              <Button variant="secondary" onClick={handleExportarExcel}>
-                <Download size={16} className="mr-2 inline" /> Exportar
+              <Button variant="secondary" onClick={handleExportarExcel} className="flex-1 md:flex-none" title="Exportar a Excel">
+                <Download size={16} className="mr-2 inline"/> Exportar
               </Button>
-              <Button variant="primary" onClick={() => handleOpenModal()}>
-              + Nuevo Material
-            </Button>
+              <Button variant="primary" onClick={() => handleOpenModal()} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
+                <Plus size={16} className="mr-2 inline"/> Nuevo Material
+              </Button>
             </>
           )}
         </div>
       </div>
-
       <Card className="mb-6">
         <div className="flex gap-2 items-center">
           <div className="relative flex-1 max-w-md">

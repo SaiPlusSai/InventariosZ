@@ -1,5 +1,5 @@
 from openpyxl import Workbook
-from openpyxl.styles import Font, Alignment, PatternFill
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from io import BytesIO
 
@@ -20,6 +20,21 @@ def setup_excel_headers(ws, headers: list[str]):
         # Adjust column width
         ws.column_dimensions[get_column_letter(col_num)].width = max(len(header) + 5, 15)
 
+def apply_excel_styles(ws, num_cols: int, num_rows: int):
+    """Applies borders and autofilter to the populated worksheet."""
+    thin_border = Border(
+        left=Side(style='thin'), 
+        right=Side(style='thin'), 
+        top=Side(style='thin'), 
+        bottom=Side(style='thin')
+    )
+    for row in ws.iter_rows(min_row=1, max_row=num_rows, min_col=1, max_col=num_cols):
+        for cell in row:
+            cell.border = thin_border
+            
+    if num_cols > 0:
+        ws.auto_filter.ref = f"A1:{get_column_letter(num_cols)}{num_rows}"
+
 def export_generic_excel(title: str, headers: list[str], data: list[list]) -> BytesIO:
     wb = Workbook()
     ws = wb.active
@@ -29,6 +44,8 @@ def export_generic_excel(title: str, headers: list[str], data: list[list]) -> By
     
     for row in data:
         ws.append(row)
+        
+    apply_excel_styles(ws, len(headers), len(data) + 1)
         
     buffer = BytesIO()
     wb.save(buffer)
@@ -45,7 +62,8 @@ def export_plantilla_excel(title: str, headers: list[str], example_rows: list[li
     for row in example_rows:
         ws.append(row)
         
-    # Agrega un mensaje explicativo en la última columna si es necesario
+    apply_excel_styles(ws, len(headers), len(example_rows) + 1)
+        
     buffer = BytesIO()
     wb.save(buffer)
     buffer.seek(0)

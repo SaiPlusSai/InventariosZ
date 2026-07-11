@@ -60,36 +60,27 @@ class MaterialService:
 
     
     def exportar_excel(self, db: Session) -> BytesIO:
+        from app.core.excel_utils import export_generic_excel
         items = self.repository.get_all(db)
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Material"
-        headers = ["ID", "Nombre", "Descripción", "Estado"]
-        ws.append(headers)
-        for item in items:
-            ws.append([
+        data = [
+            [
                 item.id,
                 item.nombre,
+                
                 getattr(item, 'descripcion', ''),
                 "Activo" if item.estado else "Inactivo"
-                
-            ])
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+            ]
+            for item in items
+        ]
+        return export_generic_excel("Material", ["ID", "Nombre", "Descripción", "Estado"], data)
 
     def generar_plantilla_importacion(self) -> BytesIO:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Plantilla Material"
-        headers = ["Nombre", "Descripción"]
-        ws.append(headers)
-        ws.append(["Ejemplo Material", "Descripción de ejemplo"])
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+        from app.core.excel_utils import export_plantilla_excel
+        return export_plantilla_excel(
+            "Plantilla Material", 
+            ["Nombre", "Descripción"], 
+            [["Ejemplo Material", "Descripción de ejemplo"]]
+        )
 
     async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
         content = await file.read()

@@ -60,36 +60,27 @@ class ColorService:
 
     
     def exportar_excel(self, db: Session) -> BytesIO:
+        from app.core.excel_utils import export_generic_excel
         items = self.repository.get_all(db)
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Color"
-        headers = ["ID", "Nombre", "Descripción", "Estado", "Código Hex"]
-        ws.append(headers)
-        for item in items:
-            ws.append([
+        data = [
+            [
                 item.id,
                 item.nombre,
+                item.codigo_hex,
                 getattr(item, 'descripcion', ''),
                 "Activo" if item.estado else "Inactivo"
-                , getattr(item, 'codigo_hex', '')
-            ])
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+            ]
+            for item in items
+        ]
+        return export_generic_excel("Color", ["ID", "Nombre", "Código Hex", "Descripción", "Estado"], data)
 
     def generar_plantilla_importacion(self) -> BytesIO:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Plantilla Color"
-        headers = ["Nombre", "Descripción", "Código Hex"]
-        ws.append(headers)
-        ws.append(["Ejemplo Color", "Descripción de ejemplo", "#FFFFFF"])
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+        from app.core.excel_utils import export_plantilla_excel
+        return export_plantilla_excel(
+            "Plantilla Color", 
+            ["Nombre", "Código Hex", "Descripción"], 
+            [["Ejemplo Color", "#FFFFFF", "Descripción de ejemplo"]]
+        )
 
     async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
         content = await file.read()
