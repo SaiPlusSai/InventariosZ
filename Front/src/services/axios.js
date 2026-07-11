@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { ENV } from '../config/env'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
-const API_TIMEOUT = parseInt(import.meta.env.VITE_API_TIMEOUT || '10000', 10)
+const API_BASE_URL = ENV.apiUrl
+const API_TIMEOUT = ENV.apiTimeout
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,

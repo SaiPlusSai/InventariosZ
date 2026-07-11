@@ -12,7 +12,7 @@ Back/*$py.class
 # Virtual Environment
 # ==========================
 
-Back/.venv/
+Back/.venv/*
 Back/venv/
 Back/env/
 
@@ -116,3 +116,12 @@ Back/.env
 Front/estructura.txt
 
 *.txt
+/Back/.venv
+/Back/.venv
+Back/.env.development
+Back/.env.example
+Back/.env.ngrok
+Back/.env.production
+Front/.env.production
+Front/.env.ngrok
+Front/.env.development

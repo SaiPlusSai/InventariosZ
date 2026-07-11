@@ -11,6 +11,7 @@ import ImportarModal from './ImportarModal'
 import MovimientoModal from './movimientos/MovimientoModal.jsx'
 import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, Upload , FileDown, FileUp} from 'lucide-react'
 import toast from 'react-hot-toast'
+import { ENV } from '../../config/env'
 
 const emptyFilters = {
   codigo: '', marca: '', tipo: '', material: '', color: '', talla: '',
@@ -101,7 +102,7 @@ export default function Productos() {
   useEffect(() => { loadProductos(cleanFilters(filters), isPapeleraMode) }, [isPapeleraMode])
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8000/productos/ws")
+    const socket = new WebSocket(`${ENV.websocketUrl}/productos/ws`)
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data)
       if (data.tipo === "stock_actualizado") actualizarStock(data.producto_id, data.stock_actual)
