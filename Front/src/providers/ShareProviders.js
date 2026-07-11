@@ -38,6 +38,10 @@ export class WebShareProvider {
       }
     }
 
+    if (!file && payload.image) {
+      shareData.text = `${shareData.text}\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)`;
+    }
+
     try {
       await navigator.share(shareData);
     } finally {
@@ -53,7 +57,8 @@ export class WebShareProvider {
 export class WhatsAppProvider {
   async share(payload) {
     // Para WhatsApp web/app el formato es: wa.me/?text=...
-    const textToShare = `${payload.title}\n\n${payload.text}`;
+    const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
+    const textToShare = `${payload.title}\n\n${payload.text}${imageFallback}`;
     const url = `https://wa.me/?text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
@@ -62,8 +67,9 @@ export class WhatsAppProvider {
 export class TelegramProvider {
   async share(payload) {
     // t.me/share/url?url=...&text=...
-    const textToShare = `${payload.title}\n\n${payload.text}`;
-    // Usamos dummy_url porque la API pública requiere 'url' en el query, pero no queremos enviarla visible
+    const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
+    const textToShare = `${payload.title}\n\n${payload.text}${imageFallback}`;
+    // Usamos dummyUrl porque la API pública requiere 'url' en el query, pero no queremos enviarla visible
     const dummyUrl = ' '; 
     const url = `https://t.me/share/url?url=${encodeURIComponent(dummyUrl)}&text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
@@ -81,7 +87,8 @@ export class FacebookProvider {
 export class XProvider {
   async share(payload) {
     // Twitter share: intent/tweet?text=...
-    const textToShare = `${payload.title}\n${payload.text}`;
+    const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
+    const textToShare = `${payload.title}\n${payload.text}${imageFallback}`;
     const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
@@ -105,7 +112,8 @@ export class PinterestProvider {
 
 export class EmailProvider {
   async share(payload) {
-    const body = `${payload.title}\n\n${payload.text}`;
+    const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
+    const body = `${payload.title}\n\n${payload.text}${imageFallback}`;
     const url = `mailto:?subject=${encodeURIComponent(payload.title)}&body=${encodeURIComponent(body)}`;
     window.location.href = url;
   }
@@ -113,7 +121,8 @@ export class EmailProvider {
 
 export class ClipboardTextProvider {
   async share(payload) {
-    const text = `${payload.title}\n\n${payload.text}`;
+    const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
+    const text = `${payload.title}\n\n${payload.text}${imageFallback}`;
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
     } else {
