@@ -147,3 +147,10 @@ class Producto(Base):
         cascade="all, delete-orphan",
         lazy="selectin",
     )
+
+    movimientos: Mapped[list["MovimientoInventario"]] = relationship(
+        "MovimientoInventario",
+        back_populates="producto",
+        cascade="all, delete-orphan"
+    )
+
