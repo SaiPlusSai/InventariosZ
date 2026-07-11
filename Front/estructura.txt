@@ -9,7 +9,13 @@
 |-- index.html
 |-- package-lock.json
 |-- package.json
+|-- patch_codigo.py
+|-- patch_front.py
+|-- patch_pages.py
 |-- postcss.config.js
+|-- repair.py
+|-- repair2.py
+|-- repair3.py
 |-- src
 |   |-- App.jsx
 |   |-- assets
@@ -21,15 +27,25 @@
 |   |   `-- ui
 |   |       |-- Button.jsx
 |   |       |-- Card.jsx
-|   |       |-- DeleteConfirmationModal.jsx
+|   |       |-- ConfirmModal.jsx
+|   |       |-- EmptyState.jsx
+|   |       |-- ExpandableInventory.jsx
+|   |       |-- FastCreateModal.jsx
+|   |       |-- GenericImportarModal.jsx
 |   |       |-- Input.jsx
+|   |       |-- NotificationModal.jsx
+|   |       |-- RecoveryModal.jsx
+|   |       |-- ShareModal.jsx
+|   |       |-- WarningModal.jsx
 |   |       `-- index.js
 |   |-- constants
 |   |   `-- index.js
 |   |-- hooks
 |   |   |-- index.js
 |   |   |-- useAsync.js
-|   |   `-- useForm.js
+|   |   |-- useForm.js
+|   |   |-- useRecoveryManager.jsx
+|   |   `-- useWarningManager.jsx
 |   |-- index.css
 |   |-- layouts
 |   |   |-- AuthLayout.jsx
@@ -48,9 +64,10 @@
 |   |   |-- materiales
 |   |   |   `-- index.jsx
 |   |   |-- productos
+|   |   |   |-- ImportarModal.jsx
+|   |   |   |-- ProductoCard.jsx
 |   |   |   |-- ProductoDetalle.jsx
 |   |   |   |-- detalle
-|   |   |   |   |-- GaleriaTab.jsx
 |   |   |   |   |-- GeneralTab.jsx
 |   |   |   |   |-- HeaderDetalle.jsx
 |   |   |   |   |-- ImageGallery.jsx
@@ -65,15 +82,13 @@
 |   |   |   `-- wizard
 |   |   |       |-- ProductoWizard.jsx
 |   |   |       |-- Step1InformacionGeneral.jsx
-|   |   |       |-- Step2Colores.jsx
-|   |   |       |-- Step3Tallas.jsx
-|   |   |       |-- Step4Variantes.jsx
-|   |   |       |-- Step5Imagenes.jsx
-|   |   |       `-- Step6Resumen.jsx
+|   |   |       `-- Step2ConfiguracionVariantes.jsx
 |   |   |-- tallas
 |   |   |   `-- index.jsx
 |   |   `-- tipos
 |   |       `-- index.jsx
+|   |-- providers
+|   |   `-- ShareProviders.js
 |   |-- routes
 |   |   `-- index.jsx
 |   |-- services
@@ -82,7 +97,9 @@
 |   |   |-- colorService.js
 |   |   |-- marcaService.js
 |   |   |-- materialService.js
+|   |   |-- productoImagenService.js
 |   |   |-- productoService.js
+|   |   |-- shareService.js
 |   |   |-- tallaService.js
 |   |   `-- tipoCalzadoService.js
 |   |-- store
@@ -90,13 +107,16 @@
 |   |   |-- colorStore.js
 |   |   |-- marcaStore.js
 |   |   |-- materialStore.js
+|   |   |-- notificationStore.js
 |   |   |-- productoStore.js
 |   |   |-- tallaStore.js
 |   |   |-- tipoCalzadoStore.js
 |   |   `-- wizardStore.js
 |   `-- utils
-|       `-- helpers.js
+|       |-- colorDictionary.js
+|       |-- helpers.js
+|       `-- shareFormatter.js
 |-- tailwind.config.js
 `-- vite.config.js
 
-27 directories, 72 files
+28 directories, 91 files
