@@ -4,9 +4,13 @@ import {
   Package, LayoutGrid, CheckCircle, XCircle, Trash2, 
   Archive, AlertTriangle, ArrowDownToLine, ArrowUpToLine,
   Tags, Layers, Palette, Ruler, FileImage, DollarSign,
-  Activity
+  Activity, PieChart, BarChart2
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+import BarChartCard from '../../components/dashboard/charts/BarChartCard';
+import HorizontalBarChartCard from '../../components/dashboard/charts/HorizontalBarChartCard';
+import PieChartCard from '../../components/dashboard/charts/PieChartCard';
 
 // Componente para Skeleton Loading
 const DashboardSkeleton = () => (
@@ -92,6 +96,22 @@ const Dashboard = () => {
       </div>
     );
   }
+
+  // Cálculos matemáticos para gráficas de calidad (optimizando recursos del backend)
+  const calidadImagenData = [
+    { name: 'Con Imagen', value: stats.productos.activos - stats.calidad.sin_imagen_principal },
+    { name: 'Sin Imagen', value: stats.calidad.sin_imagen_principal }
+  ];
+
+  const calidadPrecioData = [
+    { name: 'Con Precio Vigente', value: stats.productos.activos - stats.calidad.sin_precio_vigente },
+    { name: 'Sin Precio Vigente', value: stats.calidad.sin_precio_vigente }
+  ];
+
+  const calidadActivosData = [
+    { name: 'Activos', value: stats.productos.activos },
+    { name: 'Inactivos', value: stats.productos.inactivos }
+  ];
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">
@@ -224,26 +244,97 @@ const Dashboard = () => {
         </div>
       </section>
 
-      {/* SECCIÓN 4: CALIDAD DEL CATÁLOGO */}
-      <section>
-        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <Activity className="w-5 h-5 text-amber-600" />
-          Calidad de Datos (Acción Requerida)
+      {/* SECCIÓN 2: DISTRIBUCIÓN DEL CATÁLOGO */}
+      <section className="pt-4 border-t border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <PieChart className="w-6 h-6 text-indigo-600" />
+          Análisis del Catálogo
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <KpiCard 
-            title="Productos sin Imagen Principal" 
-            value={stats.calidad.sin_imagen_principal} 
-            icon={FileImage} 
-            colorClass="text-amber-600" 
-            bgColorClass="bg-amber-50" 
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          <HorizontalBarChartCard 
+            title="Productos por Marca" 
+            subtitle="Distribución de modelos según marca"
+            data={stats.distribucion_catalogo?.por_marca} 
+            color="#6366F1"
           />
-          <KpiCard 
-            title="Productos sin Precio Vigente" 
-            value={stats.calidad.sin_precio_vigente} 
-            icon={DollarSign} 
-            colorClass="text-amber-600" 
-            bgColorClass="bg-amber-50" 
+          <HorizontalBarChartCard 
+            title="Productos por Tipo de Calzado" 
+            subtitle="Distribución de modelos según tipo"
+            data={stats.distribucion_catalogo?.por_tipo} 
+            color="#8B5CF6"
+          />
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <BarChartCard 
+            title="Productos por Material" 
+            data={stats.distribucion_catalogo?.por_material} 
+            color="#EC4899"
+          />
+          <BarChartCard 
+            title="Productos por Color" 
+            data={stats.distribucion_catalogo?.por_color} 
+            color="#14B8A6"
+          />
+          <BarChartCard 
+            title="Productos por Talla" 
+            data={stats.distribucion_catalogo?.por_talla} 
+            color="#F59E0B"
+          />
+        </div>
+      </section>
+
+      {/* SECCIÓN 3: DISTRIBUCIÓN DEL INVENTARIO */}
+      <section className="pt-4 border-t border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <BarChart2 className="w-6 h-6 text-emerald-600" />
+          Análisis del Inventario (Stock)
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <BarChartCard 
+            title="Stock por Marca" 
+            subtitle="Cantidad total de unidades disponibles"
+            data={stats.distribucion_inventario?.por_marca} 
+            color="#10B981"
+          />
+          <BarChartCard 
+            title="Stock por Tipo" 
+            subtitle="Cantidad total de unidades disponibles"
+            data={stats.distribucion_inventario?.por_tipo} 
+            color="#10B981"
+          />
+          <BarChartCard 
+            title="Stock por Material" 
+            subtitle="Cantidad total de unidades disponibles"
+            data={stats.distribucion_inventario?.por_material} 
+            color="#10B981"
+          />
+        </div>
+      </section>
+
+      {/* SECCIÓN 4: CALIDAD DEL CATÁLOGO (GRÁFICOS) */}
+      <section className="pt-4 border-t border-gray-100">
+        <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+          <Activity className="w-6 h-6 text-amber-600" />
+          Calidad de Datos (Analítica)
+        </h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <PieChartCard 
+            title="Cobertura de Imágenes" 
+            subtitle="Productos vigentes con imagen principal"
+            data={calidadImagenData} 
+            colors={['#10B981', '#EF4444']}
+          />
+          <PieChartCard 
+            title="Cobertura de Precios" 
+            subtitle="Productos vigentes con precio establecido"
+            data={calidadPrecioData} 
+            colors={['#3B82F6', '#EF4444']}
+          />
+          <PieChartCard 
+            title="Estado del Catálogo" 
+            subtitle="Proporción de productos activos vs inactivos"
+            data={calidadActivosData} 
+            colors={['#6366F1', '#9CA3AF']}
           />
         </div>
       </section>

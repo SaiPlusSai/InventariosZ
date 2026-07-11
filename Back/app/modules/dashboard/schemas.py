@@ -1,4 +1,21 @@
 from pydantic import BaseModel
+from typing import List
+
+class ChartItem(BaseModel):
+    name: str
+    value: int
+
+class DistribucionCatalogo(BaseModel):
+    por_marca: List[ChartItem]
+    por_tipo: List[ChartItem]
+    por_material: List[ChartItem]
+    por_color: List[ChartItem]
+    por_talla: List[ChartItem]
+
+class DistribucionInventario(BaseModel):
+    por_marca: List[ChartItem]
+    por_tipo: List[ChartItem]
+    por_material: List[ChartItem]
 
 class DashboardProductos(BaseModel):
     total: int
@@ -28,3 +45,5 @@ class DashboardResponse(BaseModel):
     inventario: DashboardInventario
     catalogo: DashboardCatalogo
     calidad: DashboardCalidad
+    distribucion_catalogo: DistribucionCatalogo
+    distribucion_inventario: DistribucionInventario

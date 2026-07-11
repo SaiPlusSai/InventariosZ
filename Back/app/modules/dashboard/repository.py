@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import func, case, select
+from sqlalchemy import func, case, select, desc
 from app.modules.producto.models import Producto
 from app.modules.marca.models import Marca
 from app.modules.tipo_calzado.models import TipoCalzado
@@ -56,6 +56,56 @@ class DashboardRepository:
             ~Producto.precios.any(PrecioProducto.estado == True)
         ).scalar()
 
+        # 5. Distribución de Catálogo (Productos por categoría)
+        dist_marcas = db.query(Marca.nombre.label("name"), func.count(Producto.id).label("value"))\
+            .join(Producto, Marca.id == Producto.marca_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(Marca.nombre)\
+            .order_by(desc("value")).all()
+
+        dist_tipos = db.query(TipoCalzado.nombre.label("name"), func.count(Producto.id).label("value"))\
+            .join(Producto, TipoCalzado.id == Producto.tipo_calzado_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(TipoCalzado.nombre)\
+            .order_by(desc("value")).all()
+
+        dist_materiales = db.query(Material.nombre.label("name"), func.count(Producto.id).label("value"))\
+            .join(Producto, Material.id == Producto.material_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(Material.nombre)\
+            .order_by(desc("value")).all()
+
+        dist_colores = db.query(Color.nombre.label("name"), func.count(Producto.id).label("value"))\
+            .join(Producto, Color.id == Producto.color_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(Color.nombre)\
+            .order_by(desc("value")).all()
+
+        dist_tallas = db.query(Talla.talla.label("name"), func.count(Producto.id).label("value"))\
+            .join(Producto, Talla.id == Producto.talla_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(Talla.talla)\
+            .order_by(desc("value")).all()
+
+        # 6. Distribución de Inventario (Stock por categoría)
+        stock_marcas = db.query(Marca.nombre.label("name"), func.coalesce(func.sum(Producto.stock_actual), 0).label("value"))\
+            .join(Producto, Marca.id == Producto.marca_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(Marca.nombre)\
+            .order_by(desc("value")).all()
+
+        stock_tipos = db.query(TipoCalzado.nombre.label("name"), func.coalesce(func.sum(Producto.stock_actual), 0).label("value"))\
+            .join(Producto, TipoCalzado.id == Producto.tipo_calzado_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(TipoCalzado.nombre)\
+            .order_by(desc("value")).all()
+
+        stock_materiales = db.query(Material.nombre.label("name"), func.coalesce(func.sum(Producto.stock_actual), 0).label("value"))\
+            .join(Producto, Material.id == Producto.material_id)\
+            .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
+            .group_by(Material.nombre)\
+            .order_by(desc("value")).all()
+
         return {
             "productos": {
                 "total": int(res_productos.total or 0),
@@ -79,6 +129,18 @@ class DashboardRepository:
             "calidad": {
                 "sin_imagen_principal": sin_imagen,
                 "sin_precio_vigente": sin_precio
+            },
+            "distribucion_catalogo": {
+                "por_marca": [{"name": r.name, "value": r.value} for r in dist_marcas],
+                "por_tipo": [{"name": r.name, "value": r.value} for r in dist_tipos],
+                "por_material": [{"name": r.name, "value": r.value} for r in dist_materiales],
+                "por_color": [{"name": r.name, "value": r.value} for r in dist_colores],
+                "por_talla": [{"name": str(r.name), "value": r.value} for r in dist_tallas]
+            },
+            "distribucion_inventario": {
+                "por_marca": [{"name": r.name, "value": int(r.value)} for r in stock_marcas],
+                "por_tipo": [{"name": r.name, "value": int(r.value)} for r in stock_tipos],
+                "por_material": [{"name": r.name, "value": int(r.value)} for r in stock_materiales]
             }
         }
 
