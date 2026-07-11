@@ -12,61 +12,48 @@ export class WebShareProvider {
 
     const shareData = {
       title: payload.title,
-      text: payload.text,
-      url: payload.url,
+      text: payload.text
     };
 
-    let fileAttached = false;
+    let file = null;
 
-    // Intentar adjuntar la imagen si el navegador soporta compartir archivos (Web Share API Level 2)
-    // y si la imagen realmente existe en el payload.
     if (payload.image && navigator.canShare) {
       try {
-        console.log('WebShareProvider: Intentando descargar imagen pública...', payload.image);
-        // Descargar la imagen pública desde Supabase
         const response = await fetch(payload.image);
         if (response.ok) {
           const blob = await response.blob();
           
-          // Extraer extensión o usar jpg por defecto
           const contentType = blob.type || 'image/jpeg';
           const extension = contentType.split('/')[1] || 'jpg';
           const filename = `producto.${extension}`;
 
-          const file = new File([blob], filename, { type: contentType });
+          file = new File([blob], filename, { type: contentType });
 
-          // Verificar si el sistema operativo permite compartir este archivo específico
           if (navigator.canShare({ files: [file] })) {
             shareData.files = [file];
-            // Regla de oro: si enviamos archivo, movemos la URL al texto para evitar conflictos en Android/iOS
-            shareData.text = `${payload.text}\n\nCatálogo: ${payload.url}`;
-            delete shareData.url;
-            fileAttached = true;
-            console.log('WebShareProvider: Archivo adjuntado correctamente al payload.');
           }
         }
       } catch (error) {
         console.warn('WebShareProvider: No se pudo adjuntar la imagen al Web Share API, cayendo a texto plano.', error);
-        // Fallback silencioso: fileAttached queda en false
       }
     }
 
-    // Fallback: si no pudimos adjuntar el archivo físico, metemos la URL pública en el texto para que la app destino pueda generar preview.
-    if (!fileAttached && payload.image) {
-      shareData.text = `${shareData.text}\n\nImagen: ${payload.image}`;
+    try {
+      await navigator.share(shareData);
+    } finally {
+      // Liberación explícita de recursos para facilitar el garbage collector
+      file = null;
+      if (shareData.files) {
+        shareData.files = null;
+      }
     }
-
-    console.log('WebShareProvider: Ejecutando navigator.share con:', shareData);
-    // Ejecutar el share nativo (con o sin imagen)
-    await navigator.share(shareData);
   }
 }
 
 export class WhatsAppProvider {
   async share(payload) {
     // Para WhatsApp web/app el formato es: wa.me/?text=...
-    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
-    const textToShare = `${payload.title}\n\n${payload.text}${imageText}\n\nCatálogo: ${payload.url}`;
+    const textToShare = `${payload.title}\n\n${payload.text}`;
     const url = `https://wa.me/?text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
@@ -75,9 +62,10 @@ export class WhatsAppProvider {
 export class TelegramProvider {
   async share(payload) {
     // t.me/share/url?url=...&text=...
-    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
-    const textToShare = `${payload.title}\n\n${payload.text}${imageText}`;
-    const url = `https://t.me/share/url?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(textToShare)}`;
+    const textToShare = `${payload.title}\n\n${payload.text}`;
+    // Usamos dummy_url porque la API pública requiere 'url' en el query, pero no queremos enviarla visible
+    const dummyUrl = ' '; 
+    const url = `https://t.me/share/url?url=${encodeURIComponent(dummyUrl)}&text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
 }
@@ -92,10 +80,9 @@ export class FacebookProvider {
 
 export class XProvider {
   async share(payload) {
-    // Twitter share: intent/tweet?url=...&text=...
-    const imageText = payload.image ? `\nImagen: ${payload.image}` : '';
-    const textToShare = `${payload.title}\n${payload.text}${imageText}`;
-    const url = `https://twitter.com/intent/tweet?url=${encodeURIComponent(payload.url)}&text=${encodeURIComponent(textToShare)}`;
+    // Twitter share: intent/tweet?text=...
+    const textToShare = `${payload.title}\n${payload.text}`;
+    const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(textToShare)}`;
     window.open(url, '_blank');
   }
 }
@@ -118,8 +105,7 @@ export class PinterestProvider {
 
 export class EmailProvider {
   async share(payload) {
-    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
-    const body = `${payload.title}\n\n${payload.text}${imageText}\n\nCatálogo: ${payload.url}`;
+    const body = `${payload.title}\n\n${payload.text}`;
     const url = `mailto:?subject=${encodeURIComponent(payload.title)}&body=${encodeURIComponent(body)}`;
     window.location.href = url;
   }
@@ -127,8 +113,7 @@ export class EmailProvider {
 
 export class ClipboardTextProvider {
   async share(payload) {
-    const imageText = payload.image ? `\n\nImagen: ${payload.image}` : '';
-    const text = `${payload.title}\n\n${payload.text}${imageText}\n\nCatálogo: ${payload.url}`;
+    const text = `${payload.title}\n\n${payload.text}`;
     if (navigator.clipboard && window.isSecureContext) {
       await navigator.clipboard.writeText(text);
     } else {
