@@ -83,10 +83,10 @@ class DashboardRepository:
             .group_by(Color.nombre)\
             .order_by(desc("value")).all()
 
-        dist_tallas = db.query(Talla.talla.label("name"), func.count(Producto.id).label("value"))\
+        dist_tallas = db.query(Talla.nombre.label("name"), func.count(Producto.id).label("value"))\
             .join(Producto, Talla.id == Producto.talla_id)\
             .filter(Producto.estado == True, Producto.deleted_at.is_(None))\
-            .group_by(Talla.talla)\
+            .group_by(Talla.nombre)\
             .order_by(desc("value")).all()
 
         # 6. Distribución de Inventario (Stock por categoría)
