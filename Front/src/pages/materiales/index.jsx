@@ -6,7 +6,7 @@ import { useMaterialStore } from '../../store/materialStore'
 import { materialService } from '../../services/materialService'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 import toast from 'react-hot-toast'
-import { Loader2, Download, UploadCloud } from 'lucide-react'
+import { Loader2, Download, Upload } from 'lucide-react'
 import GenericImportarModal from '../../components/ui/GenericImportarModal'
 
 export default function Materiales() {
@@ -158,7 +158,7 @@ export default function Materiales() {
           {!isPapeleraMode && (
             <>
               <Button variant="secondary" onClick={() => setShowImportModal(true)}>
-                <UploadCloud size={16} className="mr-2 inline" /> Importar
+                <Upload size={16} className="mr-2 inline" /> Importar
               </Button>
               <Button variant="secondary" onClick={handleExportarExcel}>
                 <Download size={16} className="mr-2 inline" /> Exportar
