@@ -226,33 +226,27 @@ class ProductoService:
             tipo=tipo,
         )
 
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Productos"
+        from app.core.excel_utils import export_generic_excel
 
-        headers = [
-            "Código", "Marca", "Tipo", "Material", "Color", 
-            "Talla", "Stock", "Precio Venta", "Estado"
-        ]
-        ws.append(headers)
-
+        data = []
         for p in productos_planos:
-            ws.append([
+            data.append([
                 p["codigo"],
                 p["marca_nombre"],
                 p["tipo_calzado_nombre"],
                 p["material_nombre"],
                 p["color_nombre"],
                 p["talla_nombre"],
-                p["stock_actual"],
-                p["precio_venta"],
+                int(p["stock_actual"]),
+                float(p["precio_venta"]),
                 "Activo" if p["estado"] else "Inactivo"
             ])
-
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+            
+        return export_generic_excel(
+            "Productos", 
+            ["Código", "Marca", "Tipo", "Material", "Color", "Talla", "Stock", "Precio Venta", "Estado"], 
+            data
+        )
 
     def exportar_pdf(
         self,
@@ -285,20 +279,37 @@ class ProductoService:
         )
 
         buffer = BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter))
+        # Use margins to make it look cleaner
+        doc = SimpleDocTemplate(buffer, pagesize=landscape(letter),
+                                rightMargin=40, leftMargin=40,
+                                topMargin=40, bottomMargin=50)
         elements = []
         styles = getSampleStyleSheet()
 
-        # Cabecera genérica fácil de cambiar
-        nombre_negocio = "MI NEGOCIO S.A."
-        titulo_reporte = "Catálogo General de Productos"
-        fecha_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        # Custom Styles
+        title_style = ParagraphStyle(
+            'CustomTitle', 
+            parent=styles['Heading1'], 
+            fontSize=22, 
+            textColor=colors.HexColor("#2C3E50"),
+            spaceAfter=6,
+            alignment=1 # Center
+        )
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle', 
+            parent=styles['Normal'], 
+            fontSize=12, 
+            textColor=colors.HexColor("#7F8C8D"),
+            spaceAfter=20,
+            alignment=1 # Center
+        )
 
-        elements.append(Paragraph(f"<b>{nombre_negocio}</b>", styles['Heading1']))
-        elements.append(Paragraph(f"{titulo_reporte}", styles['Heading2']))
-        elements.append(Paragraph(f"Fecha de generación: {fecha_str}", styles['Normal']))
-        elements.append(Paragraph(f"Total de productos: {len(productos_planos)}", styles['Normal']))
-        elements.append(Spacer(1, 0.25 * inch))
+        nombre_negocio = "MI NEGOCIO S.A."
+        titulo_reporte = "Catálogo General de Inventario"
+
+        elements.append(Paragraph(f"<b>{nombre_negocio}</b>", title_style))
+        elements.append(Paragraph(f"{titulo_reporte} — Total de productos: {len(productos_planos)}", subtitle_style))
+        elements.append(Spacer(1, 0.2 * inch))
 
         # Tabla
         data = [[
@@ -319,51 +330,76 @@ class ProductoService:
                 "Activo" if p["estado"] else "Inactivo"
             ])
 
-        t = Table(data, repeatRows=1)
-        t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2C3E50")),
+        # Alternating row colors
+        row_colors = []
+        for i in range(1, len(data)):
+            if i % 2 == 0:
+                row_colors.append(('BACKGROUND', (0, i), (-1, i), colors.HexColor("#F8F9F9")))
+            else:
+                row_colors.append(('BACKGROUND', (0, i), (-1, i), colors.HexColor("#FFFFFF")))
+
+        base_style = [
+            # Header
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#2980B9")),
             ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
             ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor("#ECF0F1")),
-            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTSIZE', (0, 0), (-1, 0), 11),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+            ('TOPPADDING', (0, 0), (-1, 0), 10),
+            
+            # Body
             ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
             ('FONTSIZE', (0, 1), (-1, -1), 9),
-            ('GRID', (0, 0), (-1, -1), 1, colors.white),
-        ]))
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('TOPPADDING', (0, 1), (-1, -1), 8),
+            
+            # Borders
+            ('LINEBELOW', (0, 0), (-1, -1), 0.5, colors.HexColor("#BDC3C7")),
+        ]
+
+        t = Table(data, repeatRows=1)
+        t.setStyle(TableStyle(base_style + row_colors))
         elements.append(t)
 
-        def add_page_number(canvas, doc):
+        def add_footer(canvas, doc):
+            canvas.saveState()
+            # Línea separadora
+            canvas.setStrokeColor(colors.HexColor("#BDC3C7"))
+            canvas.setLineWidth(1)
+            canvas.line(40, 40, landscape(letter)[0] - 40, 40)
+            
+            # Fecha de descarga
+            fecha_str = datetime.now().strftime("%d de %B, %Y a las %H:%M")
+            canvas.setFont('Helvetica-Oblique', 9)
+            canvas.setFillColor(colors.HexColor("#7F8C8D"))
+            canvas.drawString(40, 25, f"Generado el: {fecha_str}")
+            
+            # Paginación
             page_num = canvas.getPageNumber()
             text = f"Página {page_num}"
-            canvas.drawRightString(10.5*inch, 0.5*inch, text)
+            canvas.drawRightString(landscape(letter)[0] - 40, 25, text)
+            
+            canvas.restoreState()
 
-        doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
+        doc.build(elements, onFirstPage=add_footer, onLaterPages=add_footer)
         buffer.seek(0)
         return buffer
 
     def generar_plantilla_importacion(self) -> BytesIO:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Plantilla Importacion"
-
-        headers = [
-            "Código", "Marca", "Tipo", "Material", "Color", 
-            "Talla", "Stock", "Precio Venta", "Descripción"
-        ]
-        ws.append(headers)
-        
-        ws.append([
-            "PROD-001", "Nike", "Urbano", "Cuero", "Blanco", 
-            "40", 100, 150.00, "Zapatilla de prueba"
-        ])
-        
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+        from app.core.excel_utils import export_plantilla_excel
+        return export_plantilla_excel(
+            "Plantilla Importacion Productos",
+            [
+                "Código", "Marca", "Tipo", "Material", "Color", 
+                "Talla", "Stock", "Precio Venta", "Descripción"
+            ],
+            [[
+                "PROD-001", "Nike", "Urbano", "Cuero", "Blanco", 
+                "40", 100, 150.00, "Zapatilla de prueba"
+            ]]
+        )
 
     async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
         content = await file.read()
