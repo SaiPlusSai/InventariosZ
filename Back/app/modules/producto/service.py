@@ -67,6 +67,8 @@ from app.modules.producto.schemas import (
     VarianteEditarResponse,
     ImagenEditarResponse,
     VarianteDetalleResponse,
+    PreviaImportacionResponse,
+    FilaPrevia,
 )
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.constants import TALLA_NO_EXISTE
