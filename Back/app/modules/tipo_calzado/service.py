@@ -3,6 +3,7 @@ from openpyxl import Workbook, load_workbook
 from fastapi import UploadFile
 from app.modules.tipo_calzado.schemas import PreviaImportacionResponse, FilaPrevia, TipoCalzadoCreate
 from app.core.exceptions import RegistroActivoNoPuedeEliminarseException
+from app.core.excel_utils import export_generic_excel, export_plantilla_excel
 from sqlalchemy.orm import Session
 
 from app.modules.tipo_calzado.constants import (
@@ -61,35 +62,23 @@ class TipoCalzadoService:
     
     def exportar_excel(self, db: Session) -> BytesIO:
         items = self.repository.get_all(db)
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "TipoCalzado"
-        headers = ["ID", "Nombre", "Descripción", "Estado"]
-        ws.append(headers)
-        for item in items:
-            ws.append([
+        data = [
+            [
                 item.id,
                 item.nombre,
-                getattr(item, 'descripcion', ''),
+                item.descripcion or '',
                 "Activo" if item.estado else "Inactivo"
-                
-            ])
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+            ]
+            for item in items
+        ]
+        return export_generic_excel("TipoCalzado", ["ID", "Nombre", "Descripción", "Estado"], data)
 
     def generar_plantilla_importacion(self) -> BytesIO:
-        wb = Workbook()
-        ws = wb.active
-        ws.title = "Plantilla TipoCalzado"
-        headers = ["Nombre", "Descripción"]
-        ws.append(headers)
-        ws.append(["Ejemplo TipoCalzado", "Descripción de ejemplo"])
-        buffer = BytesIO()
-        wb.save(buffer)
-        buffer.seek(0)
-        return buffer
+        return export_plantilla_excel(
+            "Plantilla TipoCalzado", 
+            ["Nombre", "Descripción"], 
+            [["Deportivo", "Zapatos para hacer deporte"]]
+        )
 
     async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
         content = await file.read()

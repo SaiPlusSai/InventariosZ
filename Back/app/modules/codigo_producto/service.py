@@ -1,5 +1,10 @@
 from app.core.exceptions import RegistroActivoNoPuedeEliminarseException
 from sqlalchemy.orm import Session
+from io import BytesIO
+from openpyxl import Workbook, load_workbook
+from fastapi import UploadFile
+from app.core.excel_utils import export_generic_excel, export_plantilla_excel
+from app.modules.codigo_producto.schemas import FilaPrevia, PreviaImportacionResponse
 
 from app.modules.codigo_producto.constants import (
     CODIGO_PRODUCTO_NO_EXISTE,
@@ -61,6 +66,92 @@ class CodigoProductoService:
             db.commit()
             db.refresh(item)
         return item
+        
+    def exportar_excel(self, db: Session) -> BytesIO:
+        items = self.repository.get_all(db)
+        data = [
+            [
+                item.id,
+                item.marca.nombre if item.marca else '',
+                item.codigo,
+                "Activo" if item.estado else "Inactivo"
+            ]
+            for item in items
+        ]
+        return export_generic_excel("Codigos_Producto", ["ID", "Marca", "Código", "Estado"], data)
+
+    def generar_plantilla_importacion(self) -> BytesIO:
+        return export_plantilla_excel(
+            "Plantilla CodigoProducto", 
+            ["Marca", "Código"], 
+            [["Nike", "NK-001"]]
+        )
+
+    async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
+        content = await file.read()
+        wb = load_workbook(filename=BytesIO(content), data_only=True)
+        ws = wb.active
+
+        filas = []
+        validos = 0
+        errores = 0
+
+        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            if all(cell is None for cell in row):
+                continue
+            
+            marca_val, codigo_val = (list(row)[:2] + [None]*2)[:2]
+            
+            fila_errores = []
+            marca_str = str(marca_val).strip() if marca_val is not None else None
+            codigo_str = str(codigo_val).strip() if codigo_val is not None else None
+
+            if not marca_str: 
+                fila_errores.append("Marca es obligatoria.")
+            if not codigo_str:
+                fila_errores.append("Código es obligatorio.")
+                
+            marca_obj = None
+            if marca_str:
+                marca_obj = self.marca_repository.get_by_nombre(db, marca_str)
+                if not marca_obj:
+                    fila_errores.append(f"La marca '{marca_str}' no existe.")
+            
+            if marca_obj and codigo_str:
+                existente = self.repository.get_by_codigo_y_marca(db, codigo_str, marca_obj.id)
+                if existente:
+                    fila_errores.append(f"El código '{codigo_str}' ya existe en esta marca.")
+
+            es_valido = len(fila_errores) == 0
+            if es_valido:
+                validos += 1
+            else:
+                errores += 1
+
+            filas.append(FilaPrevia(
+                fila=idx,
+                marca=marca_str,
+                codigo=codigo_str,
+                valido=es_valido,
+                errores=fila_errores
+            ))
+
+        return PreviaImportacionResponse(total=len(filas), validos=validos, errores=errores, filas=filas)
+
+    def confirmar_importacion(self, db: Session, filas: list[FilaPrevia]):
+        try:
+            creados = 0
+            for fila in filas:
+                if not fila.valido: continue
+                marca_obj = self.marca_repository.get_by_nombre(db, fila.marca)
+                payload = CodigoProductoCreate(marca_id=marca_obj.id, codigo=fila.codigo)
+                self.create(db, payload)
+                creados += 1
+            db.commit()
+            return {"success": True, "creados": creados}
+        except Exception as e:
+            db.rollback()
+            raise e
 
     def get_all(
         self,

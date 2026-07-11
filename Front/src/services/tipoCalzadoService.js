@@ -1,9 +1,9 @@
 import axiosInstance from './axios'
 
-const exportarExcel = () => axiosInstance.get('/tipos/exportar/excel', { responseType: 'blob' })
-const descargarPlantilla = () => axiosInstance.get('/tipos/importar/plantilla', { responseType: 'blob' })
-const importarPrevia = (formData) => axiosInstance.post('/tipos/importar/previa', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-const importarConfirmar = (data) => axiosInstance.post('/tipos/importar/confirmar', data)
+const exportarExcel = () => axiosInstance.get('/tipos-calzado/exportar/excel', { responseType: 'blob' })
+const descargarPlantilla = () => axiosInstance.get('/tipos-calzado/importar/plantilla', { responseType: 'blob' })
+const importarPrevia = (formData) => axiosInstance.post('/tipos-calzado/importar/previa', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+const importarConfirmar = (data) => axiosInstance.post('/tipos-calzado/importar/confirmar', data)
 
 
 export const tipoCalzadoService = {

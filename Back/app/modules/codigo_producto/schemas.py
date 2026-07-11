@@ -59,3 +59,19 @@ class CodigoProductoListResponse(BaseModel):
     items: list[CodigoProductoResponse]
 
     total: int
+
+class FilaPrevia(BaseModel):
+    fila: int
+    marca: str | None
+    codigo: str | None
+    valido: bool
+    errores: list[str]
+
+class PreviaImportacionResponse(BaseModel):
+    total: int
+    validos: int
+    errores: int
+    filas: list[FilaPrevia]
+
+class ConfirmarImportacionRequest(BaseModel):
+    filas: list[FilaPrevia]
