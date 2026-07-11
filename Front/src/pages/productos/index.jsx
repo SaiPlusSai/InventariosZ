@@ -7,7 +7,8 @@ import { productoService } from '../../services/productoService'
 import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
-import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText } from 'lucide-react'
+import ImportarModal from './ImportarModal'
+import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, UploadCloud } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const emptyFilters = {
@@ -61,6 +62,7 @@ export default function Productos() {
   
   // Modals States
   const [showNewWizard, setShowNewWizard] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
   const [showDetalle, setShowDetalle] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null) // { codigoProductoId, colorId, nombre, colorNombre }
   
@@ -247,6 +249,9 @@ export default function Productos() {
           </Button>
           {!isPapeleraMode && (
             <>
+              <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-1 md:flex-none" title="Importar Excel">
+                <UploadCloud size={16} className="mr-2"/> Importar
+              </Button>
               <Button variant="secondary" onClick={handleExportarPdf} className="flex-1 md:flex-none" title="Exportar a PDF">
                 <FileText size={16} className="mr-2"/> PDF
               </Button>
@@ -437,6 +442,17 @@ export default function Productos() {
           onClose={() => {
             setShowDetalle(false)
             setProductoDetalle(null)
+          }}
+        />
+      )}
+
+      {/* Import Modal */}
+      {showImportModal && (
+        <ImportarModal 
+          onClose={() => setShowImportModal(false)}
+          onImportSuccess={() => {
+            setShowImportModal(false)
+            loadProductos(cleanFilters(filters), isPapeleraMode)
           }}
         />
       )}

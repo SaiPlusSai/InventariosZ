@@ -4,9 +4,10 @@ from io import BytesIO
 
 from sqlalchemy.orm import Session
 from sqlalchemy import func
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from reportlab.lib.pagesizes import letter, landscape
 from reportlab.lib import colors
+from fastapi import UploadFile
 from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.units import inch
@@ -340,6 +341,180 @@ class ProductoService:
         doc.build(elements, onFirstPage=add_page_number, onLaterPages=add_page_number)
         buffer.seek(0)
         return buffer
+
+    def generar_plantilla_importacion(self) -> BytesIO:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Plantilla Importacion"
+
+        headers = [
+            "Código", "Marca", "Tipo", "Material", "Color", 
+            "Talla", "Stock", "Precio Venta", "Descripción"
+        ]
+        ws.append(headers)
+        
+        ws.append([
+            "PROD-001", "Nike", "Urbano", "Cuero", "Blanco", 
+            "40", 100, 150.00, "Zapatilla de prueba"
+        ])
+        
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
+        content = await file.read()
+        wb = load_workbook(filename=BytesIO(content), data_only=True)
+        ws = wb.active
+
+        filas = []
+        validos = 0
+        errores = 0
+
+        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            if all(cell is None for cell in row):
+                continue
+            
+            codigo, marca, tipo, material, color, talla, stock, precio, descripcion = (list(row)[:9] + [None]*9)[:9]
+
+            fila_errores = []
+
+            codigo_str = str(codigo).strip() if codigo is not None else None
+            marca_str = str(marca).strip() if marca is not None else None
+            tipo_str = str(tipo).strip() if tipo is not None else None
+            material_str = str(material).strip() if material is not None else None
+            color_str = str(color).strip() if color is not None else None
+            talla_str = str(talla).strip() if talla is not None else None
+            stock_str = str(stock).strip() if stock is not None else None
+            precio_str = str(precio).strip() if precio is not None else None
+            descripcion_str = str(descripcion).strip() if descripcion is not None else None
+
+            if not codigo_str: fila_errores.append("Código es obligatorio.")
+            else:
+                existente = self.codigo_repository.get_by_codigo(db, codigo_str)
+                if existente:
+                    fila_errores.append(f"Código '{codigo_str}' ya existe en BD.")
+            
+            if not marca_str: fila_errores.append("Marca es obligatoria.")
+            else:
+                if not self.marca_repository.get_by_nombre(db, marca_str):
+                    fila_errores.append(f"Marca '{marca_str}' no existe.")
+
+            if not tipo_str: fila_errores.append("Tipo es obligatorio.")
+            else:
+                if not self.tipo_repository.get_by_nombre(db, tipo_str):
+                    fila_errores.append(f"Tipo '{tipo_str}' no existe.")
+
+            if not material_str: fila_errores.append("Material es obligatorio.")
+            else:
+                if not self.material_repository.get_by_nombre(db, material_str):
+                    fila_errores.append(f"Material '{material_str}' no existe.")
+
+            if not color_str: fila_errores.append("Color es obligatorio.")
+            else:
+                if not self.color_repository.get_by_nombre(db, color_str):
+                    fila_errores.append(f"Color '{color_str}' no existe.")
+
+            if not talla_str: fila_errores.append("Talla es obligatoria.")
+            else:
+                if not self.talla_repository.get_by_nombre(db, talla_str):
+                    fila_errores.append(f"Talla '{talla_str}' no existe.")
+
+            if not stock_str: fila_errores.append("Stock es obligatorio.")
+            else:
+                try:
+                    s = int(float(stock_str))
+                    if s < 0: fila_errores.append("Stock debe ser >= 0.")
+                except ValueError:
+                    fila_errores.append("Stock debe ser un número entero.")
+
+            if not precio_str: fila_errores.append("Precio Venta es obligatorio.")
+            else:
+                try:
+                    p = float(precio_str)
+                    if p < 0: fila_errores.append("Precio debe ser >= 0.")
+                except ValueError:
+                    fila_errores.append("Precio debe ser un número válido.")
+            
+            es_valido = len(fila_errores) == 0
+            if es_valido:
+                validos += 1
+            else:
+                errores += 1
+
+            filas.append(FilaPrevia(
+                fila=idx,
+                codigo=codigo_str,
+                marca=marca_str,
+                tipo=tipo_str,
+                material=material_str,
+                color=color_str,
+                talla=talla_str,
+                stock=stock_str,
+                precio=precio_str,
+                descripcion=descripcion_str,
+                valido=es_valido,
+                errores=fila_errores
+            ))
+            
+        return PreviaImportacionResponse(
+            total=len(filas),
+            validos=validos,
+            errores=errores,
+            filas=filas
+        )
+
+    def confirmar_importacion(self, db: Session, filas: list[FilaPrevia]):
+        productos_a_crear = {}
+        for fila in filas:
+            if not fila.valido: continue
+            
+            marca = self.marca_repository.get_by_nombre(db, fila.marca)
+            tipo = self.tipo_repository.get_by_nombre(db, fila.tipo)
+            material = self.material_repository.get_by_nombre(db, fila.material)
+            color = self.color_repository.get_by_nombre(db, fila.color)
+            talla = self.talla_repository.get_by_nombre(db, fila.talla)
+            
+            codigo = fila.codigo
+            if codigo not in productos_a_crear:
+                productos_a_crear[codigo] = {
+                    "marca_id": marca.id,
+                    "tipo_calzado_id": tipo.id,
+                    "material_id": material.id,
+                    "descripcion": fila.descripcion or "",
+                    "variantes": []
+                }
+            
+            productos_a_crear[codigo]["variantes"].append(
+                VarianteCreate(
+                    color_id=color.id,
+                    talla_id=talla.id,
+                    stock_actual=int(float(fila.stock)),
+                    precio_venta=float(fila.precio)
+                )
+            )
+
+        # Envolver en transacción
+        try:
+            creados = 0
+            for codigo, props in productos_a_crear.items():
+                payload = ProductoCompletoCreate(
+                    codigo=codigo,
+                    marca_id=props["marca_id"],
+                    tipo_calzado_id=props["tipo_calzado_id"],
+                    material_id=props["material_id"],
+                    descripcion=props["descripcion"],
+                    variantes=props["variantes"],
+                    force=True
+                )
+                self.create_completo(db, payload)
+                creados += 1
+            db.commit()
+            return {"success": True, "creados": creados}
+        except Exception as e:
+            db.rollback()
+            raise e
 
     def get_papelera(
         self,

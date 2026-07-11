@@ -25,11 +25,27 @@ const exportarExcel = (params = {}) =>
 const exportarPdf = (params = {}) =>
   axiosInstance.get('/productos/exportar/pdf', { params, responseType: 'blob' })
 
+const descargarPlantilla = () =>
+  axiosInstance.get('/productos/importar/plantilla', { responseType: 'blob' })
+
+const importarPrevia = (formData) =>
+  axiosInstance.post('/productos/importar/previa', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+
+const importarConfirmar = (data) =>
+  axiosInstance.post('/productos/importar/confirmar', data)
+
 export const productoService = {
   getAll,
   getCatalogo,
   exportarExcel,
   exportarPdf,
+  descargarPlantilla,
+  importarPrevia,
+  importarConfirmar,
   desactivarColor,
   recuperarColor,
   eliminarColorPermanente,

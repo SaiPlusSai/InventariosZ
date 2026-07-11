@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import status
+from fastapi import status, UploadFile, File
 from fastapi.responses import StreamingResponse
 
 from sqlalchemy.orm import Session
@@ -21,7 +21,9 @@ from app.modules.producto.schemas import (
     ProductoCompletoEditarResponse,
     ProductoCompletoUpdate,
     ProductoCatalogoResponse,
-    ProductoColorUpdate
+    ProductoColorUpdate,
+    PreviaImportacionResponse,
+    ConfirmarImportacionRequest,
 )
 
 from app.modules.producto.service import ProductoService
@@ -214,6 +216,46 @@ def exportar_pdf(
         headers={"Content-Disposition": "attachment; filename=productos_inventario.pdf"}
     )
 
+@router.get(
+    "/importar/plantilla",
+)
+def importar_plantilla():
+    buffer = service.generar_plantilla_importacion()
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": "attachment; filename=plantilla_importacion.xlsx"}
+    )
+
+@router.post(
+    "/importar/previa",
+    response_model=PreviaImportacionResponse,
+)
+async def previa_importacion(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    if not file.filename.endswith(('.xlsx', '.xls')):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El archivo debe ser un Excel (.xlsx o .xls)"
+        )
+    return await service.previa_importacion(db, file)
+
+@router.post(
+    "/importar/confirmar",
+)
+def confirmar_importacion(
+    data: ConfirmarImportacionRequest,
+    db: Session = Depends(get_db),
+):
+    try:
+        return service.confirmar_importacion(db, data.filas)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
 
 @router.get(
     "/papelera",

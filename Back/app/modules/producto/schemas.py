@@ -668,3 +668,26 @@ class ProductoColorUpdate(BaseModel):
     descripcion: str | None = None
     variantes: list[VarianteColorUpdate]
     imagenes: list[ImagenColorUpdate] = []
+
+class FilaPrevia(BaseModel):
+    fila: int
+    codigo: str | None
+    marca: str | None
+    tipo: str | None
+    material: str | None
+    color: str | None
+    talla: str | None
+    stock: str | None
+    precio: str | None
+    descripcion: str | None
+    valido: bool
+    errores: list[str]
+
+class PreviaImportacionResponse(BaseModel):
+    total: int
+    validos: int
+    errores: int
+    filas: list[FilaPrevia]
+
+class ConfirmarImportacionRequest(BaseModel):
+    filas: list[FilaPrevia]
