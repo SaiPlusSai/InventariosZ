@@ -1,6 +1,7 @@
 .
 |-- Dockerfile
 |-- README.md
+|-- add_satellite.py
 |-- alembic
 |-- app
 |   |-- __init__.py
@@ -34,14 +35,18 @@
 |   |   |   |-- base.cpython-312.pyc
 |   |   |   |-- config.cpython-312.pyc
 |   |   |   |-- database.cpython-312.pyc
+|   |   |   |-- excel_utils.cpython-312.pyc
 |   |   |   |-- exceptions.cpython-312.pyc
 |   |   |   |-- logging.cpython-312.pyc
+|   |   |   |-- metrics.cpython-312.pyc
 |   |   |   `-- security.cpython-312.pyc
 |   |   |-- base.py
 |   |   |-- config.py
 |   |   |-- database.py
+|   |   |-- excel_utils.py
 |   |   |-- exceptions.py
 |   |   |-- logging.py
+|   |   |-- metrics.py
 |   |   `-- security.py
 |   |-- main.py
 |   `-- modules
@@ -191,8 +196,19 @@
 |       |   |-- service.py
 |       |   `-- validators.py
 |       |-- storage
+|       |   |-- __init__.py
+|       |   |-- __pycache__
+|       |   |   |-- __init__.cpython-312.pyc
+|       |   |   |-- cliente.cpython-312.pyc
+|       |   |   |-- constants.cpython-312.pyc
+|       |   |   |-- exceptions.cpython-312.pyc
+|       |   |   |-- router.cpython-312.pyc
+|       |   |   |-- service.cpython-312.pyc
+|       |   |   `-- utils.cpython-312.pyc
 |       |   |-- cliente.py
 |       |   |-- constants.py
+|       |   |-- exceptions.py
+|       |   |-- router.py
 |       |   |-- service.py
 |       |   `-- utils.py
 |       |-- talla
@@ -237,8 +253,8 @@
 |           `-- validators.py
 |-- docker-compose.yml
 |-- estructura.txt
-|-- patch_backend.py
+|-- placeholder
 |-- requirements.txt
 `-- tests
 
-31 directories, 210 files
+32 directories, 225 files

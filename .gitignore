@@ -115,3 +115,5 @@ Front/estructura.txt
 Back/.env
 Front/estructura.txt
 /Front
+/Back
+*.txt
