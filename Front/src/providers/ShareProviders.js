@@ -22,11 +22,9 @@ export class WebShareProvider {
         const response = await fetch(payload.image);
         if (response.ok) {
           const blob = await response.blob();
-          
           const contentType = blob.type || 'image/jpeg';
           const extension = contentType.split('/')[1] || 'jpg';
           const filename = `producto.${extension}`;
-
           file = new File([blob], filename, { type: contentType });
 
           if (navigator.canShare({ files: [file] })) {
@@ -34,7 +32,7 @@ export class WebShareProvider {
           }
         }
       } catch (error) {
-        console.warn('WebShareProvider: No se pudo adjuntar la imagen al Web Share API, cayendo a texto plano.', error);
+        // Fallback silencioso
       }
     }
 
@@ -45,7 +43,6 @@ export class WebShareProvider {
     try {
       await navigator.share(shareData);
     } finally {
-      // Liberación explícita de recursos para facilitar el garbage collector
       file = null;
       if (shareData.files) {
         shareData.files = null;
@@ -56,11 +53,38 @@ export class WebShareProvider {
 
 export class WhatsAppProvider {
   async share(payload) {
-    console.log('[DEBUG 5 - WhatsAppProvider] Payload recibido:', payload);
-    // Para WhatsApp web/app el formato es: wa.me/?text=...
+    const textToShare = `${payload.title}\n\n${payload.text}`;
+
+    // Estrategia móvil: Web Share API tiene prioridad absoluta
+    if (payload.image && navigator.share && navigator.canShare) {
+      try {
+        const response = await fetch(payload.image);
+        if (response.ok) {
+          const blob = await response.blob();
+          const contentType = blob.type || 'image/jpeg';
+          const extension = contentType.split('/')[1] || 'jpg';
+          const filename = `producto.${extension}`;
+          const file = new File([blob], filename, { type: contentType });
+
+          if (navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: payload.title,
+              text: textToShare,
+              files: [file]
+            });
+            // Si Web Share API tiene éxito, terminamos la ejecución
+            return;
+          }
+        }
+      } catch (error) {
+        // Fallback silencioso si falla la descarga o navigator.share lanza error (ej: usuario cancela)
+      }
+    }
+
+    // Estrategia escritorio / Fallback móvil
     const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
-    const textToShare = `${payload.title}\n\n${payload.text}${imageFallback}`;
-    const url = `https://wa.me/?text=${encodeURIComponent(textToShare)}`;
+    const textWithFallback = `${textToShare}${imageFallback}`;
+    const url = `https://wa.me/?text=${encodeURIComponent(textWithFallback)}`;
     window.open(url, '_blank');
   }
 }

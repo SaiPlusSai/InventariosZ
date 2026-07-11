@@ -12,7 +12,6 @@ class ShareService {
    * @returns {Object} Payload de compatibilidad para Providers.
    */
   prepareSharePayload(producto, colorInfo) {
-    console.log('[DEBUG 2 - shareService] Recibiendo datos:', { producto, colorInfo });
     const descripcion = formatProductShareText(producto, colorInfo);
     
     // Título descriptivo para Web Share API o correos
