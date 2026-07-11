@@ -56,6 +56,7 @@ export class WebShareProvider {
 
 export class WhatsAppProvider {
   async share(payload) {
+    console.log('[DEBUG 5 - WhatsAppProvider] Payload recibido:', payload);
     // Para WhatsApp web/app el formato es: wa.me/?text=...
     const imageFallback = payload.image ? `\n\nURL de la imagen:\n${payload.image}\n\n(Abrir este enlace para visualizar la imagen del producto.)` : '';
     const textToShare = `${payload.title}\n\n${payload.text}${imageFallback}`;

@@ -351,13 +351,17 @@ export default function Productos() {
         }}
         onShare={async (providerId) => {
           if (!itemToShare) return;
+          console.log('[DEBUG 1 - ShareModal] Iniciando compartición con itemToShare:', itemToShare);
           try {
             // Importación dinámica para mantener el bundle pequeño
             const { ShareFactory } = await import('../../providers/ShareProviders');
             const { shareService } = await import('../../services/shareService');
             
             const payload = shareService.prepareSharePayload(itemToShare.producto, itemToShare.colorInfo);
+            console.log('[DEBUG 3 - index.jsx] Payload retornado por shareService:', payload);
+            
             const provider = ShareFactory.getProvider(providerId);
+            console.log(`[DEBUG 4 - ShareFactory] Provider ${providerId} obtenido. Enviando payload al provider.`);
             
             await provider.share(payload);
             toast.success('¡Compartido exitosamente!');
