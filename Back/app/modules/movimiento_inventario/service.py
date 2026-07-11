@@ -1,4 +1,4 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, lazyload
 from fastapi import HTTPException, status
 from app.modules.movimiento_inventario.models import MovimientoInventario
 from app.modules.movimiento_inventario.schemas import MovimientoCreate
@@ -22,10 +22,14 @@ class MovimientoInventarioService:
         validar_coherencia_tipo_origen(request.tipo_movimiento, request.origen)
         validar_origen_observacion(request.origen, request.observacion)
 
-        # 2. Bloquear la fila del producto (Evita Race Conditions)
+        # 2. Bloquear SOLO la fila del producto evitando LEFT OUTER JOINS innecesarios
         # Esto asegura que si dos usuarios venden el último par al mismo milisegundo, 
         # la BD serialice las operaciones.
-        producto = db.query(Producto).filter(Producto.id == request.producto_id).with_for_update().first()
+        producto = db.query(Producto).filter(
+            Producto.id == request.producto_id
+        ).options(
+            lazyload("*")
+        ).with_for_update().first()
         
         if not producto:
             raise HTTPException(status_code=404, detail="Producto no encontrado")
