@@ -8,7 +8,7 @@ import ProductoWizard from './wizard/ProductoWizard'
 import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
 import ImportarModal from './ImportarModal'
-import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, Upload } from 'lucide-react'
+import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, Upload , FileDown, FileUp} from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const emptyFilters = {
@@ -250,13 +250,13 @@ export default function Productos() {
           {!isPapeleraMode && (
             <>
               <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-1 md:flex-none" title="Importar Excel">
-                <Upload size={16} className="mr-2 inline"/> Importar
+                <FileDown size={16} className="mr-2 inline"/> Importar
               </Button>
               <Button variant="secondary" onClick={handleExportarPdf} className="flex-1 md:flex-none" title="Exportar a PDF">
                 <FileText size={16} className="mr-2 inline"/> PDF
               </Button>
               <Button variant="secondary" onClick={handleExportarExcel} className="flex-1 md:flex-none" title="Exportar a Excel">
-                <Download size={16} className="mr-2 inline"/> Exportar
+                <FileUp size={16} className="mr-2 inline"/> Exportar
               </Button>
               <Button variant="primary" onClick={() => setShowNewWizard(true)} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
                 <Plus size={16} className="mr-2 inline"/> Nuevo Producto

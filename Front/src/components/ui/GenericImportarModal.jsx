@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react'
-import { Upload, FileText, CheckCircle, AlertCircle, X, Loader2, Download } from 'lucide-react'
+import { Upload, FileText, CheckCircle, AlertCircle, X, Loader2, Download , FileDown, FileUp} from 'lucide-react'
 import Button from './Button'
 import toast from 'react-hot-toast'
 
@@ -104,7 +104,7 @@ const GenericImportarModal = ({
               </div>
 
               <div className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-                <Upload size={48} className="mx-auto text-gray-400 mb-4" />
+                <FileDown size={48} className="mx-auto text-gray-400 mb-4" />
                 <h3 className="font-medium text-gray-900 mb-1">Paso 2: Sube tu archivo</h3>
                 <p className="text-sm text-gray-500 mb-4">Selecciona el archivo Excel completado (.xlsx)</p>
                 <input 
@@ -185,7 +185,7 @@ const GenericImportarModal = ({
           </Button>
           {previaData && !loading && (
             <Button variant="primary" onClick={handleConfirmar} disabled={previaData.validos === 0}>
-              <Upload size={16} className="mr-2 inline" /> Importar {previaData.validos} Válidos
+              <FileDown size={16} className="mr-2 inline" /> Importar {previaData.validos} Válidos
             </Button>
           )}
         </div>

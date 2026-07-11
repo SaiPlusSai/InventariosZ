@@ -6,7 +6,7 @@ import { useMarcaStore } from '../../store/marcaStore'
 import { marcaService } from '../../services/marcaService'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 import toast from 'react-hot-toast'
-import { Trash2, Upload, Download, FileText, RotateCcw, Plus, Loader2 } from 'lucide-react'
+import { Trash2, Upload, Download, FileText, RotateCcw, Plus, Loader2 , FileDown, FileUp} from 'lucide-react'
 import GenericImportarModal from '../../components/ui/GenericImportarModal'
 
 export default function Marcas() {
@@ -164,10 +164,10 @@ export default function Marcas() {
           {!isPapeleraMode && (
             <>
               <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-1 md:flex-none" title="Importar Excel">
-                <Upload size={16} className="mr-2 inline"/> Importar
+                <FileDown size={16} className="mr-2 inline"/> Importar
               </Button>
               <Button variant="secondary" onClick={handleExportarExcel} className="flex-1 md:flex-none" title="Exportar a Excel">
-                <Download size={16} className="mr-2 inline"/> Exportar
+                <FileUp size={16} className="mr-2 inline"/> Exportar
               </Button>
               <Button variant="primary" onClick={() => handleOpenModal()} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
                 <Plus size={16} className="mr-2 inline"/> Nueva Marca
