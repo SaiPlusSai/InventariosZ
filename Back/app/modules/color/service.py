@@ -1,3 +1,7 @@
+from io import BytesIO
+from openpyxl import Workbook, load_workbook
+from fastapi import UploadFile
+from app.modules.color.schemas import PreviaImportacionResponse, FilaPrevia, ColorCreate
 from app.core.exceptions import RegistroActivoNoPuedeEliminarseException
 from sqlalchemy.orm import Session
 
@@ -53,6 +57,99 @@ class ColorService:
             db.commit()
             db.refresh(item)
         return item
+
+    
+    def exportar_excel(self, db: Session) -> BytesIO:
+        items = self.repository.get_all(db)
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Color"
+        headers = ["ID", "Nombre", "Descripción", "Estado", "Código Hex"]
+        ws.append(headers)
+        for item in items:
+            ws.append([
+                item.id,
+                item.nombre,
+                getattr(item, 'descripcion', ''),
+                "Activo" if item.estado else "Inactivo"
+                , getattr(item, 'codigo_hex', '')
+            ])
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    def generar_plantilla_importacion(self) -> BytesIO:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Plantilla Color"
+        headers = ["Nombre", "Descripción", "Código Hex"]
+        ws.append(headers)
+        ws.append(["Ejemplo Color", "Descripción de ejemplo", "#FFFFFF"])
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
+        content = await file.read()
+        wb = load_workbook(filename=BytesIO(content), data_only=True)
+        ws = wb.active
+
+        filas = []
+        validos = 0
+        errores = 0
+
+        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            if all(cell is None for cell in row):
+                continue
+            
+            nombre, descripcion, codigo_hex = (list(row)[:3] + [None]*3)[:3]
+            
+            fila_errores = []
+            nombre_str = str(nombre).strip() if nombre is not None else None
+            desc_str = str(descripcion).strip() if descripcion is not None else None
+            codigo_hex_str = str(codigo_hex).strip() if codigo_hex is not None else None
+
+            if not nombre_str: 
+                fila_errores.append("Nombre es obligatorio.")
+            else:
+                existente = self.repository.get_by_nombre(db, nombre_str)
+                if existente:
+                    fila_errores.append(f"Color '{nombre_str}' ya existe.")
+            
+            if not codigo_hex_str: fila_errores.append("Código Hex es obligatorio.")
+
+            es_valido = len(fila_errores) == 0
+            if es_valido:
+                validos += 1
+            else:
+                errores += 1
+
+            filas.append(FilaPrevia(
+                fila=idx,
+                nombre=nombre_str,
+                descripcion=desc_str,
+                codigo_hex=codigo_hex_str,
+                valido=es_valido,
+                errores=fila_errores
+            ))
+
+        return PreviaImportacionResponse(total=len(filas), validos=validos, errores=errores, filas=filas)
+
+    def confirmar_importacion(self, db: Session, filas: list[FilaPrevia]):
+        try:
+            creados = 0
+            for fila in filas:
+                if not fila.valido: continue
+                payload = ColorCreate(nombre=fila.nombre, codigo_hex=fila.codigo_hex)
+                self.create(db, payload)
+                creados += 1
+            db.commit()
+            return {"success": True, "creados": creados}
+        except Exception as e:
+            db.rollback()
+            raise e
 
     def get_all(
         self,

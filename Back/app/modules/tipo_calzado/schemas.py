@@ -61,3 +61,20 @@ class TipoCalzadoListResponse(BaseModel):
     items: list[TipoCalzadoResponse]
 
     total: int
+
+class FilaPrevia(BaseModel):
+    fila: int
+    nombre: str | None
+    descripcion: str | None
+
+    valido: bool
+    errores: list[str]
+
+class PreviaImportacionResponse(BaseModel):
+    total: int
+    validos: int
+    errores: int
+    filas: list[FilaPrevia]
+
+class ConfirmarImportacionRequest(BaseModel):
+    filas: list[FilaPrevia]

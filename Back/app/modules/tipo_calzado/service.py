@@ -1,3 +1,7 @@
+from io import BytesIO
+from openpyxl import Workbook, load_workbook
+from fastapi import UploadFile
+from app.modules.tipo_calzado.schemas import PreviaImportacionResponse, FilaPrevia, TipoCalzadoCreate
 from app.core.exceptions import RegistroActivoNoPuedeEliminarseException
 from sqlalchemy.orm import Session
 
@@ -53,6 +57,99 @@ class TipoCalzadoService:
             db.commit()
             db.refresh(item)
         return item
+
+    
+    def exportar_excel(self, db: Session) -> BytesIO:
+        items = self.repository.get_all(db)
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "TipoCalzado"
+        headers = ["ID", "Nombre", "Descripción", "Estado"]
+        ws.append(headers)
+        for item in items:
+            ws.append([
+                item.id,
+                item.nombre,
+                getattr(item, 'descripcion', ''),
+                "Activo" if item.estado else "Inactivo"
+                
+            ])
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    def generar_plantilla_importacion(self) -> BytesIO:
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Plantilla TipoCalzado"
+        headers = ["Nombre", "Descripción"]
+        ws.append(headers)
+        ws.append(["Ejemplo TipoCalzado", "Descripción de ejemplo"])
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
+
+    async def previa_importacion(self, db: Session, file: UploadFile) -> PreviaImportacionResponse:
+        content = await file.read()
+        wb = load_workbook(filename=BytesIO(content), data_only=True)
+        ws = wb.active
+
+        filas = []
+        validos = 0
+        errores = 0
+
+        for idx, row in enumerate(ws.iter_rows(min_row=2, values_only=True), start=2):
+            if all(cell is None for cell in row):
+                continue
+            
+            nombre, descripcion = (list(row)[:2] + [None]*2)[:2]
+            
+            fila_errores = []
+            nombre_str = str(nombre).strip() if nombre is not None else None
+            desc_str = str(descripcion).strip() if descripcion is not None else None
+            
+
+            if not nombre_str: 
+                fila_errores.append("Nombre es obligatorio.")
+            else:
+                existente = self.repository.get_by_nombre(db, nombre_str)
+                if existente:
+                    fila_errores.append(f"TipoCalzado '{nombre_str}' ya existe.")
+            
+            
+
+            es_valido = len(fila_errores) == 0
+            if es_valido:
+                validos += 1
+            else:
+                errores += 1
+
+            filas.append(FilaPrevia(
+                fila=idx,
+                nombre=nombre_str,
+                descripcion=desc_str,
+                
+                valido=es_valido,
+                errores=fila_errores
+            ))
+
+        return PreviaImportacionResponse(total=len(filas), validos=validos, errores=errores, filas=filas)
+
+    def confirmar_importacion(self, db: Session, filas: list[FilaPrevia]):
+        try:
+            creados = 0
+            for fila in filas:
+                if not fila.valido: continue
+                payload = TipoCalzadoCreate(nombre=fila.nombre, descripcion=fila.descripcion or '')
+                self.create(db, payload)
+                creados += 1
+            db.commit()
+            return {"success": True, "creados": creados}
+        except Exception as e:
+            db.rollback()
+            raise e
 
     def get_all(
         self,

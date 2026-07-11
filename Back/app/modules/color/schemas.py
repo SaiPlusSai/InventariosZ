@@ -67,3 +67,20 @@ class ColorListResponse(BaseModel):
     items: list[ColorResponse]
 
     total: int
+
+class FilaPrevia(BaseModel):
+    fila: int
+    nombre: str | None
+    descripcion: str | None
+    codigo_hex: str | None = None
+    valido: bool
+    errores: list[str]
+
+class PreviaImportacionResponse(BaseModel):
+    total: int
+    validos: int
+    errores: int
+    filas: list[FilaPrevia]
+
+class ConfirmarImportacionRequest(BaseModel):
+    filas: list[FilaPrevia]

@@ -6,7 +6,8 @@ import { useMarcaStore } from '../../store/marcaStore'
 import { marcaService } from '../../services/marcaService'
 import { useRecoveryManager } from '../../hooks/useRecoveryManager'
 import toast from 'react-hot-toast'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Download, UploadCloud } from 'lucide-react'
+import GenericImportarModal from '../../components/ui/GenericImportarModal'
 
 export default function Marcas() {
   const navigate = useNavigate()
@@ -21,6 +22,7 @@ export default function Marcas() {
   const [searchTerm, setSearchTerm] = useState('')
   const [appliedSearch, setAppliedSearch] = useState('')
 
+  const [showImportModal, setShowImportModal] = useState(false)
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [itemToDelete, setItemToDelete] = useState(null)
@@ -86,6 +88,24 @@ export default function Marcas() {
     }
   }
 
+  const handleExportarExcel = async () => {
+    try {
+      const loadingToast = toast.loading('Generando Excel...')
+      const response = await marcaService.exportarExcel()
+      const url = window.URL.createObjectURL(new Blob([response.data]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', 'marcas_inventario.xlsx')
+      document.body.appendChild(link)
+      link.click()
+      link.parentNode.removeChild(link)
+      toast.dismiss(loadingToast)
+      toast.success('Excel exportado correctamente')
+    } catch (error) {
+      toast.error('Error al exportar a Excel')
+    }
+  }
+
   const handleDeleteClick = (marca) => {
     setItemToDelete(marca)
     setShowDeleteModal(true)
@@ -135,9 +155,17 @@ export default function Marcas() {
             {isPapeleraMode ? 'Volver a Activos' : 'Ver Papelera'}
           </Button>
           {!isPapeleraMode && (
-            <Button variant="primary" onClick={() => handleOpenModal()}>
-              + Nueva Marca
-            </Button>
+            <>
+              <Button variant="secondary" onClick={() => setShowImportModal(true)}>
+                <UploadCloud size={16} className="mr-2 inline" /> Importar
+              </Button>
+              <Button variant="secondary" onClick={handleExportarExcel}>
+                <Download size={16} className="mr-2 inline" /> Exportar
+              </Button>
+              <Button variant="primary" onClick={() => handleOpenModal()}>
+                + Nueva Marca
+              </Button>
+            </>
           )}
         </div>
       </div>
@@ -284,6 +312,21 @@ export default function Marcas() {
           isPhysicalDelete: isPapeleraMode
         }}
       />
+
+      {showImportModal && (
+        <GenericImportarModal 
+          title="Importación de Marcas"
+          description="Añade múltiples marcas usando un archivo Excel"
+          onClose={() => setShowImportModal(false)}
+          onImportSuccess={() => {
+            setShowImportModal(false)
+            loadMarcas()
+          }}
+          descargarPlantillaFn={marcaService.descargarPlantilla}
+          importarPreviaFn={marcaService.importarPrevia}
+          importarConfirmarFn={marcaService.importarConfirmar}
+        />
+      )}
     </div>
   )
 }
