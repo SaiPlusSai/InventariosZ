@@ -4,13 +4,16 @@ import { ENV } from '../config/env'
 const API_BASE_URL = ENV.apiUrl
 const API_TIMEOUT = ENV.apiTimeout
 
+const defaultHeaders = {
+  "Content-Type": "application/json",
+  ...(ENV.env === "ngrok" && { "ngrok-skip-browser-warning": "true" }),
+};
+
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
   timeout: API_TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-})
+  headers: defaultHeaders,
+});
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
