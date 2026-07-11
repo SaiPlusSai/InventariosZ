@@ -2,8 +2,8 @@ import { Warehouse } from 'lucide-react'
 
 import MetricCard from './MetricCard'
 import ProgressStock from './ProgressStock'
-import MovimientoModal from '../movimientos/MovimientoModal'
-import KardexTable from '../movimientos/KardexTable'
+import MovimientoModal from '../movimientos/MovimientoModal.jsx'
+import KardexTable from '../movimientos/KardexTable.jsx'
 import React, { useState } from 'react'
 import Button from '../../../components/ui/Button'
 
