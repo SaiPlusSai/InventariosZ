@@ -49,7 +49,7 @@ export default function CrudHeader({
 
       {/* Search & Filters Row */}
       {(searchConfig || filterConfig || extraContent) && (
-        <Card className="border border-gray-200 shadow-sm bg-white rounded-xl overflow-visible">
+        <div className="border border-gray-200 shadow-sm bg-white rounded-xl overflow-visible p-0.5">
           {(searchConfig || filterConfig) && (
             <div className="flex flex-col md:flex-row items-center p-1">
               {searchConfig && (
@@ -120,7 +120,7 @@ export default function CrudHeader({
           )}
 
           {extraContent}
-        </Card>
+        </div>
       )}
 
       {/* Active Filters Chips */}
