@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, ConfirmModal, EmptyState, GenericImportarModal } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState } from '../../components/ui'
 import CrudToolbar from '../../components/ui/Crud/CrudToolbar'
 import { useTallaStore } from '../../store/tallaStore'
 import { tallaService } from '../../services/tallaService'
