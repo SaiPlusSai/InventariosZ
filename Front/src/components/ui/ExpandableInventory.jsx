@@ -26,11 +26,11 @@ export function ExpandableInventory({ variantes, onIncrementar, onDecrementar })
       >
         <div className="overflow-hidden space-y-2">
           {variantes.map(v => (
-            <div key={v.id} className="flex items-center justify-between bg-gray-50 p-2 rounded border border-gray-100">
-              <span className="text-sm font-medium text-gray-700 min-w-[3rem]">
+            <div key={v.id} className="flex flex-wrap items-center justify-between gap-1.5 bg-gray-50 p-1.5 rounded border border-gray-100">
+              <span className="text-[13px] font-medium text-gray-700 min-w-[2.5rem] truncate">
                 {v.talla.nombre}
               </span>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5">
                 <Button
                   variant="secondary"
                   className="h-6 w-6 p-0 min-w-0 flex items-center justify-center rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
@@ -39,7 +39,7 @@ export function ExpandableInventory({ variantes, onIncrementar, onDecrementar })
                 >
                   -
                 </Button>
-                <span className={`text-sm font-bold w-6 text-center ${v.stock_actual > 0 ? 'text-green-600' : 'text-red-500'}`}>
+                <span className={`text-[13px] font-bold min-w-[1.25rem] text-center ${v.stock_actual > 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {v.stock_actual}
                 </span>
                 <Button
