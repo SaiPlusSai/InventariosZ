@@ -71,7 +71,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center gap-2 mb-8">
           <Activity className="w-6 h-6 text-blue-600 animate-spin" />
           <h1 className="text-2xl font-bold text-gray-800">Cargando Indicadores...</h1>
@@ -83,7 +83,7 @@ const Dashboard = () => {
 
   if (error || !stats) {
     return (
-      <div className="p-6 max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
+      <div className="max-w-7xl mx-auto flex flex-col items-center justify-center min-h-[50vh]">
         <AlertTriangle className="w-16 h-16 text-red-500 mb-4" />
         <h2 className="text-xl font-bold text-gray-800 mb-2">Error de Conexión</h2>
         <p className="text-gray-500">No se pudieron cargar los indicadores ejecutivos.</p>
@@ -114,7 +114,7 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="p-4 sm:p-6 max-w-7xl mx-auto space-y-8">
+    <div className="max-w-7xl mx-auto space-y-8">
       
       <div className="flex justify-between items-end mb-6">
         <div>
