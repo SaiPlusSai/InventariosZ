@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal, CrudHeader } from '../../components/ui'
 import { useProductoStore } from '../../store/productoStore'
 import { useWizardStore } from '../../store/wizardStore'
 import { productoService } from '../../services/productoService'
@@ -234,96 +234,73 @@ export default function Productos() {
 
   return (
     <div className="max-w-7xl mx-auto pb-12">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
-            {isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0">
-          <Button variant="secondary" onClick={() => {
-            setIsPapeleraMode(!isPapeleraMode)
-            setFilters(emptyFilters)
-            setGlobalSearch('')
-          }} className="w-full sm:w-auto">
-            {isPapeleraMode ? <><RotateCcw size={16} className="mr-2 inline"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2 inline"/> Ver Papelera</>}
-          </Button>
-          {!isPapeleraMode && (
+      <CrudHeader
+        title={isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
+        description={isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
+        actions={[
+          {
+            label: isPapeleraMode ? "Volver a Activos" : "Ver Papelera",
+            icon: isPapeleraMode ? RotateCcw : Trash2,
+            variant: "secondary",
+            onClick: () => {
+              setIsPapeleraMode(!isPapeleraMode)
+              setFilters(emptyFilters)
+              setGlobalSearch('')
+            }
+          },
+          ...(!isPapeleraMode ? [
+            {
+              label: "Importar",
+              icon: FileDown,
+              variant: "secondary",
+              title: "Importar Excel",
+              onClick: () => setShowImportModal(true)
+            },
+            {
+              label: "PDF",
+              icon: FileText,
+              variant: "secondary",
+              title: "Exportar a PDF",
+              onClick: handleExportarPdf
+            },
+            {
+              label: "Exportar",
+              icon: FileUp,
+              variant: "secondary",
+              title: "Exportar a Excel",
+              onClick: handleExportarExcel
+            },
+            {
+              label: "Nuevo Producto",
+              icon: Plus,
+              variant: "primary",
+              className: "shadow-md shadow-primary-500/20",
+              onClick: () => setShowNewWizard(true)
+            }
+          ] : [])
+        ]}
+        searchConfig={{
+          placeholder: "Buscar por nombre o descripción...",
+          value: globalSearch,
+          onChange: setGlobalSearch
+        }}
+        filterConfig={{
+          showFilters,
+          onToggle: () => setShowFilters(!showFilters),
+          onClear: () => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); },
+          onApply: () => loadProductos(cleanFilters(filters), isPapeleraMode),
+          filters: (
             <>
-              <Button variant="secondary" onClick={() => setShowImportModal(true)} className="w-full sm:w-auto" title="Importar Excel">
-                <FileDown size={16} className="mr-2 inline"/> Importar
-              </Button>
-              <Button variant="secondary" onClick={handleExportarPdf} className="w-full sm:w-auto" title="Exportar a PDF">
-                <FileText size={16} className="mr-2 inline"/> PDF
-              </Button>
-              <Button variant="secondary" onClick={handleExportarExcel} className="w-full sm:w-auto" title="Exportar a Excel">
-                <FileUp size={16} className="mr-2 inline"/> Exportar
-              </Button>
-              <Button variant="primary" onClick={() => setShowNewWizard(true)} className="w-full sm:w-auto shadow-md shadow-primary-500/20">
-                <Plus size={16} className="mr-2 inline"/> Nuevo Producto
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-      {/* Buscador y Filtros Combinados */}
-      <Card className="mb-8 border border-gray-200 shadow-sm bg-white rounded-xl overflow-hidden">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center">
-          {/* Buscador Global */}
-          <div className="relative flex-1">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <input
-              type="text"
-              className="block w-full pl-11 pr-4 py-3.5 bg-transparent border-none focus:ring-0 text-gray-700 text-base"
-              placeholder="Buscar por nombre o descripción..."
-              value={globalSearch}
-              onChange={(e) => setGlobalSearch(e.target.value)}
-            />
-          </div>
-          
-          {/* Separator (visible on desktop) */}
-          <div className="hidden md:block w-px h-8 bg-gray-200 mx-2"></div>
-
-          {/* Botón Filtros */}
-          <button 
-            onClick={() => setShowFilters(!showFilters)}
-            className={`flex items-center justify-center gap-2 px-6 py-3.5 font-medium transition-colors md:w-auto w-full md:border-none border-t border-gray-100 focus:outline-none
-              ${showFilters ? 'bg-primary-50 text-primary-700' : 'text-gray-600 hover:bg-gray-50'}`}
-          >
-            <Filter size={18} />
-            <span>Filtros</span>
-            {showFilters ? <ChevronUp size={18} className="ml-1" /> : <ChevronDown size={18} className="ml-1" />}
-          </button>
-        </div>
-
-        {/* Panel de Filtros Desplegable */}
-        <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${showFilters ? 'max-h-[1000px] opacity-100 border-t border-gray-100 bg-gray-50/50' : 'max-h-0 opacity-0'}`}>
-          <div className="p-6">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
               <Input label="Código" value={filters.codigo} onChange={(e) => setFilters({...filters, codigo: e.target.value})} />
               <Input label="Marca" value={filters.marca} onChange={(e) => setFilters({...filters, marca: e.target.value})} />
               <Input label="Tipo" value={filters.tipo} onChange={(e) => setFilters({...filters, tipo: e.target.value})} />
               <Input label="Material" value={filters.material} onChange={(e) => setFilters({...filters, material: e.target.value})} />
               <Input label="Color" value={filters.color} onChange={(e) => setFilters({...filters, color: e.target.value})} />
               <Input label="Talla" value={filters.talla} onChange={(e) => setFilters({...filters, talla: e.target.value})} />
-            </div>
-            <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
-              <Button variant="secondary" className="w-full sm:w-auto" onClick={() => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); }}>
-                Limpiar
-              </Button>
-              <Button variant="primary" className="w-full sm:w-auto" onClick={() => loadProductos(cleanFilters(filters), isPapeleraMode)}>
-                <Search size={16} className="mr-2"/> Buscar
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
+            </>
+          )
+        }}
+      />
 
       {/* Grid de Productos */}
       {(() => {
