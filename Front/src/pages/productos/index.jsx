@@ -45,6 +45,9 @@ const agruparProductosPlanos = (productosPlanos) => {
 
 export default function Productos() {
   const [searchParams] = useSearchParams()
+  const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
+  const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto } = useWizardStore()
+
   const initialFilters = {
     ...emptyFilters,
     marca_id: searchParams.get('marca_id') || '',
@@ -178,8 +181,6 @@ export default function Productos() {
   const [movimientoProductoId, setMovimientoProductoId] = useState(null)
   const [movimientoStockActual, setMovimientoStockActual] = useState(0)
   const [movimientoPolaridad, setMovimientoPolaridad] = useState(null)
-  
-  const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
 
   const loadProductos = async (params = {}, papelera = isPapeleraMode) => {
     try {
@@ -226,8 +227,6 @@ export default function Productos() {
       setLoadingDetalle(false)
     }
   }
-
-  const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto } = useWizardStore()
 
   const handleEditar = async (producto, colorInfo) => {
     await cargarProductoEditarCompleto(producto.codigo_producto_id, colorInfo.color_id)
