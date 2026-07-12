@@ -374,7 +374,7 @@ export default function Productos() {
                 <label className="text-sm font-medium text-gray-700">Código</label>
                 <input 
                   type="text" 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                   placeholder="Ej. PROD-01" 
                   value={filters.codigo} 
                   onChange={(e) => updateFilter('codigo', e.target.value)} 
@@ -383,7 +383,7 @@ export default function Productos() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-gray-700">Marca</label>
                 <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.marca} 
                   onChange={(e) => updateFilter('marca', e.target.value)}
                 >
@@ -396,7 +396,7 @@ export default function Productos() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-gray-700">Tipo</label>
                 <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.tipo} 
                   onChange={(e) => updateFilter('tipo', e.target.value)}
                 >
@@ -409,7 +409,7 @@ export default function Productos() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-gray-700">Material</label>
                 <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.material} 
                   onChange={(e) => updateFilter('material', e.target.value)}
                 >
@@ -422,7 +422,7 @@ export default function Productos() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-gray-700">Color</label>
                 <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.color} 
                   onChange={(e) => updateFilter('color', e.target.value)}
                 >
@@ -435,7 +435,7 @@ export default function Productos() {
               <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-gray-700">Talla</label>
                 <select 
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.talla} 
                   onChange={(e) => updateFilter('talla', e.target.value)}
                 >
@@ -463,7 +463,7 @@ export default function Productos() {
 
         if (loading) {
           return (
-            <div className="flex items-center justify-center py-20">
+            <div className="flex items-center justify-center py-1.50">
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
             </div>
           )

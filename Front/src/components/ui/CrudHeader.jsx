@@ -12,9 +12,9 @@ export default function CrudHeader({
   extraContent = null
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       {/* Title & Actions Row */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
         <div>
           <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
             {title}
@@ -27,7 +27,7 @@ export default function CrudHeader({
         </div>
         
         {actions.length > 0 && (
-          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0">
+          <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto mt-2 md:mt-0">
             {actions.map((action, index) => {
               const Icon = action.icon
               return (
@@ -59,7 +59,7 @@ export default function CrudHeader({
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-9 pr-4 py-2 bg-transparent border-none focus:ring-0 text-gray-700 text-sm placeholder-gray-400"
+                    className="block w-full pl-9 pr-4 py-1.5 bg-transparent border-none focus:ring-0 text-gray-700 text-sm placeholder-gray-400"
                     placeholder={searchConfig.placeholder || "Buscar..."}
                     value={searchConfig.value}
                     onChange={(e) => searchConfig.onChange(e.target.value)}
@@ -74,13 +74,13 @@ export default function CrudHeader({
 
               <div className="flex items-center gap-1 w-full md:w-auto p-1 md:p-0 border-t md:border-t-0 border-gray-100">
                 {searchConfig && searchConfig.onClear && (
-                  <Button variant="ghost" onClick={searchConfig.onClear} className="flex-1 md:flex-none text-sm px-3 py-1.5 h-auto text-gray-600 hover:text-gray-900">
+                  <Button variant="ghost" onClick={searchConfig.onClear} className="flex-1 md:flex-none text-sm px-3 py-1 h-auto text-gray-600 hover:text-gray-900">
                     Limpiar
                   </Button>
                 )}
                 
                 {searchConfig && searchConfig.onSearch && !searchConfig.hideSearchButton && (
-                  <Button variant="primary" onClick={searchConfig.onSearch} className="flex-1 md:flex-none text-sm px-4 py-1.5 h-auto shadow-sm">
+                  <Button variant="primary" onClick={searchConfig.onSearch} className="flex-1 md:flex-none text-sm px-4 py-1 h-auto shadow-sm">
                     Buscar
                   </Button>
                 )}
@@ -89,7 +89,7 @@ export default function CrudHeader({
                   <Button 
                     variant={filterConfig.showFilters ? "secondary" : "ghost"}
                     onClick={filterConfig.onToggle}
-                    className={`flex-1 md:flex-none text-sm px-3 py-1.5 h-auto ml-1 ${filterConfig.showFilters ? 'bg-primary-50 text-primary-700 border-primary-100 hover:bg-primary-100' : 'text-gray-600'}`}
+                    className={`flex-1 md:flex-none text-sm px-3 py-1 h-auto ml-1 ${filterConfig.showFilters ? 'bg-primary-50 text-primary-700 border-primary-100 hover:bg-primary-100' : 'text-gray-600'}`}
                   >
                     <Filter size={14} className="mr-1.5" />
                     <span>Filtros</span>
@@ -103,15 +103,15 @@ export default function CrudHeader({
           {/* Filter Panel */}
           {filterConfig && (
             <div className={`transition-all duration-300 ease-in-out origin-top overflow-hidden ${filterConfig.showFilters ? 'max-h-[1000px] opacity-100 border-t border-gray-100 bg-gray-50/50' : 'max-h-0 opacity-0'}`}>
-              <div className="p-4 sm:p-5">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+              <div className="p-3 sm:p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
                   {filterConfig.filters}
                 </div>
-                <div className="flex flex-col sm:flex-row justify-end gap-2 mt-5 pt-4 border-t border-gray-200/60">
-                  <Button variant="secondary" className="w-full sm:w-auto text-sm py-1.5" onClick={filterConfig.onClear}>
+                <div className="flex flex-col sm:flex-row justify-end gap-2 mt-3 pt-3 border-t border-gray-200/60">
+                  <Button variant="secondary" className="w-full sm:w-auto text-sm py-1" onClick={filterConfig.onClear}>
                     Limpiar Filtros
                   </Button>
-                  <Button variant="primary" className="w-full sm:w-auto text-sm py-1.5" onClick={filterConfig.onApply}>
+                  <Button variant="primary" className="w-full sm:w-auto text-sm py-1" onClick={filterConfig.onApply}>
                     <Search size={14} className="mr-1.5"/> Aplicar Filtros
                   </Button>
                 </div>
