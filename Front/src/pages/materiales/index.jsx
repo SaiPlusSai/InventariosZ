@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input } from '../../components/ui'
+import { Card, Button, Input, CrudHeader } from '../../components/ui'
 import { ConfirmModal, EmptyState } from '../../components/ui'
 import { useMaterialStore } from '../../store/materialStore'
 import { materialService } from '../../services/materialService'
@@ -145,63 +145,52 @@ export default function Materiales() {
 
   return (
     <div>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
-            {isPapeleraMode ? 'Materiales (Papelera)' : 'Materiales'}
-          </h1>
-          <p className="text-gray-500 mt-1">
-            {isPapeleraMode ? 'Materiales inactivos' : 'Gestiona los materiales.'}
-          </p>
-        </div>
-        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0">
-          <Button variant="secondary" onClick={() => {
-            setIsPapeleraMode(!isPapeleraMode)
-            setSearchTerm('')
-            setAppliedSearch('')
-          }} className="w-full sm:w-auto">
-            {isPapeleraMode ? <><RotateCcw size={16} className="mr-2 inline"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2 inline"/> Ver Papelera</>}
-          </Button>
-          {!isPapeleraMode && (
-            <>
-              <Button variant="secondary" onClick={() => setShowImportModal(true)} className="w-full sm:w-auto" title="Importar Excel">
-                <FileDown size={16} className="mr-2 inline"/> Importar
-              </Button>
-              <Button variant="secondary" onClick={handleExportarExcel} className="w-full sm:w-auto" title="Exportar a Excel">
-                <FileUp size={16} className="mr-2 inline"/> Exportar
-              </Button>
-              <Button variant="primary" onClick={() => handleOpenModal()} className="w-full sm:w-auto shadow-md shadow-primary-500/20">
-                <Plus size={16} className="mr-2 inline"/> Nuevo Material
-              </Button>
-            </>
-          )}
-        </div>
-      </div>
-      <Card className="mb-6">
-        <div className="flex flex-col sm:flex-row gap-2 items-center">
-          <div className="relative w-full sm:flex-1 sm:max-w-md">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-              🔍
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar..."
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-          </div>
-          <div className="flex gap-2 w-full sm:w-auto">
-            <Button variant="primary" onClick={handleSearch} className="flex-1 sm:flex-none">
-              Filtrar
-            </Button>
-            <Button variant="secondary" onClick={handleClear} className="flex-1 sm:flex-none">
-              Limpiar
-            </Button>
-          </div>
-        </div>
-      </Card>
+      <CrudHeader
+        title={isPapeleraMode ? 'Materiales (Papelera)' : 'Materiales'}
+        description={isPapeleraMode ? 'Materiales inactivos' : 'Gestiona los materiales.'}
+        actions={[
+          {
+            label: isPapeleraMode ? "Volver a Activos" : "Ver Papelera",
+            icon: isPapeleraMode ? RotateCcw : Trash2,
+            variant: "secondary",
+            onClick: () => {
+              setIsPapeleraMode(!isPapeleraMode)
+              setSearchTerm('')
+              setAppliedSearch('')
+            }
+          },
+          ...(!isPapeleraMode ? [
+            {
+              label: "Importar",
+              icon: FileDown,
+              variant: "secondary",
+              title: "Importar Excel",
+              onClick: () => setShowImportModal(true)
+            },
+            {
+              label: "Exportar",
+              icon: FileUp,
+              variant: "secondary",
+              title: "Exportar a Excel",
+              onClick: handleExportarExcel
+            },
+            {
+              label: "Nuevo Material",
+              icon: Plus,
+              variant: "primary",
+              className: "shadow-md shadow-primary-500/20",
+              onClick: () => handleOpenModal()
+            }
+          ] : [])
+        ]}
+        searchConfig={{
+          placeholder: "Buscar...",
+          value: searchTerm,
+          onChange: setSearchTerm,
+          onSearch: handleSearch,
+          onClear: handleClear
+        }}
+      />
 
       <Card>
         {loading ? (

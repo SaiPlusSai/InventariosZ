@@ -84,7 +84,12 @@ export default function CrudHeader({
               
               {/* Extra button if searchConfig is standalone and wants a trigger button */}
               {searchConfig && searchConfig.onSearch && !searchConfig.hideSearchButton && !filterConfig && (
-                <div className="p-2 border-t md:border-t-0 border-gray-100">
+                <div className="p-2 border-t md:border-t-0 border-gray-100 flex gap-2">
+                  {searchConfig.onClear && (
+                    <Button variant="secondary" onClick={searchConfig.onClear} className="w-full md:w-auto justify-center">
+                      Limpiar
+                    </Button>
+                  )}
                   <Button variant="primary" onClick={searchConfig.onSearch} className="w-full md:w-auto justify-center">
                     Buscar
                   </Button>
