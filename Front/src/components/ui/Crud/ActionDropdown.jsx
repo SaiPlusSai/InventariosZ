@@ -19,11 +19,11 @@ export default function ActionDropdown({ actions = [] }) {
   if (!actions || actions.length === 0) return null
 
   return (
-    <div className="relative inline-block text-left" ref={dropdownRef}>
+    <div className="relative inline-block text-left w-full sm:w-auto" ref={dropdownRef}>
       <Button 
         variant="secondary" 
         onClick={() => setIsOpen(!isOpen)}
-        className="inline-flex items-center justify-center whitespace-nowrap"
+        className="inline-flex items-center justify-center whitespace-nowrap w-full sm:w-auto"
       >
         Acciones <ChevronDown size={14} className={`ml-1.5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
       </Button>

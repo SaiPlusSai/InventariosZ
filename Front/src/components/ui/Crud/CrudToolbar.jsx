@@ -29,17 +29,27 @@ export default function CrudToolbar({
           )}
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-          <PrimaryActions actions={primaryActions.filter(a => a.variant !== 'primary')} />
+        <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+          <PrimaryActions 
+            actions={primaryActions
+              .filter(a => a.variant !== 'primary')
+              .map(a => ({ ...a, className: `${a.className || ''} col-span-1 sm:col-span-1` }))
+            } 
+          />
           <ActionDropdown actions={secondaryActions} />
-          <PrimaryActions actions={primaryActions.filter(a => a.variant === 'primary')} />
+          <PrimaryActions 
+            actions={primaryActions
+              .filter(a => a.variant === 'primary')
+              .map(a => ({ ...a, className: `${a.className || ''} col-span-2 sm:col-span-1` }))
+            } 
+          />
         </div>
       </div>
 
       {/* Search & Filters Row */}
       {(searchConfig || filterConfig) && (
         <div className="border border-gray-200 shadow-sm bg-white rounded-xl overflow-visible p-0.5 mt-2">
-          <div className="flex flex-col md:flex-row items-center p-1">
+          <div className="flex flex-row items-center p-1 w-full gap-2">
             
             {searchConfig && (
               <SearchInput {...searchConfig} />

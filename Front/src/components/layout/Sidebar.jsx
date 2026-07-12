@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
   LayoutDashboard,
@@ -22,6 +22,17 @@ export default function Sidebar({ isOpen, setIsOpen }) {
 
   const [catalogosOpen, setCatalogosOpen] = useState(true)
 
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen])
+
   const isActive = (path) => location.pathname === path
 
   return (
@@ -29,14 +40,14 @@ export default function Sidebar({ isOpen, setIsOpen }) {
       {/* Mobile overlay */}
       {isOpen && (
         <div 
-          className="fixed inset-0 z-20 bg-black/50 lg:hidden transition-opacity" 
+          className="fixed inset-0 z-40 bg-black/50 lg:hidden transition-opacity" 
           onClick={() => setIsOpen(false)}
         />
       )}
 
       {/* Sidebar Content */}
       <aside 
-        className={`fixed inset-y-0 left-0 z-30 w-64 bg-primary-800 text-white shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-primary-800 text-white shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

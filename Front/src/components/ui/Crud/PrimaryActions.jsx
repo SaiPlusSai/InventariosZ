@@ -5,7 +5,7 @@ export default function PrimaryActions({ actions = [] }) {
   if (!actions || actions.length === 0) return null
 
   return (
-    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto mt-2 md:mt-0">
+    <>
       {actions.map((action, index) => {
         const Icon = action.icon
         return (
@@ -21,6 +21,6 @@ export default function PrimaryActions({ actions = [] }) {
           </Button>
         )
       })}
-    </div>
+    </>
   )
 }
