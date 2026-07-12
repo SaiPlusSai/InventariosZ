@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, CrudHeader } from '../../components/ui'
-import { ConfirmModal, EmptyState } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState, GenericImportarModal } from '../../components/ui'
+import CrudToolbar from '../../components/ui/Crud/CrudToolbar'
 import { useColorStore } from '../../store/colorStore'
 import { colorService } from '../../services/colorService'
 import { getHexFromColorName } from '../../utils/colorDictionary'
@@ -146,10 +146,10 @@ export default function Colores() {
 
   return (
     <div>
-      <CrudHeader
+      <CrudToolbar
         title={isPapeleraMode ? 'Colores (Papelera)' : 'Colores'}
         description={isPapeleraMode ? 'Colores inactivos' : 'Gestiona los colores disponibles.'}
-        actions={[
+        primaryActions={[
           {
             label: isPapeleraMode ? "Volver a Activos" : "Ver Papelera",
             icon: isPapeleraMode ? RotateCcw : Trash2,
@@ -162,20 +162,6 @@ export default function Colores() {
           },
           ...(!isPapeleraMode ? [
             {
-              label: "Importar",
-              icon: FileDown,
-              variant: "secondary",
-              title: "Importar Excel",
-              onClick: () => setShowImportModal(true)
-            },
-            {
-              label: "Exportar",
-              icon: FileUp,
-              variant: "secondary",
-              title: "Exportar a Excel",
-              onClick: handleExportarExcel
-            },
-            {
               label: "Nuevo Color",
               icon: Plus,
               variant: "primary",
@@ -184,6 +170,20 @@ export default function Colores() {
             }
           ] : [])
         ]}
+        secondaryActions={!isPapeleraMode ? [
+          {
+            label: "Importar",
+            icon: FileDown,
+            title: "Importar Excel",
+            onClick: () => setShowImportModal(true)
+          },
+          {
+            label: "Exportar Excel",
+            icon: FileUp,
+            title: "Exportar a Excel",
+            onClick: handleExportarExcel
+          }
+        ] : []}
         searchConfig={{
           placeholder: "Buscar...",
           value: searchTerm,

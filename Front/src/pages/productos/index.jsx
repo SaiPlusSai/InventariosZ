@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal, CrudHeader } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal } from '../../components/ui'
+import CrudToolbar from '../../components/ui/Crud/CrudToolbar'
 import { useProductoStore } from '../../store/productoStore'
 import { useWizardStore } from '../../store/wizardStore'
 import { productoService } from '../../services/productoService'
@@ -312,10 +313,10 @@ export default function Productos() {
 
   return (
     <div className="max-w-7xl mx-auto pb-12">
-      <CrudHeader
+      <CrudToolbar
         title={isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
         description={isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
-        actions={[
+        primaryActions={[
           {
             label: isPapeleraMode ? "Volver a Activos" : "Ver Papelera",
             icon: isPapeleraMode ? RotateCcw : Trash2,
@@ -328,27 +329,6 @@ export default function Productos() {
           },
           ...(!isPapeleraMode ? [
             {
-              label: "Importar",
-              icon: FileDown,
-              variant: "secondary",
-              title: "Importar Excel",
-              onClick: () => setShowImportModal(true)
-            },
-            {
-              label: "PDF",
-              icon: FileText,
-              variant: "secondary",
-              title: "Exportar a PDF",
-              onClick: handleExportarPdf
-            },
-            {
-              label: "Exportar",
-              icon: FileUp,
-              variant: "secondary",
-              title: "Exportar a Excel",
-              onClick: handleExportarExcel
-            },
-            {
               label: "Nuevo Producto",
               icon: Plus,
               variant: "primary",
@@ -357,6 +337,26 @@ export default function Productos() {
             }
           ] : [])
         ]}
+        secondaryActions={!isPapeleraMode ? [
+          {
+            label: "Importar",
+            icon: FileDown,
+            title: "Importar Excel",
+            onClick: () => setShowImportModal(true)
+          },
+          {
+            label: "Exportar PDF",
+            icon: FileText,
+            title: "Exportar a PDF",
+            onClick: handleExportarPdf
+          },
+          {
+            label: "Exportar Excel",
+            icon: FileUp,
+            title: "Exportar a Excel",
+            onClick: handleExportarExcel
+          }
+        ] : []}
         searchConfig={{
           placeholder: "Buscar por nombre o descripción...",
           value: globalSearch,

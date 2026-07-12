@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Card, Button, Input, CrudHeader } from '../../components/ui'
-import { ConfirmModal, EmptyState } from '../../components/ui'
+import { Card, Button, Input, ConfirmModal, EmptyState, GenericImportarModal } from '../../components/ui'
+import CrudToolbar from '../../components/ui/Crud/CrudToolbar'
 import { useCodigoProductoStore } from '../../store/codigoProductoStore'
 import { codigoProductoService } from '../../services/codigoProductoService'
 import { marcaService } from '../../services/marcaService'
@@ -175,10 +175,10 @@ export default function CodigoProducto() {
 
   return (
     <div>
-      <CrudHeader
+      <CrudToolbar
         title={isPapeleraMode ? 'Códigos de Producto (Papelera)' : 'Códigos de Producto'}
         description={isPapeleraMode ? 'Códigos inactivos' : 'Gestiona los códigos base de productos.'}
-        actions={[
+        primaryActions={[
           {
             label: isPapeleraMode ? "Volver a Activos" : "Ver Papelera",
             icon: isPapeleraMode ? RotateCcw : Trash2,
@@ -191,20 +191,6 @@ export default function CodigoProducto() {
           },
           ...(!isPapeleraMode ? [
             {
-              label: "Importar",
-              icon: FileDown,
-              variant: "secondary",
-              title: "Importar Excel",
-              onClick: () => setShowImportModal(true)
-            },
-            {
-              label: "Exportar",
-              icon: FileUp,
-              variant: "secondary",
-              title: "Exportar a Excel",
-              onClick: handleExportarExcel
-            },
-            {
               label: "Nuevo Código",
               icon: Plus,
               variant: "primary",
@@ -213,6 +199,20 @@ export default function CodigoProducto() {
             }
           ] : [])
         ]}
+        secondaryActions={!isPapeleraMode ? [
+          {
+            label: "Importar",
+            icon: FileDown,
+            title: "Importar Excel",
+            onClick: () => setShowImportModal(true)
+          },
+          {
+            label: "Exportar Excel",
+            icon: FileUp,
+            title: "Exportar a Excel",
+            onClick: handleExportarExcel
+          }
+        ] : []}
         searchConfig={{
           placeholder: "Buscar por código o marca...",
           value: searchTerm,
