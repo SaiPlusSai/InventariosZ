@@ -125,3 +125,5 @@ Back/.env.production
 Front/.env.production
 Front/.env.ngrok
 Front/.env.development
+Back/.env
+Back/.env
