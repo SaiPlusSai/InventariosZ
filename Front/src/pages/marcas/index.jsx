@@ -153,23 +153,23 @@ export default function Marcas() {
             {isPapeleraMode ? 'Marcas inactivas' : 'Gestiona las marcas registradas.'}
           </p>
         </div>
-        <div className="flex gap-3 w-full md:w-auto mt-4 md:mt-0">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 w-full md:w-auto mt-4 md:mt-0">
           <Button variant="secondary" onClick={() => {
             setIsPapeleraMode(!isPapeleraMode)
             setSearchTerm('')
             setAppliedSearch('')
-          }} className="flex-1 md:flex-none">
+          }} className="w-full sm:w-auto">
             {isPapeleraMode ? <><RotateCcw size={16} className="mr-2 inline"/> Volver a Activos</> : <><Trash2 size={16} className="mr-2 inline"/> Ver Papelera</>}
           </Button>
           {!isPapeleraMode && (
             <>
-              <Button variant="secondary" onClick={() => setShowImportModal(true)} className="flex-1 md:flex-none" title="Importar Excel">
+              <Button variant="secondary" onClick={() => setShowImportModal(true)} className="w-full sm:w-auto" title="Importar Excel">
                 <FileDown size={16} className="mr-2 inline"/> Importar
               </Button>
-              <Button variant="secondary" onClick={handleExportarExcel} className="flex-1 md:flex-none" title="Exportar a Excel">
+              <Button variant="secondary" onClick={handleExportarExcel} className="w-full sm:w-auto" title="Exportar a Excel">
                 <FileUp size={16} className="mr-2 inline"/> Exportar
               </Button>
-              <Button variant="primary" onClick={() => handleOpenModal()} className="flex-1 md:flex-none shadow-md shadow-primary-500/20">
+              <Button variant="primary" onClick={() => handleOpenModal()} className="w-full sm:w-auto shadow-md shadow-primary-500/20">
                 <Plus size={16} className="mr-2 inline"/> Nueva Marca
               </Button>
             </>
@@ -177,8 +177,8 @@ export default function Marcas() {
         </div>
       </div>
       <Card className="mb-6">
-        <div className="flex gap-2 items-center">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col sm:flex-row gap-2 items-center">
+          <div className="relative w-full sm:flex-1 sm:max-w-md">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
               🔍
             </span>
@@ -191,12 +191,14 @@ export default function Marcas() {
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             />
           </div>
-          <Button variant="primary" onClick={handleSearch}>
-            Filtrar
-          </Button>
-          <Button variant="secondary" onClick={handleClear}>
-            Limpiar
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="primary" onClick={handleSearch} className="flex-1 sm:flex-none">
+              Filtrar
+            </Button>
+            <Button variant="secondary" onClick={handleClear} className="flex-1 sm:flex-none">
+              Limpiar
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -213,8 +215,8 @@ export default function Marcas() {
             onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
+          <div className="overflow-x-auto w-full rounded-lg">
+            <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
               <thead>
                 <tr className="border-b">
                   <th className="py-3 px-4 font-semibold text-gray-700">Nombre</th>

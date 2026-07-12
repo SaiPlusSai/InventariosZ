@@ -82,7 +82,7 @@ export default function ProductoCard({
       </div>
 
       {/* Acciones */}
-      <div className="grid grid-cols-2 gap-2 mt-auto">
+      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2 mt-auto">
         {!isPapeleraMode ? (
           <>
             <Button variant="ghost" className="text-xs w-full" onClick={() => onVer(color.color_id)}>

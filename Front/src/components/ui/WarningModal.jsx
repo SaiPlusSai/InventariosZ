@@ -29,12 +29,12 @@ export function WarningModal({ isOpen, onClose, onConfirm, warningData, loading 
             <p className="pt-2 font-medium">¿Desea continuar?</p>
           </div>
 
-          <div className="flex gap-3 mt-6">
+          <div className="flex flex-col-reverse sm:flex-row gap-3 mt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 transition-colors"
+              className="w-full sm:w-auto flex-1 px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 disabled:opacity-50 transition-colors"
             >
               Cancelar
             </button>
@@ -42,7 +42,7 @@ export function WarningModal({ isOpen, onClose, onConfirm, warningData, loading 
               type="button"
               onClick={onConfirm}
               disabled={loading}
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 transition-colors flex items-center justify-center"
+              className="w-full sm:w-auto flex-1 px-4 py-2 text-sm font-medium text-white bg-amber-600 border border-transparent rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 disabled:opacity-50 transition-colors flex items-center justify-center"
             >
               {loading ? (
                 <svg className="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

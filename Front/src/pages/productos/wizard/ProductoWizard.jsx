@@ -237,7 +237,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         {/* Header */}
         <div className="border-b px-6 py-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
               {modo === 'editar'
                 ? 'Editar Producto'
                 : 'Nuevo Producto'}
@@ -287,11 +287,12 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         </div>
 
         {/* Footer */}
-        <div className="border-t px-6 py-4 flex justify-between items-center gap-3 bg-white rounded-b-lg">
+        <div className="border-t px-4 sm:px-6 py-4 flex flex-col-reverse sm:flex-row justify-between items-center gap-3 bg-white rounded-b-lg">
 
           <Button
             variant="ghost"
             onClick={handlePrev}
+            className="w-full sm:w-auto"
             disabled={
               currentStep === 1 ||
               loading
@@ -309,7 +310,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
               variant="primary"
               onClick={handleSubmit}
               disabled={loading}
-              className="min-w-[150px]"
+              className="w-full sm:w-auto min-w-[150px]"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-2">
@@ -325,7 +326,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
               variant="primary"
               onClick={handleNext}
               disabled={loading}
-              className="min-w-[150px]"
+              className="w-full sm:w-auto min-w-[150px]"
             >
               Siguiente →
             </Button>

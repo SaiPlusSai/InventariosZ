@@ -130,7 +130,7 @@ const GenericImportarModal = ({
 
           {previaData && !loading && (
             <div className="space-y-4">
-              <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                 <div className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm text-center">
                   <div className="text-2xl font-bold text-gray-800">{previaData.total}</div>
                   <div className="text-sm text-gray-500">Filas Leídas</div>
@@ -147,7 +147,7 @@ const GenericImportarModal = ({
 
               <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
                 <div className="overflow-x-auto max-h-[300px]">
-                  <table className="w-full text-sm text-left">
+                  <table className="w-full text-sm text-left min-w-[500px] whitespace-nowrap">
                     <thead className="text-xs text-gray-700 uppercase bg-gray-50 sticky top-0">
                       <tr>
                         <th className="px-4 py-3">Fila</th>

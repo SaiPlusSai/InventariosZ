@@ -172,12 +172,12 @@ export function ConfirmModal({
           </div>
         </div>
 
-        <div className="px-6 py-4 bg-gray-50 border-t flex justify-end gap-3">
+        <div className="px-6 py-4 bg-gray-50 border-t flex flex-col-reverse sm:flex-row justify-end gap-3">
           <Button 
             variant="ghost" 
             onClick={onClose} 
             disabled={isProcessing || loadingDeps}
-            className="text-gray-600 hover:text-gray-900"
+            className="w-full sm:w-auto text-gray-600 hover:text-gray-900 justify-center"
           >
             {cancelText}
           </Button>
@@ -186,7 +186,7 @@ export function ConfirmModal({
             type="button"
             onClick={handleConfirm} 
             disabled={isProcessing || loadingDeps}
-            className={`px-4 py-2 text-sm font-medium border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors flex items-center justify-center min-w-[120px] ${styles.btnConfirm} disabled:opacity-50 disabled:cursor-not-allowed`}
+            className={`w-full sm:w-auto px-4 py-2 text-sm font-medium border border-transparent rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors flex items-center justify-center min-w-[120px] ${styles.btnConfirm} disabled:opacity-50 disabled:cursor-not-allowed`}
           >
             {isProcessing ? (
               <>

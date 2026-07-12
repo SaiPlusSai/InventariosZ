@@ -12,7 +12,7 @@ export default function HeaderDetalle({
 
   return (
 
-    <div className="bg-slate-800 text-white px-8 py-6 flex justify-between items-center">
+    <div className="bg-slate-800 text-white px-4 sm:px-8 py-4 sm:py-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
 
       <div>
 
@@ -60,11 +60,12 @@ export default function HeaderDetalle({
 
       </div>
 
-      <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
 
         <Button
           variant="primary"
           onClick={onEdit}
+          className="w-full sm:w-auto flex justify-center"
         >
           <Pencil
             size={18}
@@ -78,6 +79,7 @@ export default function HeaderDetalle({
         <Button
           variant="secondary"
           onClick={onClose}
+          className="w-full sm:w-auto flex justify-center"
         >
           <X
             size={18}
