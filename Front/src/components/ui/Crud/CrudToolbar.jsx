@@ -30,8 +30,9 @@ export default function CrudToolbar({
         </div>
         
         <div className="flex flex-col sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
-          <PrimaryActions actions={primaryActions} />
+          <PrimaryActions actions={primaryActions.filter(a => a.variant !== 'primary')} />
           <ActionDropdown actions={secondaryActions} />
+          <PrimaryActions actions={primaryActions.filter(a => a.variant === 'primary')} />
         </div>
       </div>
 
