@@ -1,7 +1,6 @@
 .
 |-- Dockerfile
 |-- README.md
-|-- add_satellite.py
 |-- alembic
 |-- app
 |   |-- __init__.py
@@ -47,7 +46,8 @@
 |   |   |-- exceptions.py
 |   |   |-- logging.py
 |   |   |-- metrics.py
-|   |   `-- security.py
+|   |   |-- security.py
+|   |   `-- utils.py
 |   |-- main.py
 |   `-- modules
 |       |-- __init__.py
@@ -93,6 +93,16 @@
 |       |   |-- schemas.py
 |       |   |-- service.py
 |       |   `-- validators.py
+|       |-- dashboard
+|       |   |-- __pycache__
+|       |   |   |-- repository.cpython-312.pyc
+|       |   |   |-- router.cpython-312.pyc
+|       |   |   |-- schemas.cpython-312.pyc
+|       |   |   `-- service.cpython-312.pyc
+|       |   |-- repository.py
+|       |   |-- router.py
+|       |   |-- schemas.py
+|       |   `-- service.py
 |       |-- marca
 |       |   |-- __init__.py
 |       |   |-- __pycache__
@@ -114,6 +124,26 @@
 |       |   |-- service.py
 |       |   `-- validators.py
 |       |-- material
+|       |   |-- __init__.py
+|       |   |-- __pycache__
+|       |   |   |-- __init__.cpython-312.pyc
+|       |   |   |-- constants.cpython-312.pyc
+|       |   |   |-- exceptions.cpython-312.pyc
+|       |   |   |-- models.cpython-312.pyc
+|       |   |   |-- repository.cpython-312.pyc
+|       |   |   |-- router.cpython-312.pyc
+|       |   |   |-- schemas.cpython-312.pyc
+|       |   |   |-- service.cpython-312.pyc
+|       |   |   `-- validators.cpython-312.pyc
+|       |   |-- constants.py
+|       |   |-- exceptions.py
+|       |   |-- models.py
+|       |   |-- repository.py
+|       |   |-- router.py
+|       |   |-- schemas.py
+|       |   |-- service.py
+|       |   `-- validators.py
+|       |-- movimiento_inventario
 |       |   |-- __init__.py
 |       |   |-- __pycache__
 |       |   |   |-- __init__.cpython-312.pyc
@@ -253,8 +283,7 @@
 |           `-- validators.py
 |-- docker-compose.yml
 |-- estructura.txt
-|-- placeholder
 |-- requirements.txt
 `-- tests
 
-32 directories, 225 files
+36 directories, 250 files
