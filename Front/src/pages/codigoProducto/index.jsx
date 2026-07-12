@@ -246,44 +246,74 @@ export default function CodigoProducto() {
             onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
           />
         ) : (
-          <div className="overflow-x-auto w-full rounded-lg">
-            <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-3 px-4 font-semibold text-gray-700">Código</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700">Marca</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredCodigos.map((item) => {
-                  const marca = marcas.find((m) => m.id === item.marca_id)
-                  return (
-                    <tr key={item.id} className="border-b hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium">{item.codigo}</td>
-                      <td className="py-3 px-4">{marca ? marca.nombre : item.marca_id}</td>
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex justify-end gap-2">
-                          {!isPapeleraMode ? (
-                            <>
-                              <Button variant="secondary" onClick={() => handleOpenModal(item)}>Editar</Button>
-                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Eliminar</Button>
-                              <Button variant="primary" onClick={() => navigate(`/productos?codigo=${item.codigo}`)}>Ver Variantes</Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(item.id)}>Recuperar</Button>
-                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Elim. Definitivo</Button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="hidden md:block overflow-x-auto w-full rounded-lg">
+              <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-3 px-4 font-semibold text-gray-700">Código</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700">Marca</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredCodigos.map((item) => {
+                    const marca = marcas.find((m) => m.id === item.marca_id)
+                    return (
+                      <tr key={item.id} className="border-b hover:bg-gray-50">
+                        <td className="py-3 px-4 font-medium">{item.codigo}</td>
+                        <td className="py-3 px-4">{marca ? marca.nombre : item.marca_id}</td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            {!isPapeleraMode ? (
+                              <>
+                                <Button variant="secondary" onClick={() => handleOpenModal(item)}>Editar</Button>
+                                <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Eliminar</Button>
+                                <Button variant="primary" onClick={() => navigate(`/productos?codigo=${item.codigo}`)}>Ver Variantes</Button>
+                              </>
+                            ) : (
+                              <>
+                                <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(item.id)}>Recuperar</Button>
+                                <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Elim. Definitivo</Button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col gap-4">
+              {filteredCodigos.map((item) => {
+                const marca = marcas.find((m) => m.id === item.marca_id)
+                return (
+                  <div key={item.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-lg">{item.codigo}</h3>
+                      <p className="text-sm text-gray-500 mt-1">Marca: {marca ? marca.nombre : item.marca_id}</p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                      {!isPapeleraMode ? (
+                        <>
+                          <Button variant="secondary" className="w-full justify-center text-sm py-1.5" onClick={() => handleOpenModal(item)}>Editar</Button>
+                          <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Eliminar</Button>
+                          <Button variant="primary" className="w-full justify-center text-sm py-1.5" onClick={() => navigate(`/productos?codigo=${item.codigo}`)}>Ver Variantes</Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(item.id)}>Recuperar</Button>
+                          <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(item)}>Elim. Definitivo</Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </>
         )}
       </Card>
 

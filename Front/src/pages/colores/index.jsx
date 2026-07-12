@@ -217,47 +217,79 @@ export default function Colores() {
             onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
           />
         ) : (
-          <div className="overflow-x-auto w-full rounded-lg">
-            <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-3 px-4 font-semibold text-gray-700">Nombre</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700">Código Hex</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700">Muestra</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredColores.map((color) => (
-                  <tr key={color.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{color.nombre}</td>
-                    <td className="py-3 px-4">{color.codigo_hex}</td>
-                    <td className="py-3 px-4">
-                      {color.codigo_hex && (
-                        <div className="w-6 h-6 rounded border" style={{ backgroundColor: color.codigo_hex }}></div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        {!isPapeleraMode ? (
-                          <>
-                            <Button variant="secondary" onClick={() => handleOpenModal(color)}>Editar</Button>
-                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Eliminar</Button>
-                            <Button variant="primary" onClick={() => navigate(`/productos?color_id=${color.id}`)}>Ver Productos</Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(color.id)}>Recuperar</Button>
-                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Elim. Definitivo</Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto w-full rounded-lg">
+              <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-3 px-4 font-semibold text-gray-700">Nombre</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700">Código Hex</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700">Muestra</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredColores.map((color) => (
+                    <tr key={color.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">{color.nombre}</td>
+                      <td className="py-3 px-4">{color.codigo_hex}</td>
+                      <td className="py-3 px-4">
+                        {color.codigo_hex && (
+                          <div className="w-6 h-6 rounded border" style={{ backgroundColor: color.codigo_hex }}></div>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {!isPapeleraMode ? (
+                            <>
+                              <Button variant="secondary" onClick={() => handleOpenModal(color)}>Editar</Button>
+                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Eliminar</Button>
+                              <Button variant="primary" onClick={() => navigate(`/productos?color_id=${color.id}`)}>Ver Productos</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(color.id)}>Recuperar</Button>
+                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Elim. Definitivo</Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col gap-4">
+              {filteredColores.map((color) => (
+                <div key={color.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                  <div className="flex items-center gap-3">
+                    {color.codigo_hex && (
+                      <div className="w-8 h-8 rounded-full border shadow-inner flex-shrink-0" style={{ backgroundColor: color.codigo_hex }}></div>
+                    )}
+                    <div>
+                      <h3 className="font-semibold text-gray-800 text-lg">{color.nombre}</h3>
+                      {color.codigo_hex && <p className="text-sm text-gray-500">{color.codigo_hex}</p>}
+                    </div>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    {!isPapeleraMode ? (
+                      <>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5" onClick={() => handleOpenModal(color)}>Editar</Button>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Eliminar</Button>
+                        <Button variant="primary" className="w-full justify-center text-sm py-1.5" onClick={() => navigate(`/productos?color_id=${color.id}`)}>Ver Productos</Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(color.id)}>Recuperar</Button>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(color)}>Elim. Definitivo</Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 

@@ -215,41 +215,68 @@ export default function Marcas() {
             onAction={!isPapeleraMode ? () => handleOpenModal() : undefined}
           />
         ) : (
-          <div className="overflow-x-auto w-full rounded-lg">
-            <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
-              <thead>
-                <tr className="border-b">
-                  <th className="py-3 px-4 font-semibold text-gray-700">Nombre</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700">Descripción</th>
-                  <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredMarcas.map((marca) => (
-                  <tr key={marca.id} className="border-b hover:bg-gray-50">
-                    <td className="py-3 px-4">{marca.nombre}</td>
-                    <td className="py-3 px-4">{marca.descripcion}</td>
-                    <td className="py-3 px-4 text-right">
-                      <div className="flex justify-end gap-2">
-                        {!isPapeleraMode ? (
-                          <>
-                            <Button variant="secondary" onClick={() => handleOpenModal(marca)}>Editar</Button>
-                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Eliminar</Button>
-                            <Button variant="primary" onClick={() => navigate(`/productos?marca_id=${marca.id}`)}>Ver Productos</Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(marca.id)}>Recuperar</Button>
-                            <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Elim. Definitivo</Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto w-full rounded-lg">
+              <table className="w-full text-left border-collapse min-w-[600px] whitespace-nowrap">
+                <thead>
+                  <tr className="border-b">
+                    <th className="py-3 px-4 font-semibold text-gray-700">Nombre</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700">Descripción</th>
+                    <th className="py-3 px-4 font-semibold text-gray-700 text-right">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {filteredMarcas.map((marca) => (
+                    <tr key={marca.id} className="border-b hover:bg-gray-50">
+                      <td className="py-3 px-4">{marca.nombre}</td>
+                      <td className="py-3 px-4">{marca.descripcion}</td>
+                      <td className="py-3 px-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          {!isPapeleraMode ? (
+                            <>
+                              <Button variant="secondary" onClick={() => handleOpenModal(marca)}>Editar</Button>
+                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Eliminar</Button>
+                              <Button variant="primary" onClick={() => navigate(`/productos?marca_id=${marca.id}`)}>Ver Productos</Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button variant="secondary" className="text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(marca.id)}>Recuperar</Button>
+                              <Button variant="secondary" className="text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Elim. Definitivo</Button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden flex flex-col gap-4">
+              {filteredMarcas.map((marca) => (
+                <div key={marca.id} className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                  <div>
+                    <h3 className="font-semibold text-gray-800 text-lg">{marca.nombre}</h3>
+                    {marca.descripcion && <p className="text-sm text-gray-500 mt-1">{marca.descripcion}</p>}
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                    {!isPapeleraMode ? (
+                      <>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5" onClick={() => handleOpenModal(marca)}>Editar</Button>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Eliminar</Button>
+                        <Button variant="primary" className="w-full justify-center text-sm py-1.5" onClick={() => navigate(`/productos?marca_id=${marca.id}`)}>Ver Productos</Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-green-600 border-green-200 hover:bg-green-50" onClick={() => handleRecuperar(marca.id)}>Recuperar</Button>
+                        <Button variant="secondary" className="w-full justify-center text-sm py-1.5 text-red-600 border-red-200 hover:bg-red-50" onClick={() => handleDeleteClick(marca)}>Elim. Definitivo</Button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </Card>
 
