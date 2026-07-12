@@ -107,40 +107,38 @@ export default function Productos() {
 
   const availableCatalogos = getAvailableOptions();
 
-  const updateFilter = (key, value) => {
-    const newFilters = { ...filters, [key]: value }
-    // Limpiar IDs si cambiamos el texto (para evitar conflictos)
-    if (key === 'marca') newFilters.marca_id = ''
-    if (key === 'tipo') newFilters.tipo_calzado_id = ''
-    if (key === 'material') newFilters.material_id = ''
-    if (key === 'color') newFilters.color_id = ''
-    if (key === 'talla') newFilters.talla_id = ''
+  const updateFilters = (changes) => {
+    const newFilters = { ...filters, ...changes }
+    // Auto-limpiar IDs si cambiamos el texto explícitamente y no pasamos ID
+    if ('marca' in changes && !('marca_id' in changes)) newFilters.marca_id = ''
+    if ('tipo' in changes && !('tipo_calzado_id' in changes)) newFilters.tipo_calzado_id = ''
+    if ('material' in changes && !('material_id' in changes)) newFilters.material_id = ''
+    if ('color' in changes && !('color_id' in changes)) newFilters.color_id = ''
+    if ('talla' in changes && !('talla_id' in changes)) newFilters.talla_id = ''
     
     setFilters(newFilters)
     loadProductos(cleanFilters(newFilters), isPapeleraMode)
-    
-    // Opcional: Cerrar panel de filtros si se selecciona algo, pero puede ser molesto si quieren seleccionar varios
   }
 
   const getActiveFilters = () => {
     const active = []
-    if (filters.codigo) active.push({ label: 'Código', value: filters.codigo, onRemove: () => updateFilter('codigo', '') })
+    if (filters.codigo) active.push({ label: 'Código', value: filters.codigo, onRemove: () => updateFilters({ codigo: '' }) })
     
     // Preferir nombre, si no usar el ID buscado
     const marcaVal = filters.marca || (filters.marca_id ? catalogos.marcas.find(m => m.id == filters.marca_id)?.nombre : '')
-    if (marcaVal) active.push({ label: 'Marca', value: marcaVal, onRemove: () => { updateFilter('marca', ''); updateFilter('marca_id', '') } })
+    if (marcaVal) active.push({ label: 'Marca', value: marcaVal, onRemove: () => updateFilters({ marca: '', marca_id: '' }) })
     
     const tipoVal = filters.tipo || (filters.tipo_calzado_id ? catalogos.tipos.find(m => m.id == filters.tipo_calzado_id)?.nombre : '')
-    if (tipoVal) active.push({ label: 'Tipo', value: tipoVal, onRemove: () => { updateFilter('tipo', ''); updateFilter('tipo_calzado_id', '') } })
+    if (tipoVal) active.push({ label: 'Tipo', value: tipoVal, onRemove: () => updateFilters({ tipo: '', tipo_calzado_id: '' }) })
     
     const matVal = filters.material || (filters.material_id ? catalogos.materiales.find(m => m.id == filters.material_id)?.nombre : '')
-    if (matVal) active.push({ label: 'Material', value: matVal, onRemove: () => { updateFilter('material', ''); updateFilter('material_id', '') } })
+    if (matVal) active.push({ label: 'Material', value: matVal, onRemove: () => updateFilters({ material: '', material_id: '' }) })
     
     const colVal = filters.color || (filters.color_id ? catalogos.colores.find(m => m.id == filters.color_id)?.nombre : '')
-    if (colVal) active.push({ label: 'Color', value: colVal, onRemove: () => { updateFilter('color', ''); updateFilter('color_id', '') } })
+    if (colVal) active.push({ label: 'Color', value: colVal, onRemove: () => updateFilters({ color: '', color_id: '' }) })
     
     const tallaVal = filters.talla || (filters.talla_id ? catalogos.tallas.find(m => m.id == filters.talla_id)?.nombre : '')
-    if (tallaVal) active.push({ label: 'Talla', value: tallaVal, onRemove: () => { updateFilter('talla', ''); updateFilter('talla_id', '') } })
+    if (tallaVal) active.push({ label: 'Talla', value: tallaVal, onRemove: () => updateFilters({ talla: '', talla_id: '' }) })
     
     return active
   }
@@ -377,7 +375,7 @@ export default function Productos() {
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
                   placeholder="Ej. PROD-01" 
                   value={filters.codigo} 
-                  onChange={(e) => updateFilter('codigo', e.target.value)} 
+                  onChange={(e) => updateFilters({ codigo: e.target.value })} 
                 />
               </div>
               <div className="flex flex-col gap-1.5">
@@ -385,7 +383,7 @@ export default function Productos() {
                 <select 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.marca} 
-                  onChange={(e) => updateFilter('marca', e.target.value)}
+                  onChange={(e) => updateFilters({ marca: e.target.value })}
                 >
                   <option value="">Todas</option>
                   {availableCatalogos.marcas.map(m => (
@@ -398,7 +396,7 @@ export default function Productos() {
                 <select 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.tipo} 
-                  onChange={(e) => updateFilter('tipo', e.target.value)}
+                  onChange={(e) => updateFilters({ tipo: e.target.value })}
                 >
                   <option value="">Todos</option>
                   {availableCatalogos.tipos.map(m => (
@@ -411,7 +409,7 @@ export default function Productos() {
                 <select 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.material} 
-                  onChange={(e) => updateFilter('material', e.target.value)}
+                  onChange={(e) => updateFilters({ material: e.target.value })}
                 >
                   <option value="">Todos</option>
                   {availableCatalogos.materiales.map(m => (
@@ -424,7 +422,7 @@ export default function Productos() {
                 <select 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.color} 
-                  onChange={(e) => updateFilter('color', e.target.value)}
+                  onChange={(e) => updateFilters({ color: e.target.value })}
                 >
                   <option value="">Todos</option>
                   {availableCatalogos.colores.map(m => (
@@ -437,7 +435,7 @@ export default function Productos() {
                 <select 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
                   value={filters.talla} 
-                  onChange={(e) => updateFilter('talla', e.target.value)}
+                  onChange={(e) => updateFilters({ talla: e.target.value })}
                 >
                   <option value="">Todas</option>
                   {availableCatalogos.tallas.map(m => (
