@@ -42,7 +42,7 @@ export default function ProductoCard({
         )}
       </div>
 
-      <div className="flex-1 space-y-1.5 px-3 mb-3">
+      <div className="space-y-1.5 px-3 mb-3 flex flex-col grow">
         <p className="text-sm text-gray-600 font-medium">
           {producto.marca?.nombre}
         </p>
