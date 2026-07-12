@@ -28,21 +28,21 @@ export default function ProductoCard({
     : 'No definido'
 
   return (
-    <Card className="hover:shadow-lg transition-shadow flex flex-col h-full">
+    <Card className="hover:shadow-lg transition-shadow flex flex-col h-full w-full max-w-[340px] mx-auto">
       {/* Imagen */}
-      <div className="w-full h-48 bg-gray-100 rounded-lg mb-4 overflow-hidden flex items-center justify-center">
+      <div className="w-full aspect-[4/3] max-h-[220px] bg-white border-b border-gray-100 mb-3 flex items-center justify-center overflow-hidden">
         {color.imagen_principal ? (
           <img
             src={color.imagen_principal}
             alt={`${producto.descripcion || producto.codigo} - ${color.color.nombre}`}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         ) : (
           <span className="text-gray-400">Sin imagen</span>
         )}
       </div>
 
-      <div className="flex-1 space-y-2 mb-4">
+      <div className="flex-1 space-y-1.5 px-3 mb-3">
         <p className="text-sm text-gray-600 font-medium">
           {producto.marca?.nombre}
         </p>
@@ -66,23 +66,23 @@ export default function ProductoCard({
       </div>
 
       {/* Info footer: Stock & Precios */}
-      <div className="grid grid-cols-2 gap-2 mb-4 p-3 bg-gray-50 rounded-lg">
+      <div className="grid grid-cols-2 gap-2 mx-3 mb-3 p-2.5 bg-gray-50 rounded-lg">
         <div>
-          <p className="text-xs text-gray-500">Stock Total</p>
-          <p className={`font-bold ${stockTotal > 0 ? 'text-green-600' : 'text-red-500'}`}>
+          <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">Stock Total</p>
+          <p className={`font-bold text-sm ${stockTotal > 0 ? 'text-green-600' : 'text-red-500'}`}>
             {stockTotal} unid.
           </p>
         </div>
         <div>
-          <p className="text-xs text-gray-500">Precio</p>
-          <p className="font-bold text-gray-800">
+          <p className="text-[11px] uppercase tracking-wide text-gray-500 font-medium">Precio</p>
+          <p className="font-bold text-sm text-gray-800">
             {precioDisplay}
           </p>
         </div>
       </div>
 
       {/* Acciones */}
-      <div className="flex flex-col sm:grid sm:grid-cols-2 gap-2 mt-auto">
+      <div className="grid grid-cols-2 gap-1.5 mt-auto px-3 pb-3">
         {!isPapeleraMode ? (
           <>
             <Button variant="ghost" className="text-xs w-full" onClick={() => onVer(color.color_id)}>
