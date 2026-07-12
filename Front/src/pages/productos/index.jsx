@@ -19,29 +19,7 @@ const emptyFilters = {
 
 const cleanFilters = (filters) => Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== ''))
 
-const agruparProductosPlanos = (productosPlanos) => {
-  const catalogoDict = {}
-  for (const p of productosPlanos) {
-    const cp_id = p.codigo_producto_id
-    if (!catalogoDict[cp_id]) {
-      catalogoDict[cp_id] = {
-        codigo_producto_id: cp_id, codigo: p.codigo, marca: p.marca,
-        tipo_calzado: p.tipo_calzado, material: p.material, descripcion: p.descripcion, colores: {}
-      }
-    }
-    const color_id = p.color.id
-    if (!catalogoDict[cp_id].colores[color_id]) {
-      catalogoDict[cp_id].colores[color_id] = { color_id: color_id, color: p.color, imagen_principal: p.imagen_principal, variantes: [] }
-    } else if (p.imagen_principal && !catalogoDict[cp_id].colores[color_id].imagen_principal) {
-      catalogoDict[cp_id].colores[color_id].imagen_principal = p.imagen_principal
-    }
-    catalogoDict[cp_id].colores[color_id].variantes.push({
-      id: p.id, talla: p.talla, stock_actual: p.stock_actual, stock_minimo: p.stock_minimo,
-      stock_maximo: p.stock_maximo, precio_compra: p.precio_compra, precio_venta: p.precio_venta, estado: p.estado
-    })
-  }
-  return Object.values(catalogoDict).map(cp => ({ ...cp, colores: Object.values(cp.colores) }))
-}
+import { agruparProductosPlanos } from '../../utils/adapters/productoAdapter'
 
 export default function Productos() {
   const [searchParams] = useSearchParams()
@@ -112,7 +90,7 @@ export default function Productos() {
       p.colores?.forEach(c => {
         if (c.color?.nombre) availableColores.add(c.color.nombre.toLowerCase());
         c.variantes?.forEach(v => {
-          if (v.talla) availableTallas.add(v.talla.toLowerCase());
+          if (v.talla?.nombre) availableTallas.add(v.talla.nombre.toLowerCase());
         });
       });
     });
@@ -122,7 +100,7 @@ export default function Productos() {
       tipos: catalogos.tipos.filter(t => filters.tipo || availableTipos.has(t.nombre.toLowerCase())),
       materiales: catalogos.materiales.filter(m => filters.material || availableMateriales.has(m.nombre.toLowerCase())),
       colores: catalogos.colores.filter(c => filters.color || availableColores.has(c.nombre.toLowerCase())),
-      tallas: catalogos.tallas.filter(t => filters.talla || availableTallas.has(t.talla.toLowerCase()))
+      tallas: catalogos.tallas.filter(t => filters.talla || availableTallas.has(t.nombre.toLowerCase()))
     };
   };
 
@@ -160,7 +138,7 @@ export default function Productos() {
     const colVal = filters.color || (filters.color_id ? catalogos.colores.find(m => m.id == filters.color_id)?.nombre : '')
     if (colVal) active.push({ label: 'Color', value: colVal, onRemove: () => { updateFilter('color', ''); updateFilter('color_id', '') } })
     
-    const tallaVal = filters.talla || (filters.talla_id ? catalogos.tallas.find(m => m.id == filters.talla_id)?.talla : '')
+    const tallaVal = filters.talla || (filters.talla_id ? catalogos.tallas.find(m => m.id == filters.talla_id)?.nombre : '')
     if (tallaVal) active.push({ label: 'Talla', value: tallaVal, onRemove: () => { updateFilter('talla', ''); updateFilter('talla_id', '') } })
     
     return active
@@ -463,7 +441,7 @@ export default function Productos() {
                 >
                   <option value="">Todas</option>
                   {availableCatalogos.tallas.map(m => (
-                    <option key={m.id} value={m.talla}>{m.talla}</option>
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
                   ))}
                 </select>
               </div>
