@@ -62,6 +62,107 @@ export default function Productos() {
   const [globalSearch, setGlobalSearch] = useState('')
   const [showFilters, setShowFilters] = useState(false)
   
+  const [catalogos, setCatalogos] = useState({
+    marcas: [], tipos: [], materiales: [], colores: [], tallas: []
+  })
+
+  useEffect(() => {
+    const fetchCatalogos = async () => {
+      try {
+        const [resMarcas, resTipos, resMateriales, resColores, resTallas] = await Promise.all([
+          import('../../services/marcaService').then(m => m.marcaService.getAll()),
+          import('../../services/tipoCalzadoService').then(m => m.tipoCalzadoService.getAll()),
+          import('../../services/materialService').then(m => m.materialService.getAll()),
+          import('../../services/colorService').then(m => m.colorService.getAll()),
+          import('../../services/tallaService').then(m => m.tallaService.getAll())
+        ])
+        setCatalogos({
+          marcas: resMarcas.data,
+          tipos: resTipos.data,
+          materiales: resMateriales.data,
+          colores: resColores.data,
+          tallas: resTallas.data
+        })
+      } catch (err) {
+        console.error("Error cargando catálogos", err)
+      }
+    }
+    fetchCatalogos()
+  }, [])
+
+  // Filtrado dinámico de catálogos basado en los productos actuales para evitar combinaciones sin resultados
+  const getAvailableOptions = () => {
+    // Si no hay productos cargados (ej. primera carga), devolver todos
+    if (!productos || productos.length === 0) return catalogos;
+    
+    const availableMarcas = new Set();
+    const availableTipos = new Set();
+    const availableMateriales = new Set();
+    const availableColores = new Set();
+    const availableTallas = new Set();
+
+    productos.forEach(p => {
+      if (p.marca) availableMarcas.add(p.marca.toLowerCase());
+      if (p.tipo_calzado) availableTipos.add(p.tipo_calzado.toLowerCase());
+      if (p.material) availableMateriales.add(p.material.toLowerCase());
+      
+      p.colores?.forEach(c => {
+        if (c.color?.nombre) availableColores.add(c.color.nombre.toLowerCase());
+        c.variantes?.forEach(v => {
+          if (v.talla) availableTallas.add(v.talla.toLowerCase());
+        });
+      });
+    });
+
+    return {
+      marcas: catalogos.marcas.filter(m => filters.marca || availableMarcas.has(m.nombre.toLowerCase())),
+      tipos: catalogos.tipos.filter(t => filters.tipo || availableTipos.has(t.nombre.toLowerCase())),
+      materiales: catalogos.materiales.filter(m => filters.material || availableMateriales.has(m.nombre.toLowerCase())),
+      colores: catalogos.colores.filter(c => filters.color || availableColores.has(c.nombre.toLowerCase())),
+      tallas: catalogos.tallas.filter(t => filters.talla || availableTallas.has(t.talla.toLowerCase()))
+    };
+  };
+
+  const availableCatalogos = getAvailableOptions();
+
+  const updateFilter = (key, value) => {
+    const newFilters = { ...filters, [key]: value }
+    // Limpiar IDs si cambiamos el texto (para evitar conflictos)
+    if (key === 'marca') newFilters.marca_id = ''
+    if (key === 'tipo') newFilters.tipo_calzado_id = ''
+    if (key === 'material') newFilters.material_id = ''
+    if (key === 'color') newFilters.color_id = ''
+    if (key === 'talla') newFilters.talla_id = ''
+    
+    setFilters(newFilters)
+    loadProductos(cleanFilters(newFilters), isPapeleraMode)
+    
+    // Opcional: Cerrar panel de filtros si se selecciona algo, pero puede ser molesto si quieren seleccionar varios
+  }
+
+  const getActiveFilters = () => {
+    const active = []
+    if (filters.codigo) active.push({ label: 'Código', value: filters.codigo, onRemove: () => updateFilter('codigo', '') })
+    
+    // Preferir nombre, si no usar el ID buscado
+    const marcaVal = filters.marca || (filters.marca_id ? catalogos.marcas.find(m => m.id == filters.marca_id)?.nombre : '')
+    if (marcaVal) active.push({ label: 'Marca', value: marcaVal, onRemove: () => { updateFilter('marca', ''); updateFilter('marca_id', '') } })
+    
+    const tipoVal = filters.tipo || (filters.tipo_calzado_id ? catalogos.tipos.find(m => m.id == filters.tipo_calzado_id)?.nombre : '')
+    if (tipoVal) active.push({ label: 'Tipo', value: tipoVal, onRemove: () => { updateFilter('tipo', ''); updateFilter('tipo_calzado_id', '') } })
+    
+    const matVal = filters.material || (filters.material_id ? catalogos.materiales.find(m => m.id == filters.material_id)?.nombre : '')
+    if (matVal) active.push({ label: 'Material', value: matVal, onRemove: () => { updateFilter('material', ''); updateFilter('material_id', '') } })
+    
+    const colVal = filters.color || (filters.color_id ? catalogos.colores.find(m => m.id == filters.color_id)?.nombre : '')
+    if (colVal) active.push({ label: 'Color', value: colVal, onRemove: () => { updateFilter('color', ''); updateFilter('color_id', '') } })
+    
+    const tallaVal = filters.talla || (filters.talla_id ? catalogos.tallas.find(m => m.id == filters.talla_id)?.talla : '')
+    if (tallaVal) active.push({ label: 'Talla', value: tallaVal, onRemove: () => { updateFilter('talla', ''); updateFilter('talla_id', '') } })
+    
+    return active
+  }
+  
   // Modals States
   const [showNewWizard, setShowNewWizard] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -288,15 +389,85 @@ export default function Productos() {
           showFilters,
           onToggle: () => setShowFilters(!showFilters),
           onClear: () => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); },
-          onApply: () => loadProductos(cleanFilters(filters), isPapeleraMode),
+          onApply: () => { loadProductos(cleanFilters(filters), isPapeleraMode); setShowFilters(false); },
+          activeFilters: getActiveFilters(),
           filters: (
             <>
-              <Input label="Código" value={filters.codigo} onChange={(e) => setFilters({...filters, codigo: e.target.value})} />
-              <Input label="Marca" value={filters.marca} onChange={(e) => setFilters({...filters, marca: e.target.value})} />
-              <Input label="Tipo" value={filters.tipo} onChange={(e) => setFilters({...filters, tipo: e.target.value})} />
-              <Input label="Material" value={filters.material} onChange={(e) => setFilters({...filters, material: e.target.value})} />
-              <Input label="Color" value={filters.color} onChange={(e) => setFilters({...filters, color: e.target.value})} />
-              <Input label="Talla" value={filters.talla} onChange={(e) => setFilters({...filters, talla: e.target.value})} />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Código</label>
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  placeholder="Ej. PROD-01" 
+                  value={filters.codigo} 
+                  onChange={(e) => updateFilter('codigo', e.target.value)} 
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Marca</label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.marca} 
+                  onChange={(e) => updateFilter('marca', e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  {availableCatalogos.marcas.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Tipo</label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.tipo} 
+                  onChange={(e) => updateFilter('tipo', e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {availableCatalogos.tipos.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Material</label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.material} 
+                  onChange={(e) => updateFilter('material', e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {availableCatalogos.materiales.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Color</label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.color} 
+                  onChange={(e) => updateFilter('color', e.target.value)}
+                >
+                  <option value="">Todos</option>
+                  {availableCatalogos.colores.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Talla</label>
+                <select 
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.talla} 
+                  onChange={(e) => updateFilter('talla', e.target.value)}
+                >
+                  <option value="">Todas</option>
+                  {availableCatalogos.tallas.map(m => (
+                    <option key={m.id} value={m.talla}>{m.talla}</option>
+                  ))}
+                </select>
+              </div>
             </>
           )
         }}
