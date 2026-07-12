@@ -74,13 +74,13 @@ export default function CrudHeader({
 
               <div className="flex items-center gap-1 w-full md:w-auto p-1 md:p-0 border-t md:border-t-0 border-gray-100">
                 {searchConfig && searchConfig.onClear && (
-                  <Button variant="ghost" onClick={searchConfig.onClear} className="flex-1 md:flex-none text-sm px-3 py-1 h-auto text-gray-600 hover:text-gray-900">
+                  <Button variant="ghost" onClick={searchConfig.onClear} className="inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-3 py-1 h-auto text-gray-600 hover:text-gray-900">
                     Limpiar
                   </Button>
                 )}
                 
                 {searchConfig && searchConfig.onSearch && !searchConfig.hideSearchButton && (
-                  <Button variant="primary" onClick={searchConfig.onSearch} className="flex-1 md:flex-none text-sm px-4 py-1 h-auto shadow-sm">
+                  <Button variant="primary" onClick={searchConfig.onSearch} className="inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-4 py-1 h-auto shadow-sm">
                     Buscar
                   </Button>
                 )}
@@ -89,7 +89,7 @@ export default function CrudHeader({
                   <Button 
                     variant={filterConfig.showFilters ? "secondary" : "ghost"}
                     onClick={filterConfig.onToggle}
-                    className={`flex-1 md:flex-none text-sm px-3 py-1 h-auto ml-1 ${filterConfig.showFilters ? 'bg-primary-50 text-primary-700 border-primary-100 hover:bg-primary-100' : 'text-gray-600'}`}
+                    className={`inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-3 py-1 h-auto ml-1 ${filterConfig.showFilters ? 'bg-primary-50 text-primary-700 border-primary-100 hover:bg-primary-100' : 'text-gray-600'}`}
                   >
                     <Filter size={14} className="mr-1.5" />
                     <span>Filtros</span>
@@ -108,10 +108,10 @@ export default function CrudHeader({
                   {filterConfig.filters}
                 </div>
                 <div className="flex flex-col sm:flex-row justify-end gap-2 mt-3 pt-3 border-t border-gray-200/60">
-                  <Button variant="secondary" className="w-full sm:w-auto text-sm py-1" onClick={filterConfig.onClear}>
+                  <Button variant="secondary" className="inline-flex items-center justify-center whitespace-nowrap w-full sm:w-auto text-sm py-1" onClick={filterConfig.onClear}>
                     Limpiar Filtros
                   </Button>
-                  <Button variant="primary" className="w-full sm:w-auto text-sm py-1" onClick={filterConfig.onApply}>
+                  <Button variant="primary" className="inline-flex items-center justify-center whitespace-nowrap w-full sm:w-auto text-sm py-1" onClick={filterConfig.onApply}>
                     <Search size={14} className="mr-1.5"/> Aplicar Filtros
                   </Button>
                 </div>
