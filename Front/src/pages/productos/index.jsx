@@ -105,9 +105,9 @@ export default function Productos() {
     const availableTallas = new Set();
 
     productos.forEach(p => {
-      if (p.marca) availableMarcas.add(p.marca.toLowerCase());
-      if (p.tipo_calzado) availableTipos.add(p.tipo_calzado.toLowerCase());
-      if (p.material) availableMateriales.add(p.material.toLowerCase());
+      if (p.marca?.nombre) availableMarcas.add(p.marca.nombre.toLowerCase());
+      if (p.tipo_calzado?.nombre) availableTipos.add(p.tipo_calzado.nombre.toLowerCase());
+      if (p.material?.nombre) availableMateriales.add(p.material.nombre.toLowerCase());
       
       p.colores?.forEach(c => {
         if (c.color?.nombre) availableColores.add(c.color.nombre.toLowerCase());
