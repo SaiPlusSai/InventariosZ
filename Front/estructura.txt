@@ -9,28 +9,36 @@
 |-- index.html
 |-- package-lock.json
 |-- package.json
-|-- patch_codigo.py
-|-- patch_front.py
-|-- patch_pages.py
+|-- patch_icons.py
 |-- postcss.config.js
-|-- repair.py
-|-- repair2.py
-|-- repair3.py
 |-- src
 |   |-- App.jsx
 |   |-- assets
 |   |-- components
 |   |   |-- common
+|   |   |-- dashboard
+|   |   |   `-- charts
+|   |   |       |-- BarChartCard.jsx
+|   |   |       |-- HorizontalBarChartCard.jsx
+|   |   |       `-- PieChartCard.jsx
 |   |   |-- layout
-|   |   |   |-- Header.jsx
 |   |   |   `-- Sidebar.jsx
 |   |   `-- ui
 |   |       |-- Button.jsx
 |   |       |-- Card.jsx
 |   |       |-- ConfirmModal.jsx
+|   |       |-- Crud
+|   |       |   |-- ActionDropdown.jsx
+|   |       |   |-- CrudToolbar.jsx
+|   |       |   |-- FilterButton.jsx
+|   |       |   |-- FilterPanel.jsx
+|   |       |   |-- PrimaryActions.jsx
+|   |       |   `-- SearchInput.jsx
+|   |       |-- CrudHeader.jsx
 |   |       |-- EmptyState.jsx
 |   |       |-- ExpandableInventory.jsx
 |   |       |-- FastCreateModal.jsx
+|   |       |-- FilterChip.jsx
 |   |       |-- GenericImportarModal.jsx
 |   |       |-- Input.jsx
 |   |       |-- NotificationModal.jsx
@@ -38,6 +46,8 @@
 |   |       |-- ShareModal.jsx
 |   |       |-- WarningModal.jsx
 |   |       `-- index.js
+|   |-- config
+|   |   `-- env.js
 |   |-- constants
 |   |   `-- index.js
 |   |-- hooks
@@ -79,6 +89,11 @@
 |   |   |   |   |-- StatusBadge.jsx
 |   |   |   |   `-- TabsDetalle.jsx
 |   |   |   |-- index.jsx
+|   |   |   |-- movimientos
+|   |   |   |   |-- KardexTable.jsx
+|   |   |   |   |-- MovimientoDynamicForm.jsx
+|   |   |   |   |-- MovimientoModal.jsx
+|   |   |   |   `-- MovimientoTypeSelector.jsx
 |   |   |   `-- wizard
 |   |   |       |-- ProductoWizard.jsx
 |   |   |       |-- Step1InformacionGeneral.jsx
@@ -95,8 +110,10 @@
 |   |   |-- axios.js
 |   |   |-- codigoProductoService.js
 |   |   |-- colorService.js
+|   |   |-- dashboardService.js
 |   |   |-- marcaService.js
 |   |   |-- materialService.js
+|   |   |-- movimientoService.js
 |   |   |-- productoImagenService.js
 |   |   |-- productoService.js
 |   |   |-- shareService.js
@@ -107,16 +124,19 @@
 |   |   |-- colorStore.js
 |   |   |-- marcaStore.js
 |   |   |-- materialStore.js
+|   |   |-- movimientoStore.js
 |   |   |-- notificationStore.js
 |   |   |-- productoStore.js
 |   |   |-- tallaStore.js
 |   |   |-- tipoCalzadoStore.js
 |   |   `-- wizardStore.js
 |   `-- utils
+|       |-- adapters
+|       |   `-- productoAdapter.js
 |       |-- colorDictionary.js
 |       |-- helpers.js
 |       `-- shareFormatter.js
 |-- tailwind.config.js
 `-- vite.config.js
 
-28 directories, 91 files
+34 directories, 105 files

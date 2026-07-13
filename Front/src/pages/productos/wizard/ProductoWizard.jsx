@@ -145,11 +145,14 @@ export default function ProductoWizard({ onClose, onSuccess }) {
   const handleSubmit = async () => {
     setLoading(true)
     setError(null)
-
+    
     // 1. Validaciones basicas
     if (!formData.codigo || formData.codigo.trim().length < 2) {
       return triggerFocusError("El código debe tener al menos 2 caracteres.")
     }
+    if (!formData.descripcion || !formData.descripcion.trim()) {
+    return triggerFocusError("La descripción del producto es obligatoria.")
+   }
     if (!formData.marca_id || !formData.tipo_calzado_id || !formData.material_id) {
       return triggerFocusError("Faltan datos en la Información General (Marca, Tipo o Material).")
     }
