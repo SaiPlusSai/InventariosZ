@@ -41,7 +41,7 @@ export default function ActionDropdown({ actions = [] }) {
                   setIsOpen(false)
                   if (action.onClick) action.onClick()
                 }}
-                className="group flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+                className={`group w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-colors ${action.className || 'flex'}`}
               >
                 {Icon && <Icon className="mr-3 h-4 w-4 text-gray-400 group-hover:text-gray-500" aria-hidden="true" />}
                 {action.label}
