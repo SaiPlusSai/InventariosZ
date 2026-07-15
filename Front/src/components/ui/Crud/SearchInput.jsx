@@ -7,7 +7,8 @@ export default function SearchInput({
   onChange, 
   onSearch, 
   onClear, 
-  placeholder = 'Buscar...', 
+  placeholder = 'Buscar...',
+  shortPlaceholder, 
   hideSearchButton = false 
 }) {
   return (
@@ -17,10 +18,20 @@ export default function SearchInput({
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search className="h-4 w-4 text-gray-400" />
           </div>
+          {/* Desktop Input */}
           <input
             type="text"
-            className="block w-full pl-9 pr-4 py-1.5 bg-transparent border-none focus:ring-0 text-gray-700 text-sm placeholder-gray-400"
+            className="hidden sm:block w-full pl-9 pr-4 py-1.5 bg-transparent border-none focus:ring-0 text-gray-700 text-sm placeholder-gray-400"
             placeholder={placeholder}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && onSearch && onSearch()}
+          />
+          {/* Mobile Input */}
+          <input
+            type="text"
+            className="block sm:hidden w-full pl-9 pr-4 py-1.5 bg-transparent border-none focus:ring-0 text-gray-700 text-sm placeholder-gray-400"
+            placeholder={shortPlaceholder || 'Buscar...'}
             value={value}
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onSearch && onSearch()}

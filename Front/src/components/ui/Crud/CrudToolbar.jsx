@@ -21,13 +21,13 @@ export default function CrudToolbar({
     <div className="flex flex-col gap-1.5 md:gap-2">
       {/* Title & Actions Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-        <div className="flex justify-between items-center w-full md:w-auto">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+        <div className="flex justify-between items-center w-full md:w-auto overflow-hidden">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight truncate mr-2">
               {title}
             </h1>
             {description && (
-              <p className="text-gray-500 mt-1 text-sm">
+              <p className="hidden sm:block text-gray-500 mt-1 text-sm">
                 {description}
               </p>
             )}
@@ -35,7 +35,7 @@ export default function CrudToolbar({
           
           <button 
             onClick={() => setIsActionsExpanded(!isActionsExpanded)} 
-            className="md:hidden p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex items-center gap-1 text-xs font-semibold shadow-sm"
+            className="md:hidden px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-1.5 text-sm font-medium shadow-sm flex-shrink-0"
           >
             Menú {isActionsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
@@ -50,10 +50,12 @@ export default function CrudToolbar({
             } 
           />
           {/* ActionDropdown con sus propias acciones + las primarias secundarias inyectadas para móvil */}
-          <ActionDropdown actions={[
-             ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex sm:hidden' })),
-             ...secondaryActions
-          ]} />
+          <div className="flex-1 sm:flex-none">
+            <ActionDropdown actions={[
+               ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex sm:hidden' })),
+               ...secondaryActions
+            ]} />
+          </div>
           {/* Botón Principal (Nuevo Producto) */}
           <PrimaryActions 
             actions={primaryActions

@@ -360,6 +360,7 @@ export default function Productos() {
         ] : []}
         searchConfig={{
           placeholder: "Buscar por nombre o descripción...",
+          shortPlaceholder: "Buscar...",
           value: globalSearch,
           onChange: setGlobalSearch
         }}
