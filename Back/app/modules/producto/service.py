@@ -777,12 +777,10 @@ class ProductoService:
                 )
             )
 
-        producto_principal = todas_variantes[0] if todas_variantes else producto
-
         imagen_principal = next(
             (
                 img.ruta
-                for img in producto_principal.imagenes
+                for img in producto.imagenes
                 if img.es_principal
             ),
             None,
@@ -846,7 +844,7 @@ class ProductoService:
                     es_principal=img.es_principal,
                     orden=img.orden,
                 )
-                for img in producto_principal.imagenes
+                for img in producto.imagenes
             ],
             
             variantes=variantes_response,
