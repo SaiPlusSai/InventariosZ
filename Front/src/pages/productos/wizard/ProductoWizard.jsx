@@ -88,7 +88,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     } else {
       const res = await productoService.createCompleto(dataToSend)
       console.log('✅ createCompleto response:', res.data)
-      codigoID = res.data.producto_principal_id
+      codigoID = res.data.codigo_producto_id
     }
 
     // 4. Procesar Imagenes Nuevas

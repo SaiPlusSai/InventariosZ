@@ -999,7 +999,7 @@ class ProductoService:
     def update_completo(
         self,
         db: Session,
-        producto_id: int,
+        codigo_producto_id: int,
         data: ProductoCompletoUpdate,
     ):
         self._validar_variantes(data.variantes)
@@ -1010,10 +1010,6 @@ class ProductoService:
         """
 
         try:
-
-            producto_principal = self.repository.get_by_id(db, producto_id)
-            if not producto_principal:
-                raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
 
             codigo_producto = self.codigo_repository.get_by_id(
                 db,
@@ -1072,12 +1068,9 @@ class ProductoService:
                         raise TallaNoEncontradaException(TALLA_NO_EXISTE)
                     cache_tallas[variante.talla_id] = talla_obj
 
-            # Obtenemos los productos actuales para este codigo y atributos que pertenecen al MISMO producto logico
+            # Obtenemos todos los productos actuales para este codigo
             productos_existentes = db.query(Producto).filter(
-                Producto.codigo_producto_id == producto_principal.codigo_producto_id,
-                Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
-                Producto.material_id == producto_principal.material_id,
-                Producto.descripcion == producto_principal.descripcion
+                Producto.codigo_producto_id == codigo_producto_id
             ).all()
 
             mapa_existentes = {(p.color_id, p.talla_id): p for p in productos_existentes}
@@ -1368,13 +1361,9 @@ class ProductoService:
             db.rollback()
             raise Exception(f"{str(e)}\n\nTraceback:\n{tb}")
 
-    def desactivar_color(self, db: Session, producto_id: int, color_id: int):
-        producto_principal = self.repository.get_by_id(db, producto_id)
+    def desactivar_color(self, db: Session, codigo_producto_id: int, color_id: int):
         variantes = db.query(Producto).filter(
-            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
-            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
-            Producto.material_id == producto_principal.material_id,
-            Producto.descripcion == producto_principal.descripcion,
+            Producto.codigo_producto_id == codigo_producto_id,
             Producto.color_id == color_id,
             Producto.estado == True
         ).all()
@@ -1384,13 +1373,9 @@ class ProductoService:
         db.commit()
         return {'msg': f'{len(variantes)} variantes desactivadas'}
 
-    def recuperar_color(self, db: Session, producto_id: int, color_id: int):
-        producto_principal = self.repository.get_by_id(db, producto_id)
+    def recuperar_color(self, db: Session, codigo_producto_id: int, color_id: int):
         variantes = db.query(Producto).filter(
-            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
-            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
-            Producto.material_id == producto_principal.material_id,
-            Producto.descripcion == producto_principal.descripcion,
+            Producto.codigo_producto_id == codigo_producto_id,
             Producto.color_id == color_id,
             Producto.estado == False
         ).all()
@@ -1400,13 +1385,9 @@ class ProductoService:
         db.commit()
         return {'msg': f'{len(variantes)} variantes recuperadas'}
 
-    def delete_color(self, db: Session, producto_id: int, color_id: int) -> None:
-        producto_principal = self.repository.get_by_id(db, producto_id)
+    def delete_color(self, db: Session, codigo_producto_id: int, color_id: int) -> None:
         variantes = db.query(Producto).filter(
-            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
-            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
-            Producto.material_id == producto_principal.material_id,
-            Producto.descripcion == producto_principal.descripcion,
+            Producto.codigo_producto_id == codigo_producto_id,
             Producto.color_id == color_id
         ).all()
 
@@ -1425,24 +1406,18 @@ class ProductoService:
     def update_por_color(
         self,
         db: Session,
-        producto_id: int,
+        codigo_producto_id: int,
         color_id: int,
         data: ProductoColorUpdate,
     ):
         self._validar_variantes(data.variantes)
-        producto_principal = self.repository.get_by_id(db, producto_id)
-        if not producto_principal:
-            raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         
         codigo_producto = self.codigo_repository.get_by_id(db, data.codigo_producto_id)
         if not codigo_producto:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
 
         variantes_actuales = db.query(Producto).filter(
-            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
-            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
-            Producto.material_id == producto_principal.material_id,
-            Producto.descripcion == producto_principal.descripcion,
+            Producto.codigo_producto_id == codigo_producto_id,
             Producto.color_id == color_id
         ).all()
         
