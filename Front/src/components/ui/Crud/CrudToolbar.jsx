@@ -4,7 +4,8 @@ import PrimaryActions from './PrimaryActions'
 import ActionDropdown from './ActionDropdown'
 import SearchInput from './SearchInput'
 import FilterButton from './FilterButton'
-import FilterPanel from './FilterPanel'
+import FilterPanelDesktop from './FilterPanelDesktop'
+import FilterPanelMobile from './FilterPanelMobile'
 import FilterChip from '../FilterChip'
 import { useBreakpoints } from '../../../hooks/useMediaQuery'
 
@@ -54,7 +55,7 @@ function HeaderDesktop({ title, description, primaryActions, secondaryActions, s
             {searchConfig && <SearchInput {...searchConfig} />}
             {localFilterConfig && <FilterButton showFilters={localFilterConfig.showFilters} onToggle={localFilterConfig.onToggle} />}
           </div>
-          {localFilterConfig && <FilterPanel {...localFilterConfig} />}
+          {localFilterConfig && <FilterPanelDesktop {...localFilterConfig} />}
         </div>
       )}
 
@@ -104,7 +105,7 @@ function HeaderTablet({ title, primaryActions, secondaryActions, searchConfig, f
             {searchConfig && <SearchInput {...searchConfig} />}
             {localFilterConfig && <FilterButton showFilters={localFilterConfig.showFilters} onToggle={localFilterConfig.onToggle} />}
           </div>
-          {localFilterConfig && <FilterPanel {...localFilterConfig} />}
+          {localFilterConfig && <FilterPanelDesktop {...localFilterConfig} />}
         </div>
       )}
 
@@ -173,7 +174,7 @@ function HeaderMobile({ title, primaryActions, secondaryActions, searchConfig, f
             {searchConfig && <SearchInput {...searchConfig} />}
             {localFilterConfig && <FilterButton showFilters={localFilterConfig.showFilters} onToggle={localFilterConfig.onToggle} />}
           </div>
-          {localFilterConfig && <FilterPanel {...localFilterConfig} />}
+          {localFilterConfig && <FilterPanelMobile {...localFilterConfig} />}
         </div>
       )}
 
