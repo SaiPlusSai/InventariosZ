@@ -23,7 +23,7 @@ export default function FilterPanel({ showFilters, filters, onClear, onApply, on
         md:grid md:transition-all md:duration-300 md:ease-in-out
         ${showFilters ? 'md:grid-rows-[1fr] md:opacity-100 md:border-t md:border-gray-100' : 'md:grid-rows-[0fr] md:opacity-0 md:border-t-0 md:border-transparent'}
       `}>
-        <div className="md:overflow-hidden">
+        <div className="md:overflow-hidden md:min-h-0">
           {/* Bottom sheet pill indicator */}
           <div className="w-12 h-1.5 bg-gray-300 rounded-full mx-auto mt-4 mb-2 md:hidden" />
           
