@@ -27,3 +27,4 @@ class OrigenMovimiento(str, Enum):
     DONACION = "DONACION"
     MUESTRA = "MUESTRA"
     OTRO = "OTRO"
+    INTERCAMBIO = "INTERCAMBIO"

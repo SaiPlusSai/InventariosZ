@@ -8,7 +8,7 @@ class MovimientoInventario(Base):
     __tablename__ = "movimiento_inventario"
     __table_args__ = (
         CheckConstraint("tipo_movimiento IN ('ENTRADA', 'SALIDA', 'AJUSTE')", name="movimiento_inventario_tipo_movimiento_check"),
-        CheckConstraint("origen IN ('COMPRA', 'COMPRA_CANCELADA', 'VENTA', 'VENTA_CANCELADA', 'DEVOLUCION_CLIENTE', 'DEVOLUCION_PROVEEDOR', 'AJUSTE_MANUAL', 'AJUSTE_INVENTARIO', 'INVENTARIO_INICIAL', 'CORRECCION', 'TRANSFERENCIA_ENTRADA', 'TRANSFERENCIA_SALIDA', 'MERMA_DANO', 'MERMA_ROBO', 'MERMA_PERDIDA', 'IMPORTACION', 'RESERVA', 'LIBERACION_RESERVA', 'DONACION', 'MUESTRA', 'OTRO')", name="movimiento_inventario_origen_check"),
+        CheckConstraint("origen IN ('COMPRA', 'COMPRA_CANCELADA', 'VENTA', 'VENTA_CANCELADA', 'DEVOLUCION_CLIENTE', 'DEVOLUCION_PROVEEDOR', 'AJUSTE_MANUAL', 'AJUSTE_INVENTARIO', 'INVENTARIO_INICIAL', 'CORRECCION', 'TRANSFERENCIA_ENTRADA', 'TRANSFERENCIA_SALIDA', 'MERMA_DANO', 'MERMA_ROBO', 'MERMA_PERDIDA', 'IMPORTACION', 'RESERVA', 'LIBERACION_RESERVA', 'DONACION', 'MUESTRA', 'OTRO', 'INTERCAMBIO')", name="movimiento_inventario_origen_check"),
         CheckConstraint("cantidad > 0", name="movimiento_inventario_cantidad_check"),
         CheckConstraint("stock_anterior >= 0", name="movimiento_inventario_stock_anterior_check"),
         CheckConstraint("stock_nuevo >= 0", name="movimiento_inventario_stock_nuevo_check"),

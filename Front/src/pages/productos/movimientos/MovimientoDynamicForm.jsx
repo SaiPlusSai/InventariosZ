@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import Button from '../../../components/ui/Button';
+import { ORIGENES_UI, SUB_ORIGENES_MERMA } from '../../../constants/movimientos';
 
 const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 9999 }) => {
   const [formData, setFormData] = useState({
@@ -19,26 +20,6 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
   const isSalida = tipo === 'SALIDA';
   const isEntrada = tipo === 'ENTRADA';
 
-  // Opciones de origen basadas en el tipo seleccionado (MVP)
-  const origenes = {
-    ENTRADA: [
-      { id: 'COMPRA', label: 'Compra' },
-      { id: 'INVENTARIO_INICIAL', label: 'Inventario Inicial' },
-      { id: 'OTRO', label: 'Otro' }
-    ],
-    SALIDA: [
-      { id: 'VENTA', label: 'Venta' },
-      { id: 'MERMA', label: 'Merma' },
-      { id: 'AJUSTE', label: 'Ajuste Manual' }
-    ]
-  };
-
-  const subOrigenesMerma = [
-    { id: 'ROBO', label: 'Robo' },
-    { id: 'DANO', label: 'Daño' },
-    { id: 'PERDIDA', label: 'Pérdida' }
-  ];
-
   const handleSubmit = (e) => {
     e.preventDefault();
     let finalPayload = { ...formData, tipo_movimiento: tipo };
@@ -46,8 +27,6 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
     // Si es merma, concatenamos el sub_origen al origen
     if (formData.origen === 'MERMA' && formData.sub_origen) {
       finalPayload.origen = `MERMA_${formData.sub_origen}`;
-    } else if (formData.origen === 'AJUSTE') {
-      finalPayload.origen = 'AJUSTE_MANUAL';
     }
 
     // Saneamiento del payload (Evitar 422 Unprocessable Entity)
@@ -72,7 +51,7 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
 
   const isObservacionRequired = 
     formData.origen === 'MERMA' || 
-    formData.origen === 'AJUSTE' || 
+    formData.origen === 'AJUSTE_MANUAL' || 
     formData.origen === 'OTRO';
 
   return (
@@ -102,7 +81,7 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Seleccione un motivo...</option>
-            {origenes[tipo].map(op => (
+            {ORIGENES_UI[tipo] && ORIGENES_UI[tipo].map(op => (
               <option key={op.id} value={op.id}>{op.label}</option>
             ))}
           </select>
@@ -120,7 +99,7 @@ const MovimientoDynamicForm = ({ tipo, onBack, onSubmit, loading, maxStock = 999
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Seleccione tipo de merma...</option>
-              {subOrigenesMerma.map(op => (
+              {SUB_ORIGENES_MERMA.map(op => (
                 <option key={op.id} value={op.id}>{op.label}</option>
               ))}
             </select>
