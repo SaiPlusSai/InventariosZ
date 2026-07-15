@@ -199,10 +199,10 @@ function HeaderMobile({ title, primaryActions, secondaryActions, searchConfig, f
 // Orquestador Principal
 export default function CrudToolbar(props) {
   return (
-    <>
+    <div className="w-auto flex flex-col">
       <HeaderDesktop {...props} />
       <HeaderTablet {...props} />
       <HeaderMobile {...props} />
-    </>
+    </div>
   )
 }
