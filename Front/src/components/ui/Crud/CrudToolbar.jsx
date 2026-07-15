@@ -6,6 +6,7 @@ import SearchInput from './SearchInput'
 import FilterButton from './FilterButton'
 import FilterPanel from './FilterPanel'
 import FilterChip from '../FilterChip'
+import { useBreakpoints } from '../../../hooks/useMediaQuery'
 
 // Helper for local filter configuration
 function useLocalFilterConfig(filterConfig) {
@@ -29,7 +30,7 @@ function HeaderDesktop({ title, description, primaryActions, secondaryActions, s
   const localFilterConfig = useLocalFilterConfig(filterConfig);
 
   return (
-    <div className="hidden lg:flex flex-col gap-2 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Title & Actions Row */}
       <div className="flex flex-row justify-between items-center gap-2 w-full flex-none">
         <div className="flex-1 min-w-0">
@@ -82,7 +83,7 @@ function HeaderTablet({ title, primaryActions, secondaryActions, searchConfig, f
   const localFilterConfig = useLocalFilterConfig(filterConfig);
 
   return (
-    <div className="hidden md:flex lg:hidden flex-col gap-2 w-full">
+    <div className="flex flex-col gap-2 w-full">
       {/* Title & Actions Row */}
       <div className="flex flex-row justify-between items-center gap-2 w-full flex-none">
         <div className="flex-1 min-w-0">
@@ -133,7 +134,7 @@ function HeaderMobile({ title, primaryActions, secondaryActions, searchConfig, f
   const localFilterConfig = useLocalFilterConfig(filterConfig);
 
   return (
-    <div className="flex md:hidden flex-col gap-1.5 w-full">
+    <div className="flex flex-col gap-1.5 w-full">
       {/* Title & Menú Row */}
       <div className="flex flex-row justify-between items-center gap-2 w-full flex-none">
         <div className="flex-1 min-w-0">
@@ -198,11 +199,13 @@ function HeaderMobile({ title, primaryActions, secondaryActions, searchConfig, f
 
 // Orquestador Principal
 export default function CrudToolbar(props) {
+  const { isDesktop, isTablet } = useBreakpoints();
+
   return (
     <div className="w-auto flex flex-col">
-      <HeaderDesktop {...props} />
-      <HeaderTablet {...props} />
-      <HeaderMobile {...props} />
+      {isDesktop && <HeaderDesktop {...props} />}
+      {isTablet && <HeaderTablet {...props} />}
+      {(!isDesktop && !isTablet) && <HeaderMobile {...props} />}
     </div>
   )
 }
