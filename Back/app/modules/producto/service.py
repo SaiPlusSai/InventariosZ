@@ -1285,9 +1285,13 @@ class ProductoService:
                         raise TallaNoEncontradaException(TALLA_NO_EXISTE)
                     cache_tallas[variante.talla_id] = talla_obj
 
+            print("✔ Talla encontrada")
+
             codigo_producto = self.codigo_repository.get_by_id(db, data.codigo_producto_id)
             if not codigo_producto:
                 raise CodigoProductoNoEncontradoException(CODIGO_PRODUCTO_NO_EXISTE)
+            
+            print("✔ Código encontrado")
 
             productos = []
 
@@ -1315,9 +1319,24 @@ class ProductoService:
                 db.add(producto)
                 productos.append(producto)
 
-            db.commit()
+            print("✔ Producto insertado en sesión")
+            db.flush()
+            print("✔ Flush realizado")
 
-            return {
+            for producto in productos:
+                db.refresh(producto)
+            print("✔ Refresh realizado")
+
+            print("Producto ID:", productos[0].id if productos else None)
+
+            print("✔ Variantes creadas")
+            print("✔ Precios creados")
+            print("✔ Imágenes creadas")
+
+            db.commit()
+            print("✔ Commit realizado")
+
+            res = {
                 "codigo_producto_id": codigo_producto.id,
                 "producto_principal_id": productos[0].id if productos else None,
                 "variantes_creadas": len(productos),
@@ -1327,10 +1346,19 @@ class ProductoService:
                 "message": "Producto creado correctamente.",
                 "created_at": datetime.now(),
             }
+            print("✔ Respuesta enviada")
+            return res
 
-        except Exception:
+        except Exception as e:
+            import traceback
+            tb = traceback.format_exc()
+            print("=" * 80)
+            print("ERROR EN crear_completo")
+            print(tb)
+            print(type(e))
+            print(e)
             db.rollback()
-            raise
+            raise Exception(f"{str(e)}\n\nTraceback:\n{tb}")
 
     def desactivar_color(self, db: Session, producto_id: int, color_id: int):
         producto_principal = self.repository.get_by_id(db, producto_id)
