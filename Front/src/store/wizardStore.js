@@ -59,7 +59,7 @@ export const useWizardStore = create((set) => ({
       
       console.log('➡️ Estado resultante:', nextFormData);
       console.table([{
-        codigo: nextFormData.codigo,
+        codigo_producto_id: nextFormData.codigo_producto_id,
         descripcion: nextFormData.descripcion,
         marca_id: nextFormData.marca_id,
         tipo_calzado_id: nextFormData.tipo_calzado_id,
@@ -83,7 +83,7 @@ export const useWizardStore = create((set) => ({
       const data = res.data
 
       console.table([{
-        codigo: data.codigo,
+        codigo_producto_id: data.codigo_producto_id,
         descripcion: data.descripcion,
         marca_id: data.marca_id,
         tipo_calzado_id: data.tipo_calzado_id,
@@ -126,7 +126,7 @@ export const useWizardStore = create((set) => ({
       }
 
       const nextFormData = {
-        codigo: data.codigo,
+        codigo_producto_id: data.codigo_producto_id,
         marca_id: data.marca_id,
         tipo_calzado_id: data.tipo_calzado_id,
         material_id: data.material_id,
@@ -231,7 +231,7 @@ export const useWizardStore = create((set) => ({
       targetColorId: null,
       currentStep: 1,
       formData: {
-        codigo: '',
+        codigo_producto_id: null,
         marca_id: null,
         tipo_calzado_id: null,
         material_id: null,
