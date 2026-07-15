@@ -161,13 +161,7 @@ export const useWizardStore = create((set) => ({
     }
   },
 
-<<<<<<< HEAD
-<<<<<<< HEAD
 
-=======
->>>>>>> a9ce3388e0fb2c474b54093eb04261c8fbe6f819
-=======
->>>>>>> a9ce3388e0fb2c474b54093eb04261c8fbe6f819
   // ==========================
   // Variantes
   // ==========================
