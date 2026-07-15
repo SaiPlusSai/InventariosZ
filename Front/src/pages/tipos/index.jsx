@@ -28,9 +28,9 @@ export default function Tipos() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [errorModal, setErrorModal] = useState(null)
 
-  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(tipoCalzadoService, () => {
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(tipoCalzadoService, async () => {
     handleCloseModal()
-    loadTipos()
+    await loadTipos()
   })
 
   const loadTipos = async (papelera = isPapeleraMode) => {
@@ -78,7 +78,7 @@ export default function Tipos() {
         toast.success('Registro creado correctamente')
       }
       handleCloseModal()
-      loadTipos()
+      await loadTipos()
     } catch (err) {
       if (!handleRecoveryError(err, formData.nombre)) {
         setErrorModal(err.customMessage || 'Error al guardar el tipo de calzado')
@@ -116,7 +116,7 @@ export default function Tipos() {
     try {
       await tipoCalzadoService.recuperar(id)
       toast.success('Registro recuperado correctamente')
-      loadTipos()
+      await loadTipos()
     } catch (err) {
       console.error(err)
       import('../../store/notificationStore').then(store => {
@@ -320,7 +320,7 @@ export default function Tipos() {
             await tipoCalzadoService.desactivar(itemToDelete.id)
             toast.success('Registro enviado a la papelera')
           }
-          loadTipos()
+          await loadTipos()
           setShowDeleteModal(false)
           setItemToDelete(null)
         }}
@@ -340,9 +340,9 @@ export default function Tipos() {
           title="Importación de Tipos"
           description="Añade múltiples registros usando un archivo Excel"
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadTipos()
+            await loadTipos()
           }}
           descargarPlantillaFn={tipoCalzadoService.descargarPlantilla}
           importarPreviaFn={tipoCalzadoService.importarPrevia}

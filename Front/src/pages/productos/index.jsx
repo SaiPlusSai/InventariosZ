@@ -222,20 +222,18 @@ export default function Productos() {
     setMovimientoStockActual(stock_actual)
     setMovimientoPolaridad('SALIDA')
     setMovimientoModalOpen(true)
-  }
-
   const confirmDelete = async () => {
     if (!itemToDelete) return
     try {
         if (isPapeleraMode) {
         await productoService.eliminarColorPermanente(itemToDelete.codigoProductoId, itemToDelete.colorId)
         toast.success('Producto eliminado permanentemente')
-        loadProductos(cleanFilters(filters), true)
+        await loadProductos(cleanFilters(filters), true)
         setItemToDelete(null)
       } else {
         await productoService.desactivarColor(itemToDelete.codigoProductoId, itemToDelete.colorId)
         toast.success('Producto enviado a la papelera')
-        loadProductos(cleanFilters(filters), false)
+        await loadProductos(cleanFilters(filters), false)
         setItemToDelete(null)
       }
     } catch (err) {
@@ -253,7 +251,7 @@ export default function Productos() {
     try {
       await productoService.recuperarColor(codigo_producto_id, color_id)
       toast.success('Producto recuperado correctamente')
-      loadProductos(cleanFilters(filters), isPapeleraMode)
+      await loadProductos(cleanFilters(filters), isPapeleraMode)
     } catch (err) {
       import('../../store/notificationStore').then(store => {
         store.useNotificationStore.getState().showNotification(
@@ -563,7 +561,7 @@ export default function Productos() {
             resetWizard()
             setShowNewWizard(false)
           }}
-          onSuccess={() => { setShowNewWizard(false); loadProductos(cleanFilters(filters), isPapeleraMode); }}
+          onSuccess={async () => { setShowNewWizard(false); await loadProductos(cleanFilters(filters), isPapeleraMode); }}
         />
       )}
 
@@ -580,9 +578,9 @@ export default function Productos() {
       {showImportModal && (
         <ImportarModal 
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadProductos(cleanFilters(filters), isPapeleraMode)
+            await loadProductos(cleanFilters(filters), isPapeleraMode)
           }}
         />
       )}

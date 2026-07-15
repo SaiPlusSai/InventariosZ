@@ -29,9 +29,9 @@ export default function Colores() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [errorModal, setErrorModal] = useState(null)
 
-  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(colorService, () => {
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(colorService, async () => {
     handleCloseModal()
-    loadColores()
+    await loadColores()
   })
 
   const loadColores = async (papelera = isPapeleraMode) => {
@@ -79,7 +79,7 @@ export default function Colores() {
         toast.success('Registro creado correctamente')
       }
       handleCloseModal()
-      loadColores()
+      await loadColores()
     } catch (err) {
       if (!handleRecoveryError(err, formData.nombre)) {
         setErrorModal(err.customMessage || 'Error al guardar el color')
@@ -117,7 +117,7 @@ export default function Colores() {
     try {
       await colorService.recuperar(id)
       toast.success('Registro recuperado correctamente')
-      loadColores()
+      await loadColores()
     } catch (err) {
       console.error(err)
       import('../../store/notificationStore').then(store => {
@@ -355,7 +355,7 @@ export default function Colores() {
             await colorService.desactivar(itemToDelete.id)
             toast.success('Registro enviado a la papelera')
           }
-          loadColores()
+          await loadColores()
           setShowDeleteModal(false)
           setItemToDelete(null)
         }}
@@ -375,9 +375,9 @@ export default function Colores() {
           title="Importación de Colores"
           description="Añade múltiples registros usando un archivo Excel"
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadColores()
+            await loadColores()
           }}
           descargarPlantillaFn={colorService.descargarPlantilla}
           importarPreviaFn={colorService.importarPrevia}

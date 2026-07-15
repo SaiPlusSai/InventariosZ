@@ -28,9 +28,9 @@ export default function Materiales() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [errorModal, setErrorModal] = useState(null)
 
-  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(materialService, () => {
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(materialService, async () => {
     handleCloseModal()
-    loadMateriales()
+    await loadMateriales()
   })
 
   const loadMateriales = async (papelera = isPapeleraMode) => {
@@ -78,7 +78,7 @@ export default function Materiales() {
         toast.success('Registro creado correctamente')
       }
       handleCloseModal()
-      loadMateriales()
+      await loadMateriales()
     } catch (err) {
       if (!handleRecoveryError(err, formData.nombre)) {
         setErrorModal(err.customMessage || 'Error al guardar el material')
@@ -116,7 +116,7 @@ export default function Materiales() {
     try {
       await materialService.recuperar(id)
       toast.success('Registro recuperado correctamente')
-      loadMateriales()
+      await loadMateriales()
     } catch (err) {
       console.error(err)
       import('../../store/notificationStore').then(store => {
@@ -320,7 +320,7 @@ export default function Materiales() {
             await materialService.desactivar(itemToDelete.id)
             toast.success('Registro enviado a la papelera')
           }
-          loadMateriales()
+          await loadMateriales()
           setShowDeleteModal(false)
           setItemToDelete(null)
         }}
@@ -340,9 +340,9 @@ export default function Materiales() {
           title="Importación de Materiales"
           description="Añade múltiples registros usando un archivo Excel"
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadMateriales()
+            await loadMateriales()
           }}
           descargarPlantillaFn={materialService.descargarPlantilla}
           importarPreviaFn={materialService.importarPrevia}

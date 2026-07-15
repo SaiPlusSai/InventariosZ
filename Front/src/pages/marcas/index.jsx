@@ -28,9 +28,9 @@ export default function Marcas() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [errorModal, setErrorModal] = useState(null)
 
-  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(marcaService, () => {
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(marcaService, async () => {
     handleCloseModal()
-    loadMarcas()
+    await loadMarcas()
   })
 
   const loadMarcas = async (papelera = isPapeleraMode) => {
@@ -78,7 +78,7 @@ export default function Marcas() {
         toast.success('Marca creada correctamente')
       }
       handleCloseModal()
-      loadMarcas()
+      await loadMarcas()
     } catch (err) {
       if (!handleRecoveryError(err, formData.nombre)) {
         setErrorModal(err.customMessage || 'Error al guardar la marca')
@@ -115,7 +115,7 @@ export default function Marcas() {
     try {
       await marcaService.recuperar(id)
       toast.success('Marca recuperada correctamente')
-      loadMarcas()
+      await loadMarcas()
     } catch (err) {
       console.error(err)
       import('../../store/notificationStore').then(store => {
@@ -322,7 +322,7 @@ export default function Marcas() {
             await marcaService.desactivar(itemToDelete.id)
             toast.success('Marca enviada a la papelera')
           }
-          loadMarcas()
+          await loadMarcas()
           setShowDeleteModal(false)
           setItemToDelete(null)
         }}
@@ -342,9 +342,9 @@ export default function Marcas() {
           title="Importación de Marcas"
           description="Añade múltiples marcas usando un archivo Excel"
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadMarcas()
+            await loadMarcas()
           }}
           descargarPlantillaFn={marcaService.descargarPlantilla}
           importarPreviaFn={marcaService.importarPrevia}

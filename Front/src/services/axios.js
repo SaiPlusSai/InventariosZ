@@ -6,6 +6,9 @@ const API_TIMEOUT = ENV.apiTimeout
 
 const defaultHeaders = {
   "Content-Type": "application/json",
+  "Cache-Control": "no-cache, no-store, must-revalidate",
+  "Pragma": "no-cache",
+  "Expires": "0",
   ...(ENV.env === "ngrok" && { "ngrok-skip-browser-warning": "true" }),
 };
 

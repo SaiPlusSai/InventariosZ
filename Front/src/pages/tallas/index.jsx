@@ -28,9 +28,9 @@ export default function Tallas() {
   const [itemToDelete, setItemToDelete] = useState(null)
   const [errorModal, setErrorModal] = useState(null)
 
-  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(tallaService, () => {
+  const { handleRecoveryError, RecoveryComponent } = useRecoveryManager(tallaService, async () => {
     handleCloseModal()
-    loadTallas()
+    await loadTallas()
   })
 
   const loadTallas = async (papelera = isPapeleraMode) => {
@@ -83,7 +83,7 @@ export default function Tallas() {
         toast.success('Registro creado correctamente')
       }
       handleCloseModal()
-      loadTallas()
+      await loadTallas()
     } catch (err) {
       if (!handleRecoveryError(err, formData.numero)) {
         setErrorModal(err.customMessage || 'Error al guardar la talla')
@@ -121,7 +121,7 @@ export default function Tallas() {
     try {
       await tallaService.recuperar(id)
       toast.success('Registro recuperado correctamente')
-      loadTallas()
+      await loadTallas()
     } catch (err) {
       console.error(err)
       import('../../store/notificationStore').then(store => {
@@ -319,7 +319,7 @@ export default function Tallas() {
             await tallaService.desactivar(itemToDelete.id)
             toast.success('Registro enviado a la papelera')
           }
-          loadTallas()
+          await loadTallas()
           setShowDeleteModal(false)
           setItemToDelete(null)
         }}
@@ -339,9 +339,9 @@ export default function Tallas() {
           title="Importación de Tallas"
           description="Añade múltiples registros usando un archivo Excel"
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadTallas()
+            await loadTallas()
           }}
           descargarPlantillaFn={tallaService.descargarPlantilla}
           importarPreviaFn={tallaService.importarPrevia}

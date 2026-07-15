@@ -77,7 +77,7 @@ export default function CodigoProducto() {
         toast.success('Registro creado correctamente')
     }
     handleCloseModal()
-    loadData()
+    await loadData()
   })
 
   const handleSave = async () => {
@@ -95,7 +95,7 @@ export default function CodigoProducto() {
         toast.success('Registro creado correctamente')
       }
       handleCloseModal()
-      loadData()
+      await loadData()
     } catch (err) {
       console.error(err)
       const isWarning = handleWarningError(err, {
@@ -143,8 +143,8 @@ export default function CodigoProducto() {
   const handleRecuperar = async (id) => {
     try {
       await codigoProductoService.recuperar(id)
-      toast.success('Registro recuperado correctamente')
-      loadData()
+      toast.success('Código de producto recuperado correctamente')
+      await loadData()
     } catch (err) {
       console.error(err)
       import('../../store/notificationStore').then(store => {
@@ -354,9 +354,9 @@ export default function CodigoProducto() {
             toast.success('Registro eliminado permanentemente')
           } else {
             await codigoProductoService.desactivar(itemToDelete.id)
-            toast.success('Registro enviado a la papelera')
+            toast.success('Código de producto enviado a la papelera')
           }
-          loadData()
+          await loadData()
           setShowDeleteModal(false)
           setItemToDelete(null)
         }}
@@ -377,9 +377,9 @@ export default function CodigoProducto() {
           title="Importación de Códigos de Producto"
           description="Añade múltiples códigos usando un archivo Excel. La columna 'Marca' debe coincidir con el nombre de una marca existente."
           onClose={() => setShowImportModal(false)}
-          onImportSuccess={() => {
+          onImportSuccess={async () => {
             setShowImportModal(false)
-            loadData()
+            await loadData()
           }}
           descargarPlantillaFn={codigoProductoService.descargarPlantilla}
           importarPreviaFn={codigoProductoService.importarPrevia}
