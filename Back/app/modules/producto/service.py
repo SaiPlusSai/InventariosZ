@@ -187,6 +187,7 @@ class ProductoService:
             respuestas.append(
                 ProductoCatalogoResponse(
                     codigo_producto_id=cp_data["codigo_producto_id"],
+                    producto_principal_id=cp_data["producto_principal_id"],
                     codigo=cp_data["codigo"],
                     marca=cp_data["marca"],
                     tipo_calzado=cp_data["tipo_calzado"],
