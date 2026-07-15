@@ -41,18 +41,18 @@ export default function CrudToolbar({
           </button>
         </div>
         
-        <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto mt-2 md:mt-0 justify-end transition-all ${isActionsExpanded ? 'max-h-96 opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden md:max-h-96 md:opacity-100 md:overflow-visible'}`}>
+        <div className={`flex flex-row items-stretch @[500px]:items-center gap-2 w-full @[700px]:w-auto mt-2 @[700px]:mt-0 justify-end transition-all ${isActionsExpanded ? 'max-h-96 opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden @[700px]:max-h-96 @[700px]:opacity-100 @[700px]:overflow-visible'}`}>
           {/* Botones secundarios (como Ver Papelera) ocultos en móvil y movidos al dropdown */}
           <PrimaryActions 
             actions={primaryActions
               .filter(a => a.variant !== 'primary')
-              .map(a => ({ ...a, className: `${a.className || ''} hidden sm:inline-flex` }))
+              .map(a => ({ ...a, className: `${a.className || ''} hidden @[700px]:inline-flex` }))
             } 
           />
           {/* ActionDropdown con sus propias acciones + las primarias secundarias inyectadas para móvil */}
-          <div className="flex-1 sm:flex-none">
+          <div className="w-[40%] @[500px]:w-auto @[500px]:flex-none">
             <ActionDropdown actions={[
-               ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex sm:hidden' })),
+               ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex @[700px]:hidden' })),
                ...secondaryActions
             ]} />
           </div>
@@ -60,7 +60,7 @@ export default function CrudToolbar({
           <PrimaryActions 
             actions={primaryActions
               .filter(a => a.variant === 'primary')
-              .map(a => ({ ...a, className: `${a.className || ''} flex-1 sm:flex-none` }))
+              .map(a => ({ ...a, className: `${a.className || ''} w-[60%] @[500px]:w-auto @[500px]:flex-none` }))
             } 
           />
         </div>
@@ -90,6 +90,7 @@ export default function CrudToolbar({
               filters={filterConfig.filters}
               onClear={filterConfig.onClear}
               onApply={filterConfig.onApply}
+              onToggle={filterConfig.onToggle}
             />
           )}
         </div>
