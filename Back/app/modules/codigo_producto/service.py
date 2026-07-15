@@ -54,13 +54,6 @@ class CodigoProductoService:
     def recuperar(self, db: Session, id: int):
         item = self.repository.get_by_id_papelera(db, id)
         if item:
-            conflicto = self.repository.get_by_codigo_y_marca(db, item.codigo, item.marca_id)
-            if conflicto and conflicto.id != item.id:
-                from app.core.exceptions import RecuperacionConflictivaException
-                raise RecuperacionConflictivaException(
-                    f"No se puede recuperar. Ya existe un código activo '{item.codigo}' para esta marca."
-                )
-
             item.estado = True
             item.deleted_at = None
             db.commit()
@@ -117,11 +110,6 @@ class CodigoProductoService:
                 if not marca_obj:
                     fila_errores.append(f"La marca '{marca_str}' no existe.")
             
-            if marca_obj and codigo_str:
-                existente = self.repository.get_by_codigo_y_marca(db, codigo_str, marca_obj.id)
-                if existente:
-                    fila_errores.append(f"El código '{codigo_str}' ya existe en esta marca.")
-
             es_valido = len(fila_errores) == 0
             if es_valido:
                 validos += 1
@@ -187,13 +175,6 @@ class CodigoProductoService:
                 MARCA_NO_EXISTE
             )
 
-        exacto = self.repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
-        if exacto:
-            from app.core.exceptions import CodigoProductoDuplicadoException
-            raise CodigoProductoDuplicadoException(
-                f"El código '{data.codigo}' ya existe para la marca '{marca.nombre}'."
-            )
-
         otros = self.repository.get_all_by_codigo(db, data.codigo)
         if otros and not getattr(data, 'force', False):
             marca_conflicto_obj = self.marca_repository.get_by_id(db, otros[0].marca_id)
@@ -251,18 +232,9 @@ class CodigoProductoService:
             new_codigo = data.codigo if data.codigo is not None else codigo_producto.codigo
             new_marca_id = data.marca_id if data.marca_id is not None else codigo_producto.marca_id
 
-            exacto = self.repository.get_by_codigo_y_marca(db, new_codigo, new_marca_id)
-            if exacto and exacto.id != codigo_producto.id:
-                marca_obj = self.marca_repository.get_by_id(db, new_marca_id)
-                marca_nombre = marca_obj.nombre if marca_obj else "la marca especificada"
-                from app.core.exceptions import CodigoProductoDuplicadoException
-                raise CodigoProductoDuplicadoException(
-                    f"El código '{new_codigo}' ya existe para {marca_nombre}."
-                )
-            
             if new_codigo != codigo_producto.codigo:
                 otros = self.repository.get_all_by_codigo(db, new_codigo)
-                otros_filtrados = [o for o in otros if o.id != codigo_producto.id and o.marca_id != new_marca_id]
+                otros_filtrados = [o for o in otros if o.id != codigo_producto.id]
                 if otros_filtrados and not getattr(data, 'force', False):
                     marca_conflicto_obj = self.marca_repository.get_by_id(db, otros_filtrados[0].marca_id)
                     marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"

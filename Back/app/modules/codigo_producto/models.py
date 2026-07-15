@@ -35,7 +35,6 @@ class CodigoProducto(Base):
     codigo: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
-        unique=True,
     )
 
     estado: Mapped[bool] = mapped_column(
