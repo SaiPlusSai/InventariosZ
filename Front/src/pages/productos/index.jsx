@@ -222,6 +222,8 @@ export default function Productos() {
     setMovimientoStockActual(stock_actual)
     setMovimientoPolaridad('SALIDA')
     setMovimientoModalOpen(true)
+  }
+
   const confirmDelete = async () => {
     if (!itemToDelete) return
     try {
