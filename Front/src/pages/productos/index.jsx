@@ -42,7 +42,6 @@ export default function Productos() {
   const [filters, setFilters] = useState(initialFilters)
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
-  const [showFilters, setShowFilters] = useState(false)
   
   const [catalogos, setCatalogos] = useState({
     marcas: [], tipos: [], materiales: [], colores: [], tallas: []
@@ -365,10 +364,8 @@ export default function Productos() {
           onChange: setGlobalSearch
         }}
         filterConfig={{
-          showFilters,
-          onToggle: () => setShowFilters(!showFilters),
           onClear: () => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); },
-          onApply: () => { loadProductos(cleanFilters(filters), isPapeleraMode); setShowFilters(false); },
+          onApply: () => { loadProductos(cleanFilters(filters), isPapeleraMode); },
           activeFilters: getActiveFilters(),
           filters: (
             <>
