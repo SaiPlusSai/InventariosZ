@@ -87,7 +87,8 @@ export default function ProductoWizard({ onClose, onSuccess }) {
       }
     } else {
       const res = await productoService.createCompleto(dataToSend)
-      codigoID = res.data.codigo_producto_id
+      console.log('✅ createCompleto response:', res.data)
+      codigoID = res.data.producto_principal_id
     }
 
     // 4. Procesar Imagenes Nuevas
@@ -147,8 +148,8 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     setError(null)
     
     // 1. Validaciones basicas
-    if (!formData.codigo || formData.codigo.trim().length < 2) {
-      return triggerFocusError("El código debe tener al menos 2 caracteres.")
+    if (!formData.codigo_producto_id) {
+      return triggerFocusError("Debes seleccionar un código de producto.")
     }
     if (!formData.descripcion || !formData.descripcion.trim()) {
     return triggerFocusError("La descripción del producto es obligatoria.")
@@ -175,8 +176,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     try {
       // 2. Preparar el payload global para el backend
       const dataToSend = {
-        codigo: String(formData.codigo).trim(),
-        marca_id: Number(formData.marca_id),
+        codigo_producto_id: Number(formData.codigo_producto_id),
         tipo_calzado_id: Number(formData.tipo_calzado_id),
         material_id: Number(formData.material_id),
         descripcion: formData.descripcion ? String(formData.descripcion).trim() : null,
@@ -194,6 +194,8 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
         imagenes: [], // Las enviamos despues
       }
+      
+      console.log('📤 dataToSend:', dataToSend)
 
       await processSave(dataToSend)
 
@@ -201,8 +203,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
       console.error(err)
       // dataToSend está dentro de este closure, la recuperamos interceptando el warning
       const dataToSend = {
-        codigo: String(formData.codigo).trim(),
-        marca_id: Number(formData.marca_id),
+        codigo_producto_id: Number(formData.codigo_producto_id),
         tipo_calzado_id: Number(formData.tipo_calzado_id),
         material_id: Number(formData.material_id),
         descripcion: formData.descripcion ? String(formData.descripcion).trim() : null,

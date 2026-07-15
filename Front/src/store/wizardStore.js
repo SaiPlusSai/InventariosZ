@@ -4,7 +4,7 @@ import { productoService } from '../services/productoService'
 import { productoImagenService } from '../services/productoImagenService'
 
 const initialFormData = {
-  codigo: '',
+  codigo_producto_id: null,
   marca_id: null,
   tipo_calzado_id: null,
   material_id: null,

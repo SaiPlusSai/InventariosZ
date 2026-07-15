@@ -488,7 +488,7 @@ export default function Productos() {
             {filteredProductos.flatMap((producto) =>
               producto.colores.map((colorInfo) => (
                 <ProductoCard
-                  key={`${producto.codigo_producto_id}-${colorInfo.color_id}`}
+                  key={`${producto.producto_principal_id}-${colorInfo.color_id}`}
                   producto={producto}
                   color={colorInfo}
                   isPapeleraMode={isPapeleraMode}
