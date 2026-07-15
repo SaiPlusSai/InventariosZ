@@ -518,11 +518,11 @@ def get_detalle(
         )
 
 @router.get(
-    "/{codigo_producto_id}/editar-completo",
+    "/{producto_id}/editar-completo",
     response_model=ProductoCompletoEditarResponse,
 )
 def get_editar_completo(
-    codigo_producto_id: int,
+    producto_id: int,
     db: Session = Depends(get_db),
 ):
 
@@ -530,7 +530,7 @@ def get_editar_completo(
 
         return service.get_editar_completo(
             db,
-            codigo_producto_id,
+            producto_id,
         )
 
     except ProductoNoEncontradoException as e:
@@ -546,11 +546,11 @@ def get_editar_completo(
 # ----------------------------------------------------------
 
 @router.put(
-    "/{codigo_producto_id}/editar-completo",
+    "/{producto_id}/editar-completo",
     response_model=ProductoCompletoResponse,
 )
 def update_completo(
-    codigo_producto_id: int,
+    producto_id: int,
     data: ProductoCompletoUpdate,
     db: Session = Depends(get_db),
 ):
@@ -559,7 +559,7 @@ def update_completo(
 
         return service.update_completo(
             db,
-            codigo_producto_id,
+            producto_id,
             data,
         )
 
@@ -607,35 +607,35 @@ async def websocket_stock(
 
         manager.disconnect(websocket)
 @router.patch(
-    '/{codigo_producto_id}/color/{color_id}/desactivar',
+    '/{producto_id}/color/{color_id}/desactivar',
     status_code=status.HTTP_200_OK,
 )
 def desactivar_color(
-    codigo_producto_id: int,
+    producto_id: int,
     color_id: int,
     db: Session = Depends(get_db),
 ):
-    return service.desactivar_color(db, codigo_producto_id, color_id)
+    return service.desactivar_color(db, producto_id, color_id)
 
 @router.patch(
-    '/{codigo_producto_id}/color/{color_id}/recuperar',
+    '/{producto_id}/color/{color_id}/recuperar',
     status_code=status.HTTP_200_OK,
 )
 def recuperar_color(
-    codigo_producto_id: int,
+    producto_id: int,
     color_id: int,
     db: Session = Depends(get_db),
 ):
-    return service.recuperar_color(db, codigo_producto_id, color_id)
+    return service.recuperar_color(db, producto_id, color_id)
 
 @router.put(
-    '/{codigo_producto_id}/color/{color_id}',
+    '/{producto_id}/color/{color_id}',
     status_code=status.HTTP_200_OK,
 )
 def update_por_color(
-    codigo_producto_id: int,
+    producto_id: int,
     color_id: int,
     data: ProductoColorUpdate,
     db: Session = Depends(get_db),
 ):
-    return service.update_por_color(db, codigo_producto_id, color_id, data)
+    return service.update_por_color(db, producto_id, color_id, data)

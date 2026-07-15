@@ -77,9 +77,9 @@ export const productoService = {
   getDetalle: (id) =>
     axiosInstance.get(`/productos/${id}/detalle`),
 
-  getEditarCompleto: (codigoProductoId) =>
+  getEditarCompleto: (productoId) =>
     axiosInstance.get(
-      `/productos/${codigoProductoId}/editar-completo`
+      `/productos/${productoId}/editar-completo`
     ),
 
   create: (data) =>
@@ -91,9 +91,9 @@ export const productoService = {
   update: (id, data) =>
     axiosInstance.put(`/productos/${id}`, data),
 
-  updateCompleto: (codigoProductoId, data) =>
+  updateCompleto: (productoId, data) =>
     axiosInstance.put(
-      `/productos/${codigoProductoId}/editar-completo`,
+      `/productos/${productoId}/editar-completo`,
       data
     ),
 

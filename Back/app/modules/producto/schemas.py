@@ -193,13 +193,7 @@ class ImagenProductoCreate(BaseModel):
 
 class ProductoCompletoCreate(BaseModel):
 
-    codigo: str = Field(
-        ...,
-        min_length=2,
-        max_length=50,
-    )
-
-    marca_id: int = Field(
+    codigo_producto_id: int = Field(
         ...,
         gt=0,
     )
@@ -506,13 +500,7 @@ class ImagenProductoUpdate(BaseModel):
 
 class ProductoCompletoUpdate(BaseModel):
 
-    codigo: str = Field(
-        ...,
-        min_length=2,
-        max_length=50,
-    )
-
-    marca_id: int = Field(
+    codigo_producto_id: int = Field(
         ...,
         gt=0,
     )
@@ -635,6 +623,7 @@ class ColorCatalogoResponse(BaseModel):
 
 class ProductoCatalogoResponse(BaseModel):
     codigo_producto_id: int
+    producto_principal_id: int
     codigo: str
     marca: MarcaInfo
     tipo_calzado: TipoCalzadoInfo
@@ -661,8 +650,7 @@ class ImagenColorUpdate(BaseModel):
     orden: int
 
 class ProductoColorUpdate(BaseModel):
-    codigo: str = Field(..., max_length=50)
-    marca_id: int
+    codigo_producto_id: int
     tipo_calzado_id: int
     material_id: int
     descripcion: str | None = None

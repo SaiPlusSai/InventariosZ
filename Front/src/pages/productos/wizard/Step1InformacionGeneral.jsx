@@ -32,7 +32,7 @@ export default function Step1InformacionGeneral() {
       setFormData({ ...formData, material_id: newElement.id })
     } else if (type === 'codigo') {
       setCodigos([...codigos, newElement])
-      setFormData({ ...formData, codigo: newElement.codigo, marca_id: newElement.marca_id })
+      setFormData({ ...formData, codigo_producto_id: newElement.id, marca_id: newElement.marca_id })
     }
     setFastCreate({ isOpen: false, type: null })
   }
@@ -69,12 +69,12 @@ export default function Step1InformacionGeneral() {
       parsedValue = value === '' ? null : parseInt(value)
     }
 
-    if (name === 'codigo') {
-      const selectedCodigo = codigos.find((c) => c.codigo === value)
+    if (name === 'codigo_producto_id') {
+      const selectedCodigo = codigos.find((c) => c.id === parsedValue)
       if (selectedCodigo) {
         setFormData({
           ...formData,
-          codigo: value,
+          codigo_producto_id: parsedValue,
           marca_id: selectedCodigo.marca_id
         })
         return
@@ -99,15 +99,15 @@ export default function Step1InformacionGeneral() {
           </label>
           <div className="flex gap-2">
             <select
-              name="codigo"
-              value={formData.codigo || ''}
+              name="codigo_producto_id"
+              value={formData.codigo_producto_id || ''}
               onChange={handleChange}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
               required
             >
               <option value="">Selecciona un código</option>
               {codigos.map((c) => (
-                <option key={c.id} value={c.codigo}>
+                <option key={c.id} value={c.id}>
                   {c.codigo}
                 </option>
               ))}
@@ -127,8 +127,9 @@ export default function Step1InformacionGeneral() {
               name="marca_id"
               value={formData.marca_id || ''}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-100 cursor-not-allowed"
               required
+              disabled
             >
               <option value="">Selecciona una marca</option>
               {marcas.map((marca) => (

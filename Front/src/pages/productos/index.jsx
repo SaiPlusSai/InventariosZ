@@ -205,7 +205,7 @@ export default function Productos() {
   }
 
   const handleEditar = async (producto, colorInfo) => {
-    await cargarProductoEditarCompleto(producto.codigo_producto_id, colorInfo.color_id)
+    await cargarProductoEditarCompleto(producto.producto_principal_id, colorInfo.color_id)
     setShowNewWizard(true)
   }
 
@@ -499,12 +499,12 @@ export default function Productos() {
                     setShowShareModal(true)
                   }}
                   onEliminar={() => setItemToDelete({
-                    codigoProductoId: producto.codigo_producto_id, 
+                    codigoProductoId: producto.producto_principal_id, 
                     colorId: colorInfo.color_id, 
                     nombre: producto.descripcion || producto.codigo,
                     colorNombre: colorInfo.color.nombre
                   })}
-                  onRecuperar={() => handleRecuperar(producto.codigo_producto_id, colorInfo.color_id)}
+                  onRecuperar={() => handleRecuperar(producto.producto_principal_id, colorInfo.color_id)}
                   onIncrementar={handleIncrementarStock}
                   onDecrementar={handleDecrementarStock}
                 />

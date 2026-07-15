@@ -134,10 +134,12 @@ class ProductoService:
         catalogo_dict = {}
 
         for p in productos_planos:
-            cp_id = p["codigo_producto_id"]
-            if cp_id not in catalogo_dict:
-                catalogo_dict[cp_id] = {
-                    "codigo_producto_id": cp_id,
+            agrupador = (p["codigo_producto_id"], p["tipo_calzado_id"], p["material_id"], p["descripcion"])
+            
+            if agrupador not in catalogo_dict:
+                catalogo_dict[agrupador] = {
+                    "codigo_producto_id": p["codigo_producto_id"],
+                    "producto_principal_id": p["id"],
                     "codigo": p["codigo"],
                     "marca": MarcaInfo(id=p["marca_id"], nombre=p["marca_nombre"]),
                     "tipo_calzado": TipoCalzadoInfo(id=p["tipo_calzado_id"], nombre=p["tipo_calzado_nombre"]),
@@ -146,7 +148,7 @@ class ProductoService:
                     "colores": {}
                 }
 
-            colores_dict = catalogo_dict[cp_id]["colores"]
+            colores_dict = catalogo_dict[agrupador]["colores"]
             color_id = p["color_id"]
 
             if color_id not in colores_dict:
@@ -915,30 +917,19 @@ class ProductoService:
     def get_editar_completo(
         self,
         db: Session,
-        codigo_producto_id: int,
+        producto_id: int,
     ) -> ProductoCompletoEditarResponse:
 
-        codigo_producto = self.codigo_repository.get_by_id(
-            db,
-            codigo_producto_id,
-        )
+        primer_producto = self.repository.get_by_id(db, producto_id)
+        if not primer_producto:
+            raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
 
-        if not codigo_producto:
-            raise ProductoNoEncontradoException(
-                PRODUCTO_NO_EXISTE
-            )
-
-        productos = self.repository.get_by_codigo_producto_id(
-            db,
-            codigo_producto_id,
-        )
-
-        if not productos:
-            raise ProductoNoEncontradoException(
-                PRODUCTO_NO_EXISTE
-            )
-
-        primer_producto = productos[0]
+        productos = db.query(Producto).filter(
+            Producto.codigo_producto_id == primer_producto.codigo_producto_id,
+            Producto.tipo_calzado_id == primer_producto.tipo_calzado_id,
+            Producto.material_id == primer_producto.material_id,
+            Producto.descripcion == primer_producto.descripcion
+        ).all()
 
         variantes = []
 
@@ -987,9 +978,9 @@ class ProductoService:
         ]
 
         return ProductoCompletoEditarResponse(
-            codigo_producto_id=codigo_producto.id,
-            codigo=codigo_producto.codigo,
-            marca_id=codigo_producto.marca_id,
+            codigo_producto_id=primer_producto.codigo_producto.id,
+            codigo=primer_producto.codigo_producto.codigo,
+            marca_id=primer_producto.codigo_producto.marca_id,
             tipo_calzado_id=primer_producto.tipo_calzado_id,
             material_id=primer_producto.material_id,
             descripcion=primer_producto.descripcion,
@@ -999,7 +990,7 @@ class ProductoService:
     def update_completo(
         self,
         db: Session,
-        codigo_producto_id: int,
+        producto_id: int,
         data: ProductoCompletoUpdate,
     ):
         self._validar_variantes(data.variantes)
@@ -1011,9 +1002,13 @@ class ProductoService:
 
         try:
 
+            producto_principal = self.repository.get_by_id(db, producto_id)
+            if not producto_principal:
+                raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
+
             codigo_producto = self.codigo_repository.get_by_id(
                 db,
-                codigo_producto_id,
+                data.codigo_producto_id,
             )
 
             if not codigo_producto:
@@ -1021,13 +1016,7 @@ class ProductoService:
                     PRODUCTO_NO_EXISTE
                 )
 
-            if not self.marca_repository.get_by_id(
-                db,
-                data.marca_id,
-            ):
-                raise MarcaNoEncontradaException(
-                    MARCA_NO_EXISTE
-                )
+
 
             if not self.tipo_repository.get_by_id(
                 db,
@@ -1074,41 +1063,14 @@ class ProductoService:
                         raise TallaNoEncontradaException(TALLA_NO_EXISTE)
                     cache_tallas[variante.talla_id] = talla_obj
 
-            exacto = self.codigo_repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
-            if exacto and exacto.id != codigo_producto.id:
-                marca_obj = self.marca_repository.get_by_id(db, data.marca_id)
-                marca_nombre = marca_obj.nombre if marca_obj else "la marca especificada"
-                from app.core.exceptions import CodigoProductoDuplicadoException
-                raise CodigoProductoDuplicadoException(
-                    f"El código '{data.codigo}' ya existe para la marca '{marca_nombre}'."
-                )
+            # Obtenemos los productos actuales para este codigo y atributos que pertenecen al MISMO producto logico
+            productos_existentes = db.query(Producto).filter(
+                Producto.codigo_producto_id == producto_principal.codigo_producto_id,
+                Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
+                Producto.material_id == producto_principal.material_id,
+                Producto.descripcion == producto_principal.descripcion
+            ).all()
 
-            if data.codigo != codigo_producto.codigo:
-                otros = self.codigo_repository.get_all_by_codigo(db, data.codigo)
-                otros_filtrados = [o for o in otros if o.id != codigo_producto.id and o.marca_id != data.marca_id]
-                if otros_filtrados and not getattr(data, 'force', False):
-                    marca_conflicto_obj = self.marca_repository.get_by_id(db, otros_filtrados[0].marca_id)
-                    marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"
-                    marca_destino_obj = self.marca_repository.get_by_id(db, data.marca_id)
-                    marca_destino_nombre = marca_destino_obj.nombre if marca_destino_obj else "la marca especificada"
-                    from app.core.exceptions import CodigoProductoOtraMarcaWarning
-                    raise CodigoProductoOtraMarcaWarning(
-                        f"El código '{data.codigo}' ya se encuentra registrado para la marca '{marca_conflicto_nombre}'.",
-                        codigo=data.codigo,
-                        marca_conflicto=marca_conflicto_nombre,
-                        marca_destino=marca_destino_nombre
-                    )
-
-            codigo_producto.codigo = data.codigo
-            codigo_producto.marca_id = data.marca_id
-
-            self.repository.save_codigo_producto(
-                db,
-                codigo_producto,
-            )
-
-            # Obtenemos los productos actuales para este codigo (sin N+1)
-            productos_existentes = self.repository.get_by_codigo_producto_id(db, codigo_producto.id)
             mapa_existentes = {(p.color_id, p.talla_id): p for p in productos_existentes}
 
             variantes_entrantes_claves = set()
@@ -1276,13 +1238,6 @@ class ProductoService:
         """
 
         try:
-            if not self.marca_repository.get_by_id(
-                db,
-                data.marca_id,
-            ):
-                raise MarcaNoEncontradaException(
-                    MARCA_NO_EXISTE
-                )
 
             if not self.tipo_repository.get_by_id(
                 db,
@@ -1329,31 +1284,9 @@ class ProductoService:
                         raise TallaNoEncontradaException(TALLA_NO_EXISTE)
                     cache_tallas[variante.talla_id] = talla_obj
 
-            exacto = self.codigo_repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
-            if exacto:
-                codigo_producto = exacto
-            else:
-                otros = self.codigo_repository.get_all_by_codigo(db, data.codigo)
-                if otros and not getattr(data, 'force', False):
-                    marca_conflicto_obj = self.marca_repository.get_by_id(db, otros[0].marca_id)
-                    marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"
-                    marca_destino_obj = self.marca_repository.get_by_id(db, data.marca_id)
-                    marca_destino_nombre = marca_destino_obj.nombre if marca_destino_obj else "la marca especificada"
-                    from app.core.exceptions import CodigoProductoOtraMarcaWarning
-                    raise CodigoProductoOtraMarcaWarning(
-                        f"El código '{data.codigo}' ya se encuentra registrado para la marca '{marca_conflicto_nombre}'.",
-                        codigo=data.codigo,
-                        marca_conflicto=marca_conflicto_nombre,
-                        marca_destino=marca_destino_nombre
-                    )
-
-                codigo_producto = CodigoProducto(
-                    marca_id=data.marca_id,
-                    codigo=data.codigo,
-                    estado=True,
-                )
-
-                db.add(codigo_producto)
+            codigo_producto = self.codigo_repository.get_by_id(db, data.codigo_producto_id)
+            if not codigo_producto:
+                raise CodigoProductoNoEncontradoException(CODIGO_PRODUCTO_NO_EXISTE)
 
             productos = []
 
@@ -1398,9 +1331,13 @@ class ProductoService:
             db.rollback()
             raise
 
-    def desactivar_color(self, db: Session, codigo_producto_id: int, color_id: int):
+    def desactivar_color(self, db: Session, producto_id: int, color_id: int):
+        producto_principal = self.repository.get_by_id(db, producto_id)
         variantes = db.query(Producto).filter(
-            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
+            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
+            Producto.material_id == producto_principal.material_id,
+            Producto.descripcion == producto_principal.descripcion,
             Producto.color_id == color_id,
             Producto.estado == True
         ).all()
@@ -1410,9 +1347,13 @@ class ProductoService:
         db.commit()
         return {'msg': f'{len(variantes)} variantes desactivadas'}
 
-    def recuperar_color(self, db: Session, codigo_producto_id: int, color_id: int):
+    def recuperar_color(self, db: Session, producto_id: int, color_id: int):
+        producto_principal = self.repository.get_by_id(db, producto_id)
         variantes = db.query(Producto).filter(
-            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
+            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
+            Producto.material_id == producto_principal.material_id,
+            Producto.descripcion == producto_principal.descripcion,
             Producto.color_id == color_id,
             Producto.estado == False
         ).all()
@@ -1422,9 +1363,13 @@ class ProductoService:
         db.commit()
         return {'msg': f'{len(variantes)} variantes recuperadas'}
 
-    def delete_color(self, db: Session, codigo_producto_id: int, color_id: int) -> None:
+    def delete_color(self, db: Session, producto_id: int, color_id: int) -> None:
+        producto_principal = self.repository.get_by_id(db, producto_id)
         variantes = db.query(Producto).filter(
-            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
+            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
+            Producto.material_id == producto_principal.material_id,
+            Producto.descripcion == producto_principal.descripcion,
             Producto.color_id == color_id
         ).all()
 
@@ -1443,46 +1388,24 @@ class ProductoService:
     def update_por_color(
         self,
         db: Session,
-        codigo_producto_id: int,
+        producto_id: int,
         color_id: int,
         data: ProductoColorUpdate,
     ):
         self._validar_variantes(data.variantes)
-        codigo_producto = self.codigo_repository.get_by_id(db, codigo_producto_id)
-        if not codigo_producto:
+        producto_principal = self.repository.get_by_id(db, producto_id)
+        if not producto_principal:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         
-        exacto = self.codigo_repository.get_by_codigo_y_marca(db, data.codigo, data.marca_id)
-        if exacto and exacto.id != codigo_producto.id:
-            marca_obj = self.marca_repository.get_by_id(db, data.marca_id)
-            marca_nombre = marca_obj.nombre if marca_obj else "la marca especificada"
-            from app.core.exceptions import CodigoProductoDuplicadoException
-            raise CodigoProductoDuplicadoException(
-                f"El código '{data.codigo}' ya existe para la marca '{marca_nombre}'."
-            )
-
-        if data.codigo != codigo_producto.codigo:
-            otros = self.codigo_repository.get_all_by_codigo(db, data.codigo)
-            otros_filtrados = [o for o in otros if o.id != codigo_producto.id and o.marca_id != data.marca_id]
-            if otros_filtrados and not getattr(data, 'force', False):
-                marca_conflicto_obj = self.marca_repository.get_by_id(db, otros_filtrados[0].marca_id)
-                marca_conflicto_nombre = marca_conflicto_obj.nombre if marca_conflicto_obj else "Otra marca"
-                marca_destino_obj = self.marca_repository.get_by_id(db, data.marca_id)
-                marca_destino_nombre = marca_destino_obj.nombre if marca_destino_obj else "la marca especificada"
-                from app.core.exceptions import CodigoProductoOtraMarcaWarning
-                raise CodigoProductoOtraMarcaWarning(
-                    f"El código '{data.codigo}' ya se encuentra registrado para la marca '{marca_conflicto_nombre}'.",
-                    codigo=data.codigo,
-                    marca_conflicto=marca_conflicto_nombre,
-                    marca_destino=marca_destino_nombre
-                )
-            
-        codigo_producto.codigo = data.codigo
-        codigo_producto.marca_id = data.marca_id
-        self.codigo_repository.update(db, codigo_producto)
+        codigo_producto = self.codigo_repository.get_by_id(db, data.codigo_producto_id)
+        if not codigo_producto:
+            raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
 
         variantes_actuales = db.query(Producto).filter(
-            Producto.codigo_producto_id == codigo_producto_id,
+            Producto.codigo_producto_id == producto_principal.codigo_producto_id,
+            Producto.tipo_calzado_id == producto_principal.tipo_calzado_id,
+            Producto.material_id == producto_principal.material_id,
+            Producto.descripcion == producto_principal.descripcion,
             Producto.color_id == color_id
         ).all()
         
