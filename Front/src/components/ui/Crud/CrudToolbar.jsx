@@ -41,7 +41,7 @@ export default function CrudToolbar({
           </button>
         </div>
         
-        <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto mt-2 md:mt-0 justify-end transition-all overflow-hidden ${isActionsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-96 md:opacity-100'}`}>
+        <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto mt-2 md:mt-0 justify-end transition-all ${isActionsExpanded ? 'max-h-96 opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden md:max-h-96 md:opacity-100 md:overflow-visible'}`}>
           {/* Botones secundarios (como Ver Papelera) ocultos en móvil y movidos al dropdown */}
           <PrimaryActions 
             actions={primaryActions
