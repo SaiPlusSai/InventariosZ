@@ -777,10 +777,20 @@ class ProductoService:
                 )
             )
 
+        imagenes_a_mostrar = producto.imagenes
+
+        if not imagenes_a_mostrar:
+            variante_con_imagen = next(
+                (v for v in todas_variantes if v.color_id == producto.color_id and v.imagenes),
+                None
+            )
+            if variante_con_imagen:
+                imagenes_a_mostrar = variante_con_imagen.imagenes
+
         imagen_principal = next(
             (
                 img.ruta
-                for img in producto.imagenes
+                for img in imagenes_a_mostrar
                 if img.es_principal
             ),
             None,
@@ -844,7 +854,7 @@ class ProductoService:
                     es_principal=img.es_principal,
                     orden=img.orden,
                 )
-                for img in producto.imagenes
+                for img in imagenes_a_mostrar
             ],
             
             variantes=variantes_response,
