@@ -27,19 +27,21 @@ export default function SearchInput({
           />
         </div>
 
-        <div className="flex items-center gap-1 w-full md:w-auto p-1 md:p-0 border-t md:border-t-0 border-gray-100">
-          {onClear && (
-            <Button variant="ghost" onClick={onClear} className="inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-3 py-1 h-auto text-gray-600 hover:text-gray-900">
-              Limpiar
-            </Button>
-          )}
-          
-          {onSearch && !hideSearchButton && (
-            <Button variant="primary" onClick={onSearch} className="inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-4 py-1 h-auto shadow-sm">
-              Buscar
-            </Button>
-          )}
-        </div>
+        {(onClear || (onSearch && !hideSearchButton)) && (
+          <div className="flex items-center gap-1 w-full md:w-auto p-1 md:p-0 border-t md:border-t-0 border-gray-100">
+            {onClear && (
+              <Button variant="ghost" onClick={onClear} className="inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-3 py-1 h-auto text-gray-600 hover:text-gray-900">
+                Limpiar
+              </Button>
+            )}
+            
+            {onSearch && !hideSearchButton && (
+              <Button variant="primary" onClick={onSearch} className="inline-flex items-center justify-center whitespace-nowrap flex-1 md:flex-none text-sm px-4 py-1 h-auto shadow-sm">
+                Buscar
+              </Button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

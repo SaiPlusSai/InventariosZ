@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { ChevronUp, ChevronDown } from 'lucide-react'
 import PrimaryActions from './PrimaryActions'
 import ActionDropdown from './ActionDropdown'
 import SearchInput from './SearchInput'
@@ -14,33 +15,50 @@ export default function CrudToolbar({
   searchConfig = null,
   filterConfig = null
 }) {
+  const [isActionsExpanded, setIsActionsExpanded] = useState(false);
+
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5 md:gap-2">
       {/* Title & Actions Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
-            {title}
-          </h1>
-          {description && (
-            <p className="text-gray-500 mt-1 text-sm">
-              {description}
-            </p>
-          )}
+        <div className="flex justify-between items-center w-full md:w-auto">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-800 tracking-tight">
+              {title}
+            </h1>
+            {description && (
+              <p className="text-gray-500 mt-1 text-sm">
+                {description}
+              </p>
+            )}
+          </div>
+          
+          <button 
+            onClick={() => setIsActionsExpanded(!isActionsExpanded)} 
+            className="md:hidden p-2 rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors flex items-center gap-1 text-xs font-semibold shadow-sm"
+          >
+            Menú {isActionsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+          </button>
         </div>
         
-        <div className="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 w-full md:w-auto mt-2 md:mt-0">
+        <div className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full md:w-auto mt-2 md:mt-0 justify-end transition-all overflow-hidden ${isActionsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 md:max-h-96 md:opacity-100'}`}>
+          {/* Botones secundarios (como Ver Papelera) ocultos en móvil y movidos al dropdown */}
           <PrimaryActions 
             actions={primaryActions
               .filter(a => a.variant !== 'primary')
-              .map(a => ({ ...a, className: `${a.className || ''} col-span-1 sm:col-span-1` }))
+              .map(a => ({ ...a, className: `${a.className || ''} hidden sm:inline-flex` }))
             } 
           />
-          <ActionDropdown actions={secondaryActions} />
+          {/* ActionDropdown con sus propias acciones + las primarias secundarias inyectadas para móvil */}
+          <ActionDropdown actions={[
+             ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex sm:hidden' })),
+             ...secondaryActions
+          ]} />
+          {/* Botón Principal (Nuevo Producto) */}
           <PrimaryActions 
             actions={primaryActions
               .filter(a => a.variant === 'primary')
-              .map(a => ({ ...a, className: `${a.className || ''} col-span-2 sm:col-span-1` }))
+              .map(a => ({ ...a, className: `${a.className || ''} flex-1 sm:flex-none` }))
             } 
           />
         </div>
@@ -48,8 +66,8 @@ export default function CrudToolbar({
 
       {/* Search & Filters Row */}
       {(searchConfig || filterConfig) && (
-        <div className="border border-gray-200 shadow-sm bg-white rounded-xl overflow-visible p-0.5 mt-2">
-          <div className="flex flex-row items-center p-1 w-full gap-2">
+        <div className="border border-gray-200 shadow-sm bg-white rounded-xl overflow-visible p-0.5 mt-1 md:mt-2">
+          <div className="flex flex-row items-center p-0.5 md:p-1 w-full gap-1.5 md:gap-2">
             
             {searchConfig && (
               <SearchInput {...searchConfig} />
@@ -77,7 +95,7 @@ export default function CrudToolbar({
 
       {/* Active Filters Chips */}
       {filterConfig && filterConfig.activeFilters && filterConfig.activeFilters.length > 0 && !filterConfig.showFilters && (
-        <div className="flex flex-wrap items-center gap-2 mt-1 animate-in fade-in duration-200">
+        <div className="flex flex-wrap items-center gap-1.5 mt-1 animate-in fade-in duration-200">
           {filterConfig.activeFilters.map((chip, idx) => (
             <FilterChip 
               key={idx} 
