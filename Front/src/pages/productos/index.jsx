@@ -25,7 +25,7 @@ import { agruparProductosPlanos } from '../../utils/adapters/productoAdapter'
 export default function Productos() {
   const [searchParams] = useSearchParams()
   const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
-  const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto } = useWizardStore()
+  const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto, resetWizard } = useWizardStore()
 
   const initialFilters = {
     ...emptyFilters,
@@ -331,7 +331,10 @@ export default function Productos() {
               icon: Plus,
               variant: "primary",
               className: "shadow-md shadow-primary-500/20",
-              onClick: () => setShowNewWizard(true)
+              onClick: () => {
+                resetWizard()
+                setShowNewWizard(true)
+              }
             }
           ] : [])
         ]}
@@ -474,7 +477,10 @@ export default function Productos() {
               title={isPapeleraMode ? "La papelera está vacía" : "No se encontraron productos"}
               description={isPapeleraMode ? "No hay productos eliminados temporalmente." : "Intenta ajustar los filtros de búsqueda o crea uno nuevo."}
               actionLabel={!isPapeleraMode ? "Nuevo Producto" : undefined}
-              onAction={!isPapeleraMode ? () => setShowNewWizard(true) : undefined}
+              onAction={!isPapeleraMode ? () => {
+                resetWizard()
+                setShowNewWizard(true)
+              } : undefined}
             />
           )
         }
@@ -553,7 +559,10 @@ export default function Productos() {
 
       {showNewWizard && (
         <ProductoWizard
-          onClose={() => setShowNewWizard(false)}
+          onClose={() => {
+            resetWizard()
+            setShowNewWizard(false)
+          }}
           onSuccess={() => { setShowNewWizard(false); loadProductos(cleanFilters(filters), isPapeleraMode); }}
         />
       )}
