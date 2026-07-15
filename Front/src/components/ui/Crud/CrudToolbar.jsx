@@ -18,16 +18,16 @@ export default function CrudToolbar({
   const [isActionsExpanded, setIsActionsExpanded] = useState(false);
 
   return (
-    <div className="flex flex-col gap-1.5 md:gap-2">
+    <div className="@container flex flex-col gap-1.5 md:gap-2">
       {/* Title & Actions Row */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-        <div className="flex justify-between items-center w-full md:w-auto overflow-hidden">
+      <div className="flex flex-col @[600px]:flex-row justify-between items-start @[600px]:items-center gap-2">
+        <div className="flex justify-between items-center w-full @[600px]:w-auto overflow-hidden">
           <div className="min-w-0 flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight truncate mr-2">
+            <h1 className="text-2xl @[600px]:text-3xl font-bold text-gray-800 tracking-tight truncate mr-2">
               {title}
             </h1>
             {description && (
-              <p className="hidden sm:block text-gray-500 mt-1 text-sm">
+              <p className="hidden @[1000px]:block text-gray-500 mt-1 text-sm truncate">
                 {description}
               </p>
             )}
@@ -35,24 +35,24 @@ export default function CrudToolbar({
           
           <button 
             onClick={() => setIsActionsExpanded(!isActionsExpanded)} 
-            className="md:hidden px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-1.5 text-sm font-medium shadow-sm flex-shrink-0"
+            className="@[600px]:hidden px-3 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors flex items-center gap-1.5 text-sm font-medium shadow-sm flex-shrink-0"
           >
             Menú {isActionsExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
           </button>
         </div>
         
-        <div className={`flex flex-row items-stretch @[500px]:items-center gap-2 w-full @[700px]:w-auto mt-2 @[700px]:mt-0 justify-end transition-all ${isActionsExpanded ? 'max-h-96 opacity-100 overflow-visible' : 'max-h-0 opacity-0 overflow-hidden @[700px]:max-h-96 @[700px]:opacity-100 @[700px]:overflow-visible'}`}>
-          {/* Botones secundarios (como Ver Papelera) ocultos en móvil y movidos al dropdown */}
+        <div className={`flex flex-row items-stretch @[400px]:items-center gap-2 w-full @[600px]:w-auto mt-2 @[600px]:mt-0 justify-end transition-all overflow-hidden ${isActionsExpanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0 @[600px]:max-h-96 @[600px]:opacity-100 @[600px]:overflow-visible'}`}>
+          {/* Botones secundarios (como Ver Papelera) ocultos en móvil/tablet y movidos al dropdown */}
           <PrimaryActions 
             actions={primaryActions
               .filter(a => a.variant !== 'primary')
-              .map(a => ({ ...a, className: `${a.className || ''} hidden @[700px]:inline-flex` }))
+              .map(a => ({ ...a, className: `${a.className || ''} hidden @[800px]:inline-flex` }))
             } 
           />
-          {/* ActionDropdown con sus propias acciones + las primarias secundarias inyectadas para móvil */}
-          <div className="w-[40%] @[500px]:w-auto @[500px]:flex-none">
+          {/* ActionDropdown con sus propias acciones + las primarias secundarias inyectadas para móvil/tablet */}
+          <div className="w-[40%] @[400px]:w-auto @[400px]:flex-none">
             <ActionDropdown actions={[
-               ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex @[700px]:hidden' })),
+               ...primaryActions.filter(a => a.variant !== 'primary').map(a => ({ ...a, className: 'flex @[800px]:hidden' })),
                ...secondaryActions
             ]} />
           </div>
@@ -60,7 +60,7 @@ export default function CrudToolbar({
           <PrimaryActions 
             actions={primaryActions
               .filter(a => a.variant === 'primary')
-              .map(a => ({ ...a, className: `${a.className || ''} w-[60%] @[500px]:w-auto @[500px]:flex-none` }))
+              .map(a => ({ ...a, className: `${a.className || ''} w-[60%] @[400px]:w-auto @[400px]:flex-none` }))
             } 
           />
         </div>
