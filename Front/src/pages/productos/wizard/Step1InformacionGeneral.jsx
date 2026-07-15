@@ -252,6 +252,14 @@ function FastCreateCodigoModal({ isOpen, onClose, onSuccess, marcas }) {
   const [formData, setFormData] = useState({ codigo: '', marca_id: '' })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [isNestedMarcaOpen, setIsNestedMarcaOpen] = useState(false)
+  const addMarca = useMarcaStore((state) => state.addMarca)
+
+  const handleNestedMarcaSuccess = (nuevaMarca) => {
+    addMarca(nuevaMarca)
+    setFormData({ ...formData, marca_id: nuevaMarca.id })
+    setIsNestedMarcaOpen(false)
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -298,18 +306,23 @@ function FastCreateCodigoModal({ isOpen, onClose, onSuccess, marcas }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Marca *
             </label>
-            <select
-              name="marca_id"
-              value={formData.marca_id}
-              onChange={(e) => setFormData({ ...formData, marca_id: e.target.value })}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-              required
-            >
-              <option value="">Selecciona una marca</option>
-              {marcas.map((marca) => (
-                <option key={marca.id} value={marca.id}>{marca.nombre}</option>
-              ))}
-            </select>
+            <div className="flex gap-2">
+              <select
+                name="marca_id"
+                value={formData.marca_id}
+                onChange={(e) => setFormData({ ...formData, marca_id: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                required
+              >
+                <option value="">Selecciona una marca</option>
+                {marcas.map((marca) => (
+                  <option key={marca.id} value={marca.id}>{marca.nombre}</option>
+                ))}
+              </select>
+              <Button type="button" variant="secondary" onClick={() => setIsNestedMarcaOpen(true)} className="px-3">
+                <Plus size={20} />
+              </Button>
+            </div>
           </div>
 
           <div className="flex gap-3 justify-end pt-4">
@@ -322,6 +335,16 @@ function FastCreateCodigoModal({ isOpen, onClose, onSuccess, marcas }) {
           </div>
         </form>
       </div>
+
+      <FastCreateModal
+        isOpen={isNestedMarcaOpen}
+        onClose={() => setIsNestedMarcaOpen(false)}
+        title="Nueva Marca"
+        inputLabel="Nombre de la marca"
+        apiService={marcaService}
+        hasDescription={true}
+        onSuccess={handleNestedMarcaSuccess}
+      />
     </div>
   )
 }
