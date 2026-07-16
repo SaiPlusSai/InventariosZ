@@ -689,6 +689,210 @@ export default function Productos() {
         <MovimientoModal
           productoId={movimientoProductoId}
           stockActual={movimientoStockActual}
+                <label className="text-sm font-medium text-gray-700">Color</label>
+                <select 
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.color} 
+                  onChange={(e) => updateFilters({ color: e.target.value })}
+                >
+                  <option value="">Todos</option>
+                  {availableCatalogos.colores.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Talla</label>
+                <select 
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.talla} 
+                  onChange={(e) => updateFilters({ talla: e.target.value })}
+                >
+                  <option value="">Todas</option>
+                  {availableCatalogos.tallas.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )
+        }}
+      />
+
+      {/* Grid de Productos */}
+      {(() => {
+        const filteredProductos = productos.filter((p) => {
+          if (!globalSearch) return true
+          const searchLower = globalSearch.toLowerCase()
+          return (
+            (p.codigo && p.codigo.toLowerCase().includes(searchLower)) ||
+            (p.descripcion && p.descripcion.toLowerCase().includes(searchLower))
+          )
+        })
+
+        if (loading) {
+          return (
+            <div className="flex items-center justify-center py-1.50">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600"></div>
+            </div>
+          )
+        }
+
+        if (filteredProductos.length === 0) {
+          return (
+            <EmptyState 
+              icon={Package}
+              title={isPapeleraMode ? "La papelera está vacía" : "No se encontraron productos"}
+              description={isPapeleraMode ? "No hay productos eliminados temporalmente." : "Intenta ajustar los filtros de búsqueda o crea uno nuevo."}
+              actionLabel={!isPapeleraMode ? "Nuevo Producto" : undefined}
+              onAction={!isPapeleraMode ? () => {
+                resetWizard()
+                setShowNewWizard(true)
+              } : undefined}
+            />
+          )
+        }
+
+        return (
+          <div className="space-y-4">
+            {/* Opciones Masivas: Seleccionar Todo */}
+            <div className="flex items-center justify-between px-2 bg-gray-50/50 py-2 rounded-lg border border-gray-100">
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+                <input 
+                  type="checkbox" 
+                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  checked={getFilteredVisibleItems().length > 0 && selectedItems.size === getFilteredVisibleItems().length}
+                  onChange={(e) => {
+                    if (e.target.checked) handleSelectAllVisible()
+                    else clearSelection()
+                  }}
+                />
+                Seleccionar todos los visibles
+              </label>
+              {selectedItems.size > 0 && (
+                <span className="text-sm text-gray-500">
+                  {selectedItems.size} seleccionados
+                </span>
+              )}
+            </div>
+            
+            <BulkActionBar
+              selectedCount={selectedItems.size}
+              isPapeleraMode={isPapeleraMode}
+              onClear={clearSelection}
+              onDesactivar={() => handleBulkAction('desactivar')}
+              onRecuperar={() => handleBulkAction('recuperar')}
+              onEliminar={() => handleBulkAction('eliminar')}
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredProductos.flatMap((producto) =>
+                producto.colores.map((colorInfo) => (
+                  <ProductoCard
+                    key={`${producto.grupo_id || producto.producto_principal_id}-${colorInfo.color_id}`}
+                    producto={producto}
+                    color={colorInfo}
+                    isPapeleraMode={isPapeleraMode}
+                    isSelected={isSelected(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
+                    onToggleSelection={() => toggleItem(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
+                    onVer={() => handleVer(producto, colorInfo)}
+                    onEditar={() => handleEditar(producto, colorInfo)}
+                    onCompartir={() => {
+                      setItemToShare({ producto, colorInfo })
+                      setShowShareModal(true)
+                    }}
+                    onEliminar={() => setItemToDelete({
+                      grupoId: producto.grupo_id || producto.producto_principal_id, 
+                      colorId: colorInfo.color_id, 
+                      nombre: producto.descripcion || producto.codigo,
+                      colorNombre: colorInfo.color.nombre
+                    })}
+                    onRecuperar={() => handleRecuperar(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
+                    onIncrementar={handleIncrementarStock}
+                    onDecrementar={handleDecrementarStock}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        )
+      })()}
+
+      <ConfirmModal
+        isOpen={!!itemToDelete}
+        onClose={() => setItemToDelete(null)}
+        onConfirm={confirmDelete}
+        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
+        message={`¿Estás seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'desactivar'} el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?${isPapeleraMode ? '\nEsta acción no se puede deshacer.' : ''}`}
+        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Desactivar Producto'}
+        variant="danger"
+        dependencyConfig={{
+          service: productoService,
+          itemId: itemToDelete?.colorId, 
+          isPhysicalDelete: isPapeleraMode
+        }}
+      />
+
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => {
+          setShowShareModal(false)
+          setItemToShare(null)
+        }}
+        onShare={async (providerId) => {
+          if (!itemToShare) return;
+          try {
+            const { ShareFactory } = await import('../../providers/ShareProviders');
+            const { shareService } = await import('../../services/shareService');
+            
+            const payload = shareService.prepareSharePayload(itemToShare.producto, itemToShare.colorInfo);
+            const provider = ShareFactory.getProvider(providerId);
+            
+            await provider.share(payload);
+            toast.success('¡Compartido exitosamente!');
+          } catch (error) {
+            console.error('Error al compartir:', error);
+            toast.error(error.message || 'Error al intentar compartir.');
+          } finally {
+            setShowShareModal(false);
+          }
+        }}
+      />
+
+      {showNewWizard && (
+        <ProductoWizard
+          onClose={() => {
+            resetWizard()
+            setShowNewWizard(false)
+          }}
+          onSuccess={async () => { setShowNewWizard(false); await loadProductos(cleanFilters(filters), isPapeleraMode); }}
+        />
+      )}
+
+      {showDetalle && productoDetalle && (
+        <ProductoDetalle
+          producto={productoDetalle}
+          onClose={() => {
+            setShowDetalle(false)
+            setProductoDetalle(null)
+          }}
+        />
+      )}
+
+      {showImportModal && (
+        <ImportarModal 
+          onClose={() => setShowImportModal(false)}
+          onImportSuccess={async () => {
+            setShowImportModal(false)
+            await loadProductos(cleanFilters(filters), isPapeleraMode)
+          }}
+        />
+      )}
+
+      {movimientoModalOpen && (
+        <MovimientoModal
+          productoId={movimientoProductoId}
+          stockActual={movimientoStockActual}
           preselectedPolarity={movimientoPolaridad}
           onClose={() => {
             setMovimientoModalOpen(false)
@@ -696,15 +900,6 @@ export default function Productos() {
           }}
         />
       )}
-
-      <BulkActionBar
-        selectedCount={selectedItems.size}
-        isPapeleraMode={isPapeleraMode}
-        onClear={clearSelection}
-        onDesactivar={() => handleBulkAction('desactivar')}
-        onRecuperar={() => handleBulkAction('recuperar')}
-        onEliminar={() => handleBulkAction('eliminar')}
-      />
     </div>
   )
 }
