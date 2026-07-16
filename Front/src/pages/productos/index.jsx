@@ -353,16 +353,15 @@ export default function Productos() {
       }
     }
 
+    let toastId;
     try {
-      const toastId = toast.loading('Procesando operación masiva...')
+      toastId = toast.loading('Procesando operación masiva...')
       const res = await productoService.bulkAction(action, itemsArray)
       
-      toast.dismiss(toastId)
-      
       if (res.data.failed > 0) {
-        toast.error(`Atención: ${res.data.successful} éxitos, ${res.data.failed} fallos.`)
+        toast.error(`Atención: ${res.data.successful} éxitos, ${res.data.failed} fallos.`, { id: toastId })
       } else {
-        toast.success(res.data.message || 'Operación masiva completada con éxito')
+        toast.success(res.data.message || 'Operación masiva completada con éxito', { id: toastId })
       }
 
       // Optimistic UI Update: Eliminar los seleccionados de la lista visible
@@ -379,7 +378,7 @@ export default function Productos() {
 
     } catch (err) {
       console.error(err)
-      toast.error('Error al ejecutar la operación masiva')
+      toast.error('Error al ejecutar la operación masiva', { id: toastId })
     }
   }
 
