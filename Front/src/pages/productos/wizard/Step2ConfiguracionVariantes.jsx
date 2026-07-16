@@ -55,7 +55,7 @@ export default function Step2ConfiguracionVariantes() {
   // Handle color selection
   const toggleColor = (colorId) => {
     const selected = formData.colores.includes(colorId)
-    const newColores = selected
+    let newColores = selected
       ? formData.colores.filter((id) => id !== colorId)
       : [...formData.colores, colorId]
 
@@ -64,50 +64,43 @@ export default function Step2ConfiguracionVariantes() {
     if (!selected && !newImagenesPorColor[colorId]) {
       newImagenesPorColor[colorId] = []
     }
-
-    setFormData({ colores: newColores, imagenesPorColor: newImagenesPorColor })
-    syncVariantes(newColores, formData.tallas)
-  }
-
-  // Handle talla selection
-  const toggleTalla = (tallaId) => {
-    const selected = formData.tallas.includes(tallaId)
-    const newTallas = selected
-      ? formData.tallas.filter((id) => id !== tallaId)
-      : [...formData.tallas, tallaId]
-
-    setFormData({ tallas: newTallas })
-    syncVariantes(formData.colores, newTallas)
-  }
-
-  // Generate or remove variants based on matrix (Colors x Tallas)
-  const syncVariantes = (currentColores, currentTallas) => {
-    const nuevasVariantes = []
     
-    currentColores.forEach((cId) => {
-      currentTallas.forEach((tId) => {
-        // Buscamos si ya existe para mantener sus datos
-        const existente = formData.variantes.find(
-          (v) => v.color_id === cId && v.talla_id === tId
-        )
-        
-        if (existente) {
-          nuevasVariantes.push(existente)
-        } else {
-          nuevasVariantes.push({
-            color_id: cId,
-            talla_id: tId,
-            stock_actual: 0,
-            stock_minimo: 0,
-            stock_maximo: null,
-            precio_compra: null,
-            precio_venta: 0,
-            estado: true,
-          })
-        }
-      })
-    })
+    // Si se deselecciona un color, eliminamos todas sus variantes del payload
+    let nuevasVariantes = formData.variantes
+    if (selected) {
+      nuevasVariantes = nuevasVariantes.filter(v => v.color_id !== colorId)
+    }
 
+    setFormData({ 
+      colores: newColores, 
+      imagenesPorColor: newImagenesPorColor,
+      variantes: nuevasVariantes
+    })
+  }
+
+  // Handle talla selection PER COLOR
+  const toggleTallaPorColor = (colorId, tallaId) => {
+    const existe = formData.variantes.some(v => v.color_id === colorId && v.talla_id === tallaId)
+    
+    let nuevasVariantes = [...formData.variantes]
+    
+    if (existe) {
+      // Si existe, la removemos del array (significa que NO se creará ni existirá)
+      nuevasVariantes = nuevasVariantes.filter(v => !(v.color_id === colorId && v.talla_id === tallaId))
+    } else {
+      // Si no existe, la añadimos (significa que SÍ se creará)
+      nuevasVariantes.push({
+        color_id: colorId,
+        talla_id: tallaId,
+        stock_actual: 0,
+        stock_minimo: 0,
+        stock_maximo: null,
+        precio_compra: null,
+        precio_venta: 0,
+        estado: true, // Por defecto comercialmente activa
+      })
+    }
+    
     setFormData({ variantes: nuevasVariantes })
   }
 
@@ -251,30 +244,7 @@ export default function Step2ConfiguracionVariantes() {
           </div>
         </div>
 
-        <div>
-          <h3 className="text-lg font-semibold mb-3">2. Seleccionar Tallas Disponibles</h3>
-          <div className="flex flex-wrap gap-3">
-            {dbTallas.map((t) => (
-              <label key={t.id} className={`flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer transition-colors ${formData.tallas.includes(t.id) ? 'bg-primary-50 border-primary-500 text-primary-700 font-medium' : 'hover:bg-gray-50'}`}>
-                <input
-                  type="checkbox"
-                  className="hidden"
-                  checked={formData.tallas.includes(t.id)}
-                  onChange={() => toggleTalla(t.id)}
-                />
-                {t.nombre}
-              </label>
-            ))}
-              <button 
-                type="button" 
-                onClick={() => setFastCreate({ isOpen: true, type: 'talla' })}
-                className="flex items-center gap-1 px-4 py-2 border border-dashed border-gray-400 rounded-lg text-gray-500 hover:text-gray-700 hover:border-gray-600 transition-colors"
-                title="Añadir nueva Talla"
-              >
-                <Plus size={16} /> Añadir
-              </button>
-          </div>
-        </div>
+
       </div>
 
       {fastCreate.isOpen && fastCreate.type === 'color' && (
@@ -300,10 +270,10 @@ export default function Step2ConfiguracionVariantes() {
         />
       )}
 
-      {/* 3. BLOQUES POR COLOR */}
-      {formData.colores.length > 0 && formData.tallas.length > 0 && (
+      {/* 2. BLOQUES POR COLOR */}
+      {formData.colores.length > 0 && (
         <div className="space-y-8">
-          <h3 className="text-xl font-bold">3. Configurar Variantes e Imágenes</h3>
+          <h3 className="text-xl font-bold">2. Configurar Variantes e Imágenes por Color</h3>
           
           {formData.colores.map((colorId) => {
             const colorObj = dbColores.find(c => c.id === colorId)
@@ -314,7 +284,26 @@ export default function Step2ConfiguracionVariantes() {
               <div key={colorId} className="bg-gray-50 p-6 rounded-xl border border-gray-200 shadow-sm">
                 <h4 className="text-xl font-bold text-gray-800 mb-6 uppercase tracking-wider border-b pb-2">{colorObj?.nombre}</h4>
                 
-                {/* UPLOADER DE IMAGENES PARA ESTE COLOR */}
+                {/* SELECTOR DE TALLAS PARA ESTE COLOR */}
+                <div className="mb-8">
+                  <h5 className="font-semibold mb-3 text-sm text-gray-600">1. Selecciona las Tallas que existirán para el color {colorObj?.nombre}</h5>
+                  <div className="flex flex-wrap gap-2">
+                    {dbTallas.map((t) => {
+                      const existe = variantesColor.some(v => v.talla_id === t.id);
+                      return (
+                        <label key={t.id} className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg cursor-pointer transition-colors text-sm ${existe ? 'bg-primary-50 border-primary-500 text-primary-700 font-medium' : 'hover:bg-gray-50'}`}>
+                          <input
+                            type="checkbox"
+                            className="hidden"
+                            checked={existe}
+                            onChange={() => toggleTallaPorColor(colorId, t.id)}
+                          />
+                          {t.nombre}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
                 <div className="mb-8">
                   <h5 className="font-semibold mb-3 text-sm text-gray-600">Imágenes del Color {colorObj?.nombre}</h5>
                   <div className="flex items-center gap-4 mb-4 overflow-x-auto pb-2">
@@ -490,11 +479,7 @@ export default function Step2ConfiguracionVariantes() {
           <p>ℹ️ Selecciona al menos un color de la parte superior para comenzar a configurar variantes.</p>
         </div>
       )}
-      {formData.colores.length > 0 && formData.tallas.length === 0 && (
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700">
-          <p>ℹ️ Selecciona al menos una talla para mostrar la tabla de inventario por color.</p>
-        </div>
-      )}
+
     </div>
   )
 }
