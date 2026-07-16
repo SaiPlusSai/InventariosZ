@@ -672,23 +672,23 @@ export default function Productos() {
             setShowDetalle(false)
             setProductoDetalle(null)
           }}
-        />
-      )}
-
-      {showImportModal && (
-        <ImportarModal 
-          onClose={() => setShowImportModal(false)}
-          onImportSuccess={async () => {
-            setShowImportModal(false)
-            await loadProductos(cleanFilters(filters), isPapeleraMode)
-          }}
-        />
-      )}
-
-      {movimientoModalOpen && (
-        <MovimientoModal
-          productoId={movimientoProductoId}
-          stockActual={movimientoStockActual}
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Material</label>
+                <select 
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.material} 
+                  onChange={(e) => updateFilters({ material: e.target.value })}
+                >
+                  <option value="">Todos</option>
+                  {availableCatalogos.materiales.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
                 <label className="text-sm font-medium text-gray-700">Color</label>
                 <select 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
@@ -775,15 +775,6 @@ export default function Productos() {
                 </span>
               )}
             </div>
-            
-            <BulkActionBar
-              selectedCount={selectedItems.size}
-              isPapeleraMode={isPapeleraMode}
-              onClear={clearSelection}
-              onDesactivar={() => handleBulkAction('desactivar')}
-              onRecuperar={() => handleBulkAction('recuperar')}
-              onEliminar={() => handleBulkAction('eliminar')}
-            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProductos.flatMap((producto) =>
@@ -854,7 +845,7 @@ export default function Productos() {
             console.error('Error al compartir:', error);
             toast.error(error.message || 'Error al intentar compartir.');
           } finally {
-            setShowShareModal(false);
+            setShowShareModal(false)
           }
         }}
       />
