@@ -31,29 +31,29 @@ export default function ProductoCard({
 
   return (
     <div className="relative group w-full max-w-[360px] mx-auto">
-      {/* Checkbox de Selección */}
-      {onToggleSelection && (
-        <div 
-          className={`absolute top-2 left-2 z-10 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleSelection();
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={() => {}} // Handle on parent div click
-            className="w-5 h-5 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500 bg-white shadow-sm"
-          />
-        </div>
-      )}
-      
       <Card 
-        className={`hover:shadow-lg transition-all flex flex-col h-full w-full ${
+        className={`relative hover:shadow-lg transition-all flex flex-col h-full w-full ${
           isSelected ? 'ring-2 ring-primary-500 bg-primary-50/10' : ''
         }`}
       >
+        {/* Checkbox de Selección */}
+        {onToggleSelection && (
+          <div 
+            className={`absolute top-2 left-2 z-20 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggleSelection();
+            }}
+          >
+            <input
+              type="checkbox"
+              checked={isSelected}
+              onChange={() => {}} // Handle on parent div click
+              className="w-5 h-5 cursor-pointer rounded border-gray-300 text-primary-600 focus:ring-primary-500 bg-white shadow-sm"
+            />
+          </div>
+        )}
+        
         {/* Imagen */}
         <div className="w-full aspect-[4/3] max-h-[220px] bg-white border-b border-gray-100 mb-3 flex items-center justify-center overflow-hidden">
         {color.imagen_principal ? (
