@@ -27,36 +27,36 @@ export default function BulkActionBar({
         {!isPapeleraMode ? (
           <Button 
             variant="secondary" 
-            className="text-red-600 border-red-200 hover:bg-red-50 bg-white justify-center"
+            className="text-red-600 border-red-200 hover:bg-red-50 bg-white flex items-center justify-center gap-2"
             onClick={onDesactivar}
           >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Enviar a Papelera
+            <Trash2 className="w-4 h-4" />
+            <span>Enviar a Papelera</span>
           </Button>
         ) : (
           <>
             <Button 
               variant="secondary" 
-              className="text-green-600 border-green-200 hover:bg-green-50 bg-white justify-center"
+              className="text-green-600 border-green-200 hover:bg-green-50 bg-white flex items-center justify-center gap-2"
               onClick={onRecuperar}
             >
-              <RotateCcw className="w-4 h-4 mr-2" />
-              Recuperar
+              <RotateCcw className="w-4 h-4" />
+              <span>Recuperar</span>
             </Button>
             <Button 
               variant="secondary" 
-              className="text-red-600 border-red-200 hover:bg-red-50 bg-white justify-center"
+              className="text-red-600 border-red-200 hover:bg-red-50 bg-white flex items-center justify-center gap-2"
               onClick={onEliminar}
             >
-              <ArchiveX className="w-4 h-4 mr-2" />
-              Eliminar Definitivamente
+              <ArchiveX className="w-4 h-4" />
+              <span>Eliminar Definitivamente</span>
             </Button>
           </>
         )}
         
         <Button 
           variant="ghost" 
-          className="text-gray-500 hover:text-gray-700 justify-center"
+          className="text-gray-500 hover:text-gray-700 flex items-center justify-center gap-2"
           onClick={onClear}
         >
           Cancelar<span className="hidden sm:inline">&nbsp;selección</span>

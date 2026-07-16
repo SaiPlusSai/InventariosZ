@@ -1401,8 +1401,9 @@ class ProductoService:
             db.rollback()
             raise Exception(f"{str(e)}\n\nTraceback:\n{tb}")
 
-    def desactivar_color(self, db: Session, grupo_id: int, color_id: int):
-        representante = self.repository.get_by_id(db, grupo_id)
+    def desactivar_color(self, db: Session, grupo_id: int, color_id: int, commit: bool = True, representante: Producto = None):
+        if not representante:
+            representante = self.repository.get_by_id(db, grupo_id)
         if not representante:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         variantes = db.query(Producto).filter(
@@ -1416,11 +1417,13 @@ class ProductoService:
         for v in variantes:
             v.estado = False
             v.deleted_at = datetime.now()
-        db.commit()
+        if commit:
+            db.commit()
         return {'msg': f'{len(variantes)} variantes desactivadas'}
 
-    def recuperar_color(self, db: Session, grupo_id: int, color_id: int):
-        representante = self.repository.get_by_id_including_deleted(db, grupo_id)
+    def recuperar_color(self, db: Session, grupo_id: int, color_id: int, commit: bool = True, representante: Producto = None):
+        if not representante:
+            representante = self.repository.get_by_id_including_deleted(db, grupo_id)
         if not representante:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         variantes = db.query(Producto).filter(
@@ -1434,11 +1437,13 @@ class ProductoService:
         for v in variantes:
             v.estado = True
             v.deleted_at = None
-        db.commit()
+        if commit:
+            db.commit()
         return {'msg': f'{len(variantes)} variantes recuperadas'}
 
-    def delete_color(self, db: Session, grupo_id: int, color_id: int) -> None:
-        representante = self.repository.get_by_id_including_deleted(db, grupo_id)
+    def delete_color(self, db: Session, grupo_id: int, color_id: int, commit: bool = True, representante: Producto = None) -> None:
+        if not representante:
+            representante = self.repository.get_by_id_including_deleted(db, grupo_id)
         if not representante:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
             
@@ -1459,7 +1464,8 @@ class ProductoService:
             self.repository.delete_imagenes(db, v.id)
             self.repository.delete_producto(db, v.id)
             
-        db.commit()
+        if commit:
+            db.commit()
 
     def update_por_color(
         self,
@@ -1548,33 +1554,55 @@ class ProductoService:
         failed = 0
         errors = []
 
+        representantes_cache = {}
         for item in items:
             grupo_id = item.get("grupo_id")
-            color_id = item.get("color_id")
-            
-            try:
+            if grupo_id not in representantes_cache:
+                try:
+                    if action == "desactivar":
+                        rep = self.repository.get_by_id(db, grupo_id)
+                    else:
+                        rep = self.repository.get_by_id_including_deleted(db, grupo_id)
+                    
+                    if not rep:
+                        raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
+                    representantes_cache[grupo_id] = rep
+                except Exception as e:
+                    representantes_cache[grupo_id] = e
+
+        try:
+            for item in items:
+                grupo_id = item.get("grupo_id")
+                color_id = item.get("color_id")
+                
+                rep_or_err = representantes_cache.get(grupo_id)
+                if isinstance(rep_or_err, Exception):
+                    raise rep_or_err
+
                 if action == "desactivar":
-                    self.desactivar_color(db, grupo_id, color_id)
+                    self.desactivar_color(db, grupo_id, color_id, commit=False, representante=rep_or_err)
                 elif action == "recuperar":
-                    self.recuperar_color(db, grupo_id, color_id)
+                    self.recuperar_color(db, grupo_id, color_id, commit=False, representante=rep_or_err)
                 elif action == "eliminar":
-                    self.delete_color(db, grupo_id, color_id)
+                    self.delete_color(db, grupo_id, color_id, commit=False, representante=rep_or_err)
                 else:
                     raise Exception(f"Acción '{action}' no soportada")
                 successful += 1
-            except Exception as e:
-                failed += 1
-                errors.append({
-                    "grupo_id": grupo_id,
-                    "color_id": color_id,
-                    "error": str(e)
-                })
-                # Revertimos solo la transacción parcial si hubo error
-                db.rollback()
+                
+            db.commit()
+            
+        except Exception as e:
+            db.rollback()
+            return {
+                "successful": 0,
+                "failed": len(items),
+                "errors": [{"error": f"Operación revertida (Atomicidad). Falló por: {str(e)}"}],
+                "message": "Operación masiva fallida y revertida."
+            }
 
         return {
             "successful": successful,
-            "failed": failed,
-            "errors": errors,
-            "message": f"Operación masiva completada: {successful} éxitos, {failed} fallos."
+            "failed": 0,
+            "errors": [],
+            "message": f"Operación masiva completada: {successful} éxitos."
         }
