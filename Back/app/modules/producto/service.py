@@ -1309,7 +1309,34 @@ class ProductoService:
 
             productos = []
 
+            # 1. Consultar BD para detectar colisiones antes de iterar
+            productos_existentes = db.query(Producto).filter(
+                Producto.codigo_producto_id == data.codigo_producto_id,
+                Producto.tipo_calzado_id == data.tipo_calzado_id,
+                Producto.material_id == data.material_id,
+                Producto.descripcion == data.descripcion
+            ).all()
+            
+            # Guardamos el estado de cada variante existente
+            mapa_existentes = {(p.color_id, p.talla_id): p.estado for p in productos_existentes}
+
             for variante in data.variantes:
+                # 2. Filtrar variantes inactivas que son basura de la matriz rectangular
+                if (
+                    not variante.estado 
+                    and (variante.stock_actual == 0 or variante.stock_actual is None)
+                    and (variante.precio_venta == 0 or variante.precio_venta is None)
+                ):
+                    continue
+
+                # 3. Validar si ya existe en la BD (sea activa o inactiva)
+                clave = (variante.color_id, variante.talla_id)
+                if clave in mapa_existentes:
+                    if mapa_existentes[clave]:
+                        raise ProductoYaExisteException(PRODUCTO_YA_EXISTE)
+                    else:
+                        raise ProductoYaExisteException("La variante ya existe pero está inactiva. Por favor utilice el flujo de Edición para reactivarla.")
+
                 producto = Producto(
                     codigo_producto=codigo_producto,
                     tipo_calzado_id=data.tipo_calzado_id,
