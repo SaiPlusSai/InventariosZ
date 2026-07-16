@@ -2,7 +2,7 @@ from app.core.exceptions import RegistroActivoNoPuedeEliminarseException, Valida
 from datetime import datetime
 from io import BytesIO
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload, joinedload
 from sqlalchemy import func
 from openpyxl import Workbook, load_workbook
 from reportlab.lib.pagesizes import letter, landscape
@@ -25,6 +25,7 @@ from app.modules.codigo_producto.models import CodigoProducto
 from app.modules.codigo_producto.repository import CodigoProductoRepository
 from app.modules.color.constants import COLOR_NO_EXISTE
 from app.modules.color.exceptions import ColorNoEncontradoException
+from app.modules.color.models import Color
 from app.modules.color.repository import ColorRepository
 from app.modules.marca.constants import MARCA_NO_EXISTE
 from app.modules.marca.exceptions import MarcaNoEncontradaException
@@ -73,6 +74,7 @@ from app.modules.producto.schemas import (
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.constants import TALLA_NO_EXISTE
 from app.modules.talla.exceptions import TallaNoEncontradaException
+from app.modules.talla.models import Talla
 from app.modules.talla.repository import TallaRepository
 from app.modules.tipo_calzado.constants import TIPO_CALZADO_NO_EXISTE
 from app.modules.tipo_calzado.exceptions import TipoCalzadoNoEncontradoException
@@ -929,11 +931,16 @@ class ProductoService:
         grupo_id: int,
     ) -> ProductoCompletoEditarResponse:
 
-        primer_producto = self.repository.get_by_id(db, grupo_id)
+        primer_producto = db.query(Producto).options(
+            selectinload(Producto.imagenes),
+            joinedload(Producto.codigo_producto)
+        ).filter(Producto.id == grupo_id).first()
         if not primer_producto:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
 
-        productos = db.query(Producto).filter(
+        productos = db.query(Producto).options(
+            selectinload(Producto.precios)
+        ).filter(
             Producto.codigo_producto_id == primer_producto.codigo_producto_id,
             Producto.tipo_calzado_id == primer_producto.tipo_calzado_id,
             Producto.material_id == primer_producto.material_id,
@@ -1271,33 +1278,29 @@ class ProductoService:
                 )
 
             variantes_unicas = set()
-            cache_colores = {}
-            cache_tallas = {}
+            color_ids = list({v.color_id for v in data.variantes})
+            talla_ids = list({v.talla_id for v in data.variantes})
+
+            colores_db = db.query(Color).filter(Color.id.in_(color_ids)).all()
+            tallas_db = db.query(Talla).filter(Talla.id.in_(talla_ids)).all()
+
+            cache_colores = {c.id: c for c in colores_db}
+            cache_tallas = {t.id: t for t in tallas_db}
+
+            for c_id in color_ids:
+                if c_id not in cache_colores:
+                    raise ColorNoEncontradoException(COLOR_NO_EXISTE)
+            for t_id in talla_ids:
+                if t_id not in cache_tallas:
+                    raise TallaNoEncontradaException(TALLA_NO_EXISTE)
 
             for variante in data.variantes:
-                clave_variante = (
-                    variante.color_id,
-                    variante.talla_id,
-                )
+                clave_variante = (variante.color_id, variante.talla_id)
 
                 if clave_variante in variantes_unicas:
-                    raise ProductoYaExisteException(
-                        PRODUCTO_YA_EXISTE
-                    )
+                    raise ProductoYaExisteException(PRODUCTO_YA_EXISTE)
 
                 variantes_unicas.add(clave_variante)
-
-                if variante.color_id not in cache_colores:
-                    color_obj = self.color_repository.get_by_id(db, variante.color_id)
-                    if not color_obj:
-                        raise ColorNoEncontradoException(COLOR_NO_EXISTE)
-                    cache_colores[variante.color_id] = color_obj
-
-                if variante.talla_id not in cache_tallas:
-                    talla_obj = self.talla_repository.get_by_id(db, variante.talla_id)
-                    if not talla_obj:
-                        raise TallaNoEncontradaException(TALLA_NO_EXISTE)
-                    cache_tallas[variante.talla_id] = talla_obj
 
             print("✔ Talla encontrada")
 
@@ -1364,9 +1367,7 @@ class ProductoService:
             db.flush()
             print("✔ Flush realizado")
 
-            for producto in productos:
-                db.refresh(producto)
-            print("✔ Refresh realizado")
+            # Eliminado bucle db.refresh() redundante. db.flush() ya pobló los IDs autoincrementales.
 
             print("Producto ID:", productos[0].id if productos else None)
 
