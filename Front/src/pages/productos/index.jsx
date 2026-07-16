@@ -560,6 +560,15 @@ export default function Productos() {
 
         return (
           <div className="space-y-4">
+            <BulkActionBar
+              selectedCount={selectedItems.size}
+              isPapeleraMode={isPapeleraMode}
+              onClear={clearSelection}
+              onDesactivar={() => handleBulkAction('desactivar')}
+              onRecuperar={() => handleBulkAction('recuperar')}
+              onEliminar={() => handleBulkAction('eliminar')}
+            />
+
             {/* Opciones Masivas: Seleccionar Todo */}
             <div className="flex items-center justify-between px-2 bg-gray-50/50 py-2 rounded-lg border border-gray-100">
               <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
