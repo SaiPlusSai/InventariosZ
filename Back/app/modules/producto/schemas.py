@@ -679,3 +679,17 @@ class PreviaImportacionResponse(BaseModel):
 
 class ConfirmarImportacionRequest(BaseModel):
     filas: list[FilaPrevia]
+
+class BulkItem(BaseModel):
+    grupo_id: int
+    color_id: int
+
+class BulkActionRequest(BaseModel):
+    action: str
+    items: list[BulkItem]
+
+class BulkActionResponse(BaseModel):
+    successful: int
+    failed: int
+    errors: list[dict]
+    message: str

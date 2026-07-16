@@ -1542,3 +1542,39 @@ class ProductoService:
 
         db.commit()
         return {'msg': 'Producto actualizado correctamente'}
+
+    def bulk_action(self, db: Session, action: str, items: list[dict]) -> dict:
+        successful = 0
+        failed = 0
+        errors = []
+
+        for item in items:
+            grupo_id = item.get("grupo_id")
+            color_id = item.get("color_id")
+            
+            try:
+                if action == "desactivar":
+                    self.desactivar_color(db, grupo_id, color_id)
+                elif action == "recuperar":
+                    self.recuperar_color(db, grupo_id, color_id)
+                elif action == "eliminar":
+                    self.delete_color(db, grupo_id, color_id)
+                else:
+                    raise Exception(f"Acción '{action}' no soportada")
+                successful += 1
+            except Exception as e:
+                failed += 1
+                errors.append({
+                    "grupo_id": grupo_id,
+                    "color_id": color_id,
+                    "error": str(e)
+                })
+                # Revertimos solo la transacción parcial si hubo error
+                db.rollback()
+
+        return {
+            "successful": successful,
+            "failed": failed,
+            "errors": errors,
+            "message": f"Operación masiva completada: {successful} éxitos, {failed} fallos."
+        }

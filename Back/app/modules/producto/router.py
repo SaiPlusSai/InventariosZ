@@ -24,6 +24,8 @@ from app.modules.producto.schemas import (
     ProductoColorUpdate,
     PreviaImportacionResponse,
     ConfirmarImportacionRequest,
+    BulkActionRequest,
+    BulkActionResponse,
 )
 
 from app.modules.producto.service import ProductoService
@@ -639,3 +641,14 @@ def update_por_color(
     db: Session = Depends(get_db),
 ):
     return service.update_por_color(db, grupo_id, color_id, data)
+
+@router.post(
+    '/bulk',
+    response_model=BulkActionResponse,
+    status_code=status.HTTP_200_OK,
+)
+def bulk_action(
+    data: BulkActionRequest,
+    db: Session = Depends(get_db),
+):
+    return service.bulk_action(db, data.action, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items])

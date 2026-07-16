@@ -10,7 +10,9 @@ import ProductoDetalle from './ProductoDetalle'
 import ProductoCard from './ProductoCard'
 import ImportarModal from './ImportarModal'
 import MovimientoModal from './movimientos/MovimientoModal.jsx'
-import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, Upload , FileDown, FileUp} from 'lucide-react'
+import BulkActionBar from './BulkActionBar'
+import { useBulkSelectionStore } from '../../store/bulkSelectionStore'
+import { Search, Filter, Plus, Trash2, RotateCcw, ChevronDown, ChevronUp, Package, Download, FileText, Upload , FileDown, FileUp, CheckSquare} from 'lucide-react'
 import toast from 'react-hot-toast'
 import { ENV } from '../../config/env'
 
@@ -26,6 +28,7 @@ export default function Productos() {
   const [searchParams] = useSearchParams()
   const { productos, setProductos, actualizarStock, productoDetalle, setProductoDetalle, setLoadingDetalle } = useProductoStore()
   const { setCurrentStep, setModo, setCodigoProductoId, cargarProductoEditarCompleto, resetWizard } = useWizardStore()
+  const { selectedItems, toggleItem, selectAll, clearSelection, isSelected } = useBulkSelectionStore()
 
   const initialFilters = {
     ...emptyFilters,
@@ -309,8 +312,87 @@ export default function Productos() {
     }
   }
 
+  const getFilteredVisibleItems = () => {
+    const filtered = productos.filter((p) => {
+      if (!globalSearch) return true
+      const searchLower = globalSearch.toLowerCase()
+      return (
+        (p.codigo && p.codigo.toLowerCase().includes(searchLower)) ||
+        (p.descripcion && p.descripcion.toLowerCase().includes(searchLower))
+      )
+    })
+    
+    const items = []
+    filtered.forEach(p => {
+      p.colores.forEach(c => {
+        items.push({ grupo_id: p.grupo_id || p.producto_principal_id, color_id: c.color_id })
+      })
+    })
+    return items
+  }
+
+  const handleSelectAllVisible = () => {
+    const items = getFilteredVisibleItems()
+    selectAll(items)
+  }
+
+  const handleBulkAction = async (action) => {
+    if (selectedItems.size === 0) return
+    
+    // Si la acción es destructiva, podemos usar ConfirmModal pero como aquí son genéricos,
+    // usaremos un window.confirm nativo temporalmente, o integrarlo con nuestro UI.
+    const itemsArray = Array.from(selectedItems.values())
+    
+    if (action === 'eliminar') {
+      if (!window.confirm(`¿Estás seguro de eliminar permanentemente ${itemsArray.length} colores? Esta acción NO se puede deshacer.`)) {
+        return
+      }
+    } else if (action === 'desactivar') {
+      if (!window.confirm(`¿Estás seguro de enviar ${itemsArray.length} colores a la papelera?`)) {
+        return
+      }
+    }
+
+    try {
+      const toastId = toast.loading('Procesando operación masiva...')
+      const res = await productoService.bulkAction(action, itemsArray)
+      
+      toast.dismiss(toastId)
+      
+      if (res.data.failed > 0) {
+        toast.error(`Atención: ${res.data.successful} éxitos, ${res.data.failed} fallos.`)
+      } else {
+        toast.success(res.data.message || 'Operación masiva completada con éxito')
+      }
+
+      // Optimistic UI Update: Eliminar los seleccionados de la lista visible
+      // (Para desactivar y eliminar desaparecen de la vista actual, igual para recuperar desde papelera)
+      setProductos(productos.map(p => {
+        const nuevosColores = p.colores.filter(c => {
+          const key = `${p.grupo_id || p.producto_principal_id}-${c.color_id}`
+          return !selectedItems.has(key)
+        })
+        return { ...p, colores: nuevosColores }
+      }).filter(p => p.colores.length > 0))
+
+      clearSelection()
+
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al ejecutar la operación masiva')
+    }
+  }
+
   return (
     <div className="max-w-7xl mx-auto pb-12">
+      <BulkActionBar
+        selectedCount={selectedItems.size}
+        isPapeleraMode={isPapeleraMode}
+        onClear={clearSelection}
+        onDesactivar={() => handleBulkAction('desactivar')}
+        onRecuperar={() => handleBulkAction('recuperar')}
+        onEliminar={() => handleBulkAction('eliminar')}
+      />
       <CrudToolbar
         title={isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
         description={isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
@@ -485,32 +567,57 @@ export default function Productos() {
         }
 
         return (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {filteredProductos.flatMap((producto) =>
-              producto.colores.map((colorInfo) => (
-                <ProductoCard
-                  key={`${producto.grupo_id || producto.producto_principal_id}-${colorInfo.color_id}`}
-                  producto={producto}
-                  color={colorInfo}
-                  isPapeleraMode={isPapeleraMode}
-                  onVer={() => handleVer(producto, colorInfo)}
-                  onEditar={() => handleEditar(producto, colorInfo)}
-                  onCompartir={() => {
-                    setItemToShare({ producto, colorInfo })
-                    setShowShareModal(true)
+          <div className="space-y-4">
+            {/* Opciones Masivas: Seleccionar Todo */}
+            <div className="flex items-center justify-between px-2 bg-gray-50/50 py-2 rounded-lg border border-gray-100">
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+                <input 
+                  type="checkbox" 
+                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  checked={getFilteredVisibleItems().length > 0 && selectedItems.size === getFilteredVisibleItems().length}
+                  onChange={(e) => {
+                    if (e.target.checked) handleSelectAllVisible()
+                    else clearSelection()
                   }}
-                  onEliminar={() => setItemToDelete({
-                    grupoId: producto.grupo_id || producto.producto_principal_id, 
-                    colorId: colorInfo.color_id, 
-                    nombre: producto.descripcion || producto.codigo,
-                    colorNombre: colorInfo.color.nombre
-                  })}
-                  onRecuperar={() => handleRecuperar(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
-                  onIncrementar={handleIncrementarStock}
-                  onDecrementar={handleDecrementarStock}
                 />
-              ))
-            )}
+                Seleccionar todos los visibles
+              </label>
+              {selectedItems.size > 0 && (
+                <span className="text-sm text-gray-500">
+                  {selectedItems.size} seleccionados
+                </span>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {filteredProductos.flatMap((producto) =>
+                producto.colores.map((colorInfo) => (
+                  <ProductoCard
+                    key={`${producto.grupo_id || producto.producto_principal_id}-${colorInfo.color_id}`}
+                    producto={producto}
+                    color={colorInfo}
+                    isPapeleraMode={isPapeleraMode}
+                    isSelected={isSelected(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
+                    onToggleSelection={() => toggleItem(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
+                    onVer={() => handleVer(producto, colorInfo)}
+                    onEditar={() => handleEditar(producto, colorInfo)}
+                    onCompartir={() => {
+                      setItemToShare({ producto, colorInfo })
+                      setShowShareModal(true)
+                    }}
+                    onEliminar={() => setItemToDelete({
+                      grupoId: producto.grupo_id || producto.producto_principal_id, 
+                      colorId: colorInfo.color_id, 
+                      nombre: producto.descripcion || producto.codigo,
+                      colorNombre: colorInfo.color.nombre
+                    })}
+                    onRecuperar={() => handleRecuperar(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
+                    onIncrementar={handleIncrementarStock}
+                    onDecrementar={handleDecrementarStock}
+                  />
+                ))
+              )}
+            </div>
           </div>
         )
       })()}
