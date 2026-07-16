@@ -606,72 +606,72 @@ export default function Productos() {
                     onRecuperar={() => handleRecuperar(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
                     onIncrementar={handleIncrementarStock}
                     onDecrementar={handleDecrementarStock}
-                  />
-                ))
-              )}
-            </div>
-          </div>
-        )
-      })()}
-
-      <ConfirmModal
-        isOpen={!!itemToDelete}
-        onClose={() => setItemToDelete(null)}
-        onConfirm={confirmDelete}
-        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
-        message={`¿Estás seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'desactivar'} el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?${isPapeleraMode ? '\nEsta acción no se puede deshacer.' : ''}`}
-        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Desactivar Producto'}
-        variant="danger"
-        dependencyConfig={{
-          service: productoService,
-          itemId: itemToDelete?.colorId, 
-          isPhysicalDelete: isPapeleraMode
-        }}
-      />
-
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => {
-          setShowShareModal(false)
-          setItemToShare(null)
-        }}
-        onShare={async (providerId) => {
-          if (!itemToShare) return;
-          try {
-            const { ShareFactory } = await import('../../providers/ShareProviders');
-            const { shareService } = await import('../../services/shareService');
-            
-            const payload = shareService.prepareSharePayload(itemToShare.producto, itemToShare.colorInfo);
-            const provider = ShareFactory.getProvider(providerId);
-            
-            await provider.share(payload);
-            toast.success('¡Compartido exitosamente!');
-          } catch (error) {
-            console.error('Error al compartir:', error);
-            toast.error(error.message || 'Error al intentar compartir.');
-          } finally {
-            setShowShareModal(false);
+        ]}
+        secondaryActions={!isPapeleraMode ? [
+          {
+            label: "Importar",
+            icon: FileDown,
+            title: "Importar Excel",
+            onClick: () => setShowImportModal(true)
+          },
+          {
+            label: "Exportar PDF",
+            icon: FileText,
+            title: "Exportar a PDF",
+            onClick: handleExportarPdf
+          },
+          {
+            label: "Exportar Excel",
+            icon: FileUp,
+            title: "Exportar a Excel",
+            onClick: handleExportarExcel
           }
+        ] : []}
+        searchConfig={{
+          placeholder: "Buscar por nombre o descripción...",
+          shortPlaceholder: "Buscar...",
+          value: globalSearch,
+          onChange: setGlobalSearch
         }}
-      />
-
-      {showNewWizard && (
-        <ProductoWizard
-          onClose={() => {
-            resetWizard()
-            setShowNewWizard(false)
-          }}
-          onSuccess={async () => { setShowNewWizard(false); await loadProductos(cleanFilters(filters), isPapeleraMode); }}
-        />
-      )}
-
-      {showDetalle && productoDetalle && (
-        <ProductoDetalle
-          producto={productoDetalle}
-          onClose={() => {
-            setShowDetalle(false)
-            setProductoDetalle(null)
-          }}
+        filterConfig={{
+          onClear: () => { setFilters(emptyFilters); loadProductos({}, isPapeleraMode); },
+          onApply: () => { loadProductos(cleanFilters(filters), isPapeleraMode); },
+          activeFilters: getActiveFilters(),
+          filters: (
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Código</label>
+                <input 
+                  type="text" 
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                  placeholder="Ej. PROD-01" 
+                  value={filters.codigo} 
+                  onChange={(e) => updateFilters({ codigo: e.target.value })} 
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Marca</label>
+                <select 
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.marca} 
+                  onChange={(e) => updateFilters({ marca: e.target.value })}
+                >
+                  <option value="">Todas</option>
+                  {availableCatalogos.marcas.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-gray-700">Tipo</label>
+                <select 
+                  className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 bg-white text-sm"
+                  value={filters.tipo} 
+                  onChange={(e) => updateFilters({ tipo: e.target.value })}
+                >
+                  <option value="">Todos</option>
+                  {availableCatalogos.tipos.map(m => (
+                    <option key={m.id} value={m.nombre}>{m.nombre}</option>
                   ))}
                 </select>
               </div>
@@ -775,6 +775,15 @@ export default function Productos() {
                 </span>
               )}
             </div>
+            
+            <BulkActionBar
+              selectedCount={selectedItems.size}
+              isPapeleraMode={isPapeleraMode}
+              onClear={clearSelection}
+              onDesactivar={() => handleBulkAction('desactivar')}
+              onRecuperar={() => handleBulkAction('recuperar')}
+              onEliminar={() => handleBulkAction('eliminar')}
+            />
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredProductos.flatMap((producto) =>
