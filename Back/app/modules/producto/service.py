@@ -1120,6 +1120,15 @@ class ProductoService:
                     productos_modificados_o_creados.append(producto)
                 else:
                     # Insert (Nuevo)
+                    # Si la variante es nueva pero viene desactivada y sin datos relevantes,
+                    # asumimos que es basura de la matriz rectangular del frontend y la omitimos.
+                    if (
+                        not variante.estado 
+                        and (variante.stock_actual == 0 or variante.stock_actual is None)
+                        and (variante.precio_venta == 0 or variante.precio_venta is None)
+                    ):
+                        continue
+                        
                     producto = Producto(
                         codigo_producto_id=codigo_producto.id,
                         tipo_calzado_id=data.tipo_calzado_id,
@@ -1486,30 +1495,11 @@ class ProductoService:
                     )
                     producto.precios.append(nuevo_precio)
             else:
-                # Insert (Nuevo)
-                producto = Producto(
-                    codigo_producto_id=codigo_producto_id,
-                    tipo_calzado_id=data.tipo_calzado_id,
-                    material_id=data.material_id,
-                    color_id=color_id,
-                    talla_id=variante.talla_id,
-                    descripcion=data.descripcion,
-                    stock_actual=variante.stock_actual,
-                    stock_minimo=variante.stock_minimo,
-                    stock_maximo=variante.stock_maximo,
-                    estado=variante.estado,
-                )
+                # Omitir silenciosamente las variantes que no existen
+                # Nunca lanzamos error 500 por una combinacion de talla/color inexistente
+                pass
                 
-                nuevo_precio = PrecioProducto(
-                    precio_compra=variante.precio_compra,
-                    precio_venta=variante.precio_venta,
-                    vigente_desde=datetime.now(),
-                    estado=True,
-                )
-                producto.precios.append(nuevo_precio)
-                db.add(producto)
-                
-        # Desactivar variantes que no vinieron en el payload
+        # Desactivar variantes que no vinieron en el payload (y que si existian)
         for talla_id, producto in mapa_existentes.items():
             if talla_id not in variantes_entrantes_claves:
                 producto.estado = False

@@ -182,7 +182,9 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         material_id: Number(formData.material_id),
         descripcion: formData.descripcion ? String(formData.descripcion).trim() : null,
 
-        variantes: formData.variantes.map((v) => ({
+        variantes: formData.variantes
+          .filter(v => !(v.estado === false && (!v.stock_actual || Number(v.stock_actual) === 0) && (!v.precio_venta || Number(v.precio_venta) === 0)))
+          .map((v) => ({
           color_id: Number(v.color_id),
           talla_id: Number(v.talla_id),
           stock_actual: parseInt(v.stock_actual) || 0,
@@ -208,7 +210,9 @@ export default function ProductoWizard({ onClose, onSuccess }) {
         tipo_calzado_id: Number(formData.tipo_calzado_id),
         material_id: Number(formData.material_id),
         descripcion: formData.descripcion ? String(formData.descripcion).trim() : null,
-        variantes: formData.variantes.map((v) => ({
+        variantes: formData.variantes
+          .filter(v => !(v.estado === false && (!v.stock_actual || Number(v.stock_actual) === 0) && (!v.precio_venta || Number(v.precio_venta) === 0)))
+          .map((v) => ({
           color_id: Number(v.color_id),
           talla_id: Number(v.talla_id),
           stock_actual: parseInt(v.stock_actual) || 0,
