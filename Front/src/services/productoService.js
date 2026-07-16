@@ -4,17 +4,17 @@ const getAll = (params = {}) =>
   axiosInstance.get('/productos/', { params })
 
 
-const desactivarColor = (codigoProductoId, colorId) =>
-  axiosInstance.patch(`/productos/${codigoProductoId}/color/${colorId}/desactivar`)
+const desactivarColor = (grupoId, colorId) =>
+  axiosInstance.patch(`/productos/${grupoId}/color/${colorId}/desactivar`)
 
-const recuperarColor = (codigoProductoId, colorId) =>
-  axiosInstance.patch(`/productos/${codigoProductoId}/color/${colorId}/recuperar`)
+const recuperarColor = (grupoId, colorId) =>
+  axiosInstance.patch(`/productos/${grupoId}/color/${colorId}/recuperar`)
 
-const eliminarColorPermanente = (codigoProductoId, colorId) =>
-  axiosInstance.delete(`/productos/${codigoProductoId}/color/${colorId}`)
+const eliminarColorPermanente = (grupoId, colorId) =>
+  axiosInstance.delete(`/productos/${grupoId}/color/${colorId}`)
 
-const updateColor = (codigoProductoId, colorId, data) =>
-  axiosInstance.put(`/productos/${codigoProductoId}/color/${colorId}`, data)
+const updateColor = (grupoId, colorId, data) =>
+  axiosInstance.put(`/productos/${grupoId}/color/${colorId}`, data)
 
 const getCatalogo = (params = {}) =>
   axiosInstance.get('/productos/catalogo', { params })

@@ -70,14 +70,14 @@ export const useWizardStore = create((set) => ({
       return { formData: nextFormData };
     }),
 
-  cargarProductoEditarCompleto: async (codigoProductoId, targetColorId = null) => {
+  cargarProductoEditarCompleto: async (grupoId, targetColorId = null) => {
     console.group('🚀 [wizardStore] cargarProductoEditarCompleto');
     console.log('⏱️ Inicio de ejecución:', new Date().toISOString());
-    console.log('🔑 codigoProductoId:', codigoProductoId);
+    console.log('🔑 grupoId:', grupoId);
     console.log('🎨 targetColorId:', targetColorId);
 
     try {
-      const res = await productoService.getEditarCompleto(codigoProductoId)
+      const res = await productoService.getEditarCompleto(grupoId)
       console.log('📥 Respuesta completa del backend:', res);
       
       const data = res.data
@@ -145,6 +145,7 @@ export const useWizardStore = create((set) => ({
         const nextState = {
           modo: 'editar',
           codigoProductoId: data.codigo_producto_id,
+          grupoId: grupoId,
           targetColorId: targetColorId,
           currentStep: 1,
           formData: nextFormData,

@@ -20,6 +20,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
   const {
     modo,
     codigoProductoId,
+    grupoId,
     targetColorId,
     currentStep,
     setCurrentStep,
@@ -73,22 +74,22 @@ export default function ProductoWizard({ onClose, onSuccess }) {
           }))
         )
         await productoService.updateColor(
-          codigoProductoId,
+          grupoId,
           targetColorId,
           dataToSend
         )
-        codigoID = codigoProductoId
+        codigoID = grupoId
       } else {
         await productoService.updateCompleto(
-          codigoProductoId,
+          grupoId,
           dataToSend
         )
-        codigoID = codigoProductoId
+        codigoID = grupoId
       }
     } else {
       const res = await productoService.createCompleto(dataToSend)
       console.log('✅ createCompleto response:', res.data)
-      codigoID = res.data.codigo_producto_id
+      codigoID = res.data.producto_principal_id
     }
 
     // 4. Procesar Imagenes Nuevas
