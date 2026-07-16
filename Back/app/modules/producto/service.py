@@ -1441,25 +1441,25 @@ class ProductoService:
         representante = self.repository.get_by_id_including_deleted(db, grupo_id)
         if not representante:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
-        variantes = db.query(Producto).filter(
+            
+        variantes_inactivas = db.query(Producto).filter(
             Producto.codigo_producto_id == representante.codigo_producto_id,
             Producto.tipo_calzado_id == representante.tipo_calzado_id,
             Producto.material_id == representante.material_id,
             Producto.descripcion == representante.descripcion,
-            Producto.color_id == color_id
+            Producto.color_id == color_id,
+            Producto.estado == False
         ).all()
 
-        if not variantes:
+        if not variantes_inactivas:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
 
-        for v in variantes:
-            if v.estado == True:
-                raise RegistroActivoNoPuedeEliminarseException(
-                    "No se puede eliminar un registro activo. Desactívalo primero."
-                )
-
-        for v in variantes:
-            self.repository.delete(db, v)
+        for v in variantes_inactivas:
+            self.repository.delete_precios(db, v.id)
+            self.repository.delete_imagenes(db, v.id)
+            self.repository.delete_producto(db, v.id)
+            
+        db.commit()
 
     def update_por_color(
         self,
