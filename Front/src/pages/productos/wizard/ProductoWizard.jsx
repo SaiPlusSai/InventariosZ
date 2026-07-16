@@ -60,7 +60,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
     }, 100)
   }
 
-  const processSave = async (dataToSend) => {
+  const processSave = async (dataToSend, toastId) => {
     let codigoID = null;
 
     // 3. Crear o Actualizar Producto Base
@@ -120,9 +120,9 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
     // 5. Finalizar
     if (modo === 'editar') {
-      toast.success('Producto actualizado correctamente')
+      toast.success('Producto actualizado correctamente', { id: toastId })
     } else {
-      toast.success('Producto creado correctamente')
+      toast.success('Producto creado correctamente', { id: toastId })
     }
     resetWizard()
     if (onSuccess) {
@@ -133,10 +133,17 @@ export default function ProductoWizard({ onClose, onSuccess }) {
   }
 
   const { handleWarningError, WarningComponent } = useWarningManager(async (dataToSendWithForce) => {
+    let retryToastId;
     try {
-      await processSave(dataToSendWithForce)
+      retryToastId = toast.loading(modo === 'editar' ? 'Actualizando producto...' : 'Creando producto...')
+      await processSave(dataToSendWithForce, retryToastId)
     } catch (err) {
       console.error(err)
+      toast.error(
+        err.customMessage ||
+        (modo === 'editar' ? 'Error al actualizar el producto.' : 'Error al crear el producto.'),
+        { id: retryToastId }
+      )
       setError(
         err.customMessage ||
         (modo === 'editar' ? 'Error al actualizar el producto.' : 'Error al crear el producto.')
@@ -174,7 +181,9 @@ export default function ProductoWizard({ onClose, onSuccess }) {
       }
     }
 
+    let toastId;
     try {
+      toastId = toast.loading(modo === 'editar' ? 'Actualizando producto...' : 'Creando producto...')
       // 2. Preparar el payload global para el backend
       const dataToSend = {
         codigo_producto_id: Number(formData.codigo_producto_id),
@@ -198,7 +207,7 @@ export default function ProductoWizard({ onClose, onSuccess }) {
       
       console.log('📤 dataToSend:', dataToSend)
 
-      await processSave(dataToSend)
+      await processSave(dataToSend, toastId)
 
     } catch (err) {
       console.error(err)
@@ -223,12 +232,21 @@ export default function ProductoWizard({ onClose, onSuccess }) {
 
       const isWarning = handleWarningError(err, dataToSend)
       if (!isWarning) {
+        toast.error(
+          err.customMessage ||
+          (modo === 'editar'
+            ? 'Error al actualizar el producto.'
+            : 'Error al crear el producto.'),
+          { id: toastId }
+        )
         setError(
           err.customMessage ||
           (modo === 'editar'
             ? 'Error al actualizar el producto.'
             : 'Error al crear el producto.')
         )
+      } else {
+        toast.dismiss(toastId)
       }
     } finally {
       setLoading(false)

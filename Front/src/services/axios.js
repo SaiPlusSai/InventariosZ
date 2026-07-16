@@ -15,7 +15,7 @@ const defaultHeaders = {
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  timeout: API_TIMEOUT,
+  timeout: 0, // Timeout desactivado para evitar cortes en procesos pesados
   headers: defaultHeaders,
 });
 
