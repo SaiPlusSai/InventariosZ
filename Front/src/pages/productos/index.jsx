@@ -205,7 +205,8 @@ export default function Productos() {
   }
 
   const handleEditar = async (producto, colorInfo) => {
-    await cargarProductoEditarCompleto(producto.producto_principal_id, colorInfo.color_id)
+    const grupoId = producto.grupo_id || producto.producto_principal_id
+    await cargarProductoEditarCompleto(grupoId, colorInfo.color_id)
     setShowNewWizard(true)
   }
 
@@ -227,12 +228,12 @@ export default function Productos() {
     if (!itemToDelete) return
     try {
         if (isPapeleraMode) {
-        await productoService.eliminarColorPermanente(itemToDelete.codigoProductoId, itemToDelete.colorId)
+        await productoService.eliminarColorPermanente(itemToDelete.grupoId, itemToDelete.colorId)
         toast.success('Producto eliminado permanentemente')
         await loadProductos(cleanFilters(filters), true)
         setItemToDelete(null)
       } else {
-        await productoService.desactivarColor(itemToDelete.codigoProductoId, itemToDelete.colorId)
+        await productoService.desactivarColor(itemToDelete.grupoId, itemToDelete.colorId)
         toast.success('Producto enviado a la papelera')
         await loadProductos(cleanFilters(filters), false)
         setItemToDelete(null)
@@ -488,7 +489,7 @@ export default function Productos() {
             {filteredProductos.flatMap((producto) =>
               producto.colores.map((colorInfo) => (
                 <ProductoCard
-                  key={`${producto.producto_principal_id}-${colorInfo.color_id}`}
+                  key={`${producto.grupo_id || producto.producto_principal_id}-${colorInfo.color_id}`}
                   producto={producto}
                   color={colorInfo}
                   isPapeleraMode={isPapeleraMode}
@@ -499,12 +500,12 @@ export default function Productos() {
                     setShowShareModal(true)
                   }}
                   onEliminar={() => setItemToDelete({
-                    codigoProductoId: producto.producto_principal_id, 
+                    grupoId: producto.grupo_id || producto.producto_principal_id, 
                     colorId: colorInfo.color_id, 
                     nombre: producto.descripcion || producto.codigo,
                     colorNombre: colorInfo.color.nombre
                   })}
-                  onRecuperar={() => handleRecuperar(producto.producto_principal_id, colorInfo.color_id)}
+                  onRecuperar={() => handleRecuperar(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
                   onIncrementar={handleIncrementarStock}
                   onDecrementar={handleDecrementarStock}
                 />

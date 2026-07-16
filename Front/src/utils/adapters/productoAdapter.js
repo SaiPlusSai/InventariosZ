@@ -1,10 +1,13 @@
 export const agruparProductosPlanos = (productosPlanos) => {
   const catalogoDict = {}
   for (const p of productosPlanos) {
-    const cp_id = p.codigo_producto_id
-    if (!catalogoDict[cp_id]) {
-      catalogoDict[cp_id] = {
-        codigo_producto_id: cp_id, 
+    const grupoKey = `${p.codigo_producto_id}-${p.tipo_calzado?.id || ''}-${p.material?.id || ''}-${(p.descripcion || '').trim().toLowerCase()}`
+    
+    if (!catalogoDict[grupoKey]) {
+      catalogoDict[grupoKey] = {
+        grupo_id: p.id,
+        producto_principal_id: p.id, // Mantenido por compatibilidad
+        codigo_producto_id: p.codigo_producto_id, 
         codigo: p.codigo, 
         marca: p.marca,
         tipo_calzado: p.tipo_calzado, 
@@ -14,17 +17,17 @@ export const agruparProductosPlanos = (productosPlanos) => {
       }
     }
     const color_id = p.color.id
-    if (!catalogoDict[cp_id].colores[color_id]) {
-      catalogoDict[cp_id].colores[color_id] = { 
+    if (!catalogoDict[grupoKey].colores[color_id]) {
+      catalogoDict[grupoKey].colores[color_id] = { 
         color_id: color_id, 
         color: p.color, 
         imagen_principal: p.imagen_principal, 
         variantes: [] 
       }
-    } else if (p.imagen_principal && !catalogoDict[cp_id].colores[color_id].imagen_principal) {
-      catalogoDict[cp_id].colores[color_id].imagen_principal = p.imagen_principal
+    } else if (p.imagen_principal && !catalogoDict[grupoKey].colores[color_id].imagen_principal) {
+      catalogoDict[grupoKey].colores[color_id].imagen_principal = p.imagen_principal
     }
-    catalogoDict[cp_id].colores[color_id].variantes.push({
+    catalogoDict[grupoKey].colores[color_id].variantes.push({
       id: p.id, 
       talla: p.talla, 
       stock_actual: p.stock_actual, 
