@@ -39,7 +39,7 @@ export default function ProductoCard({
         {/* Checkbox de Selección */}
         {onToggleSelection && (
           <div 
-            className={`absolute top-2 left-2 z-20 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
+            className={`absolute top-2 left-2 transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleSelection();

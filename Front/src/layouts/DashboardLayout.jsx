@@ -28,7 +28,7 @@ export default function DashboardLayout() {
               px-4 sm:px-6 md:px-8
               [&>div>div:first-child]:sticky 
               [&>div>div:first-child]:top-0 
-              [&>div>div:first-child]:z-10 
+              [&>div>div:first-child]:z-50 
               [&>div>div:first-child]:bg-gray-50 
               [&>div>div:first-child]:pt-4 
               md:[&>div>div:first-child]:pt-6 
