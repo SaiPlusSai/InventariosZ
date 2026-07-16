@@ -385,14 +385,6 @@ export default function Productos() {
 
   return (
     <div className="max-w-7xl mx-auto pb-12">
-      <BulkActionBar
-        selectedCount={selectedItems.size}
-        isPapeleraMode={isPapeleraMode}
-        onClear={clearSelection}
-        onDesactivar={() => handleBulkAction('desactivar')}
-        onRecuperar={() => handleBulkAction('recuperar')}
-        onEliminar={() => handleBulkAction('eliminar')}
-      />
       <CrudToolbar
         title={isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
         description={isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
@@ -705,6 +697,14 @@ export default function Productos() {
         />
       )}
 
+      <BulkActionBar
+        selectedCount={selectedItems.size}
+        isPapeleraMode={isPapeleraMode}
+        onClear={clearSelection}
+        onDesactivar={() => handleBulkAction('desactivar')}
+        onRecuperar={() => handleBulkAction('recuperar')}
+        onEliminar={() => handleBulkAction('eliminar')}
+      />
     </div>
   )
 }
