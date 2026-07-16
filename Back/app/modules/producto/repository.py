@@ -368,6 +368,21 @@ class ProductoRepository:
 
         return db.scalar(statement)
 
+    def get_by_id_including_deleted(
+        self,
+        db: Session,
+        producto_id: int,
+    ) -> Producto | None:
+
+        statement = (
+            select(Producto)
+            .where(
+                Producto.id == producto_id
+            )
+        )
+
+        return db.scalar(statement)
+
     def get_by_id_papelera(
         self,
         db: Session,

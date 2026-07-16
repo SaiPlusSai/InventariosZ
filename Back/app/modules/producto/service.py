@@ -1420,7 +1420,7 @@ class ProductoService:
         return {'msg': f'{len(variantes)} variantes desactivadas'}
 
     def recuperar_color(self, db: Session, grupo_id: int, color_id: int):
-        representante = self.repository.get_by_id(db, grupo_id)
+        representante = self.repository.get_by_id_including_deleted(db, grupo_id)
         if not representante:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         variantes = db.query(Producto).filter(
@@ -1438,7 +1438,7 @@ class ProductoService:
         return {'msg': f'{len(variantes)} variantes recuperadas'}
 
     def delete_color(self, db: Session, grupo_id: int, color_id: int) -> None:
-        representante = self.repository.get_by_id(db, grupo_id)
+        representante = self.repository.get_by_id_including_deleted(db, grupo_id)
         if not representante:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
         variantes = db.query(Producto).filter(
