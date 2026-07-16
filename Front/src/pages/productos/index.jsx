@@ -571,17 +571,17 @@ export default function Productos() {
 
             {/* Opciones Masivas: Seleccionar Todo */}
             <div className="flex items-center justify-between px-2 bg-gray-50/50 py-2 rounded-lg border border-gray-100">
-              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors">
+              <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors m-0 p-0">
                 <input 
                   type="checkbox" 
-                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
+                  className="w-4 h-4 m-0 p-0 rounded border-gray-300 text-primary-600 focus:ring-primary-500 cursor-pointer"
                   checked={getFilteredVisibleItems().length > 0 && selectedItems.size === getFilteredVisibleItems().length}
                   onChange={(e) => {
                     if (e.target.checked) handleSelectAllVisible()
                     else clearSelection()
                   }}
                 />
-                Seleccionar todos los visibles
+                <span>Seleccionar todos los visibles</span>
               </label>
               {selectedItems.size > 0 && (
                 <span className="text-sm text-gray-500">
