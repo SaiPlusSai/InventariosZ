@@ -23,24 +23,7 @@ export default function DashboardLayout() {
         
         <main className="flex-1 bg-gray-50 flex flex-col overflow-hidden relative">
           <div className="flex-1 overflow-y-auto w-full custom-scrollbar">
-            <div className={`
-              max-w-7xl mx-auto w-full pb-8
-              px-4 sm:px-6 md:px-8
-              [&>div>div:first-child]:sticky 
-              [&>div>div:first-child]:top-0 
-              [&>div>div:first-child]:z-50 
-              [&>div>div:first-child]:bg-gray-50 
-              [&>div>div:first-child]:pt-4 
-              md:[&>div>div:first-child]:pt-6 
-              [&>div>div:first-child]:pb-4 
-              [&>div>div:first-child]:!mb-6 
-              [&>div>div:first-child]:-mx-4 
-              [&>div>div:first-child]:px-4 
-              sm:[&>div>div:first-child]:-mx-6 
-              sm:[&>div>div:first-child]:px-6 
-              md:[&>div>div:first-child]:-mx-8 
-              md:[&>div>div:first-child]:px-8
-            `.replace(/\s+/g, ' ').trim()}>
+            <div className="max-w-7xl mx-auto w-full pb-8 px-4 sm:px-6 md:px-8">
               <Outlet />
             </div>
           </div>

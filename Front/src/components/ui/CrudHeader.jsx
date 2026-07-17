@@ -2,6 +2,7 @@ import React from 'react'
 import { Card, Button } from './index'
 import { Search, Filter, ChevronUp, ChevronDown, X } from 'lucide-react'
 import FilterChip from './FilterChip'
+import PageHeader from './PageHeader'
 
 export default function CrudHeader({
   title,
@@ -9,10 +10,12 @@ export default function CrudHeader({
   actions = [],
   searchConfig = null,
   filterConfig = null,
-  extraContent = null
+  extraContent = null,
+  sticky = true,
+  stickyOffset = 'top-0'
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <PageHeader isSticky={sticky} stickyOffset={stickyOffset} className="gap-2">
       {/* Title & Actions Row */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
         <div>
@@ -144,6 +147,6 @@ export default function CrudHeader({
           )}
         </div>
       )}
-    </div>
+    </PageHeader>
   )
 }

@@ -7,6 +7,7 @@ import FilterButton from './FilterButton'
 import FilterPanelDesktop from './FilterPanelDesktop'
 import FilterPanelMobile from './FilterPanelMobile'
 import FilterChip from '../FilterChip'
+import PageHeader from '../PageHeader'
 import { useBreakpoints } from '../../../hooks/useMediaQuery'
 
 // Helper for local filter configuration
@@ -201,12 +202,13 @@ function HeaderMobile({ title, primaryActions, secondaryActions, searchConfig, f
 // Orquestador Principal
 export default function CrudToolbar(props) {
   const { isDesktop, isTablet } = useBreakpoints();
+  const { sticky = true, stickyOffset = 'top-0' } = props;
 
   return (
-    <div className="w-auto flex flex-col">
+    <PageHeader isSticky={sticky} stickyOffset={stickyOffset} className="w-auto">
       {isDesktop && <HeaderDesktop {...props} />}
       {isTablet && <HeaderTablet {...props} />}
       {(!isDesktop && !isTablet) && <HeaderMobile {...props} />}
-    </div>
+    </PageHeader>
   )
 }
