@@ -20,7 +20,7 @@ export default function PageHeader({
   // These paddings and negative margins break out of the DashboardLayout container 
   // to provide a full-width background for the sticky header while aligning content.
   const stickyClasses = isSticky 
-    ? `sticky ${stickyOffset} z-30 bg-gray-50 pt-4 pb-4 -mx-4 px-4 sm:-mx-6 sm:px-6 md:pt-6 md:-mx-8 md:px-8 mb-6` 
+    ? `sticky ${stickyOffset} z-30 bg-gray-50 pt-4 pb-4 md:pt-6 mb-6` 
     : "mb-6";
 
   return (
