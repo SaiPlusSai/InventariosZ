@@ -11,6 +11,7 @@ from app.modules.producto.models import Producto
 from app.modules.producto_imagen.models import ProductoImagen
 from app.modules.talla.models import Talla
 from app.modules.tipo_calzado.models import TipoCalzado
+from app.modules.movimiento_inventario.models import MovimientoInventario
 
 
 
