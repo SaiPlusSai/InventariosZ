@@ -19,8 +19,10 @@ const updateColor = (grupoId, colorId, data) =>
 const bulkAction = (action, items) =>
   axiosInstance.post('/productos/bulk', { action, items })
 
-const previewHardDelete = (items) =>
-  axiosInstance.post('/productos/hard-delete/preview', { items })
+const previewHardDelete = (items) => axiosInstance.post('/productos/hard-delete/preview', { items })
+
+const exportarRespaldoProductos = (items) => axiosInstance.post('/productos/hard-delete/exportar-productos', { items }, { responseType: 'blob' })
+const exportarRespaldoMovimientos = (items) => axiosInstance.post('/productos/hard-delete/exportar-movimientos', { items }, { responseType: 'blob' })
 
 const getCatalogo = (params = {}) =>
   axiosInstance.get('/productos/catalogo', { params })
@@ -58,6 +60,9 @@ export const productoService = {
   updateColor,
   bulkAction,
   previewHardDelete,
+  exportarRespaldoProductos,
+  exportarRespaldoMovimientos,
+  crear,
 
   filter: getAll,
 

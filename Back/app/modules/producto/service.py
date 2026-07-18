@@ -1560,20 +1560,10 @@ class ProductoService:
         db.commit()
         return {'msg': 'Producto actualizado correctamente'}
 
-    def preview_hard_delete(self, db: Session, items: list[dict]) -> dict:
-        total_productos = 0
-        total_imagenes = 0
-        total_precios = 0
-        total_movimientos = 0
-        
-        # Avoid circular dependencies by importing models here if necessary, or just query
+    def _get_variantes_por_lote(self, db: Session, items: list[dict]):
         from app.modules.producto.models import Producto
-        from app.modules.producto_imagen.models import ProductoImagen
-        from app.modules.precio_producto.models import PrecioProducto
-        from app.modules.movimiento_inventario.models import MovimientoInventario
-        
+        variantes_finales = []
         representantes_cache = {}
-        
         for item in items:
             grupo_id = item.get("grupo_id")
             color_id = item.get("color_id")
@@ -1587,7 +1577,15 @@ class ProductoService:
             if not representante:
                 continue
                 
-            variantes = db.query(Producto).filter(
+            variantes = db.query(Producto).options(
+                selectinload(Producto.imagenes),
+                selectinload(Producto.precios),
+                joinedload(Producto.codigo_producto).joinedload(CodigoProducto.marca),
+                joinedload(Producto.tipo_calzado),
+                joinedload(Producto.material),
+                joinedload(Producto.color),
+                joinedload(Producto.talla)
+            ).filter(
                 Producto.codigo_producto_id == representante.codigo_producto_id,
                 Producto.tipo_calzado_id == representante.tipo_calzado_id,
                 Producto.material_id == representante.material_id,
@@ -1595,20 +1593,134 @@ class ProductoService:
                 Producto.color_id == color_id,
                 Producto.estado == False
             ).all()
+            variantes_finales.extend(variantes)
             
-            total_productos += len(variantes)
+        return variantes_finales
+
+    def preview_hard_delete(self, db: Session, items: list[dict]) -> dict:
+        total_productos = 0
+        total_imagenes = 0
+        total_precios = 0
+        total_movimientos = 0
+        
+        from app.modules.producto_imagen.models import ProductoImagen
+        from app.modules.precio_producto.models import PrecioProducto
+        from app.modules.movimiento_inventario.models import MovimientoInventario
+        
+        variantes = self._get_variantes_por_lote(db, items)
+        total_productos = len(variantes)
+        
+        for v in variantes:
+            total_imagenes += db.query(ProductoImagen).filter(ProductoImagen.producto_id == v.id).count()
+            total_precios += db.query(PrecioProducto).filter(PrecioProducto.producto_id == v.id).count()
+            total_movimientos += db.query(MovimientoInventario).filter(MovimientoInventario.producto_id == v.id).count()
             
-            for v in variantes:
-                total_imagenes += db.query(ProductoImagen).filter(ProductoImagen.producto_id == v.id).count()
-                total_precios += db.query(PrecioProducto).filter(PrecioProducto.producto_id == v.id).count()
-                total_movimientos += db.query(MovimientoInventario).filter(MovimientoInventario.producto_id == v.id).count()
-                
         return {
             "productos": total_productos,
             "imagenes": total_imagenes,
             "precios": total_precios,
             "movimientos": total_movimientos
         }
+
+    def exportar_respaldo_productos(self, db: Session, items: list[dict], request=None) -> BytesIO:
+        from app.core.excel_utils import export_generic_excel
+        variantes = self._get_variantes_por_lote(db, items)
+        
+        headers = [
+            "ID Físico", "Código", "Marca", "Tipo Calzado", "Material", "Color", 
+            "Talla", "Descripción", "Stock Actual", "Stock Mínimo", "Stock Máximo", 
+            "Precio Compra", "Precio Venta", "Imágenes Relacionadas", "Fecha Creación"
+        ]
+        
+        data = []
+        for v in variantes:
+            precio_vigente = next((p for p in v.precios if p.estado), None)
+            precio_c = precio_vigente.precio_compra if precio_vigente else 0
+            precio_v = precio_vigente.precio_venta if precio_vigente else 0
+            
+            imagenes_names = ", ".join([img.nombre_archivo for img in v.imagenes]) if v.imagenes else "Ninguna"
+            
+            data.append([
+                v.id,
+                v.codigo_producto.codigo if v.codigo_producto else "N/A",
+                v.codigo_producto.marca.nombre if v.codigo_producto and v.codigo_producto.marca else "N/A",
+                v.tipo_calzado.nombre if v.tipo_calzado else "N/A",
+                v.material.nombre if v.material else "N/A",
+                v.color.nombre if v.color else "N/A",
+                v.talla.nombre if v.talla else "N/A",
+                v.descripcion or "",
+                v.stock_actual,
+                v.stock_minimo,
+                v.stock_maximo,
+                precio_c,
+                precio_v,
+                imagenes_names,
+                v.created_at.strftime("%Y-%m-%d %H:%M") if v.created_at else "N/A"
+            ])
+            
+        fecha_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        user_ip = request.client.host if request else "Local"
+        
+        # Inyectar metadatos arriba de la tabla principal
+        metadatos = [
+            ["SISTEMA:", "Inventarios Z"],
+            ["MOTIVO:", "Respaldo previo a Eliminación Definitiva (Hard Delete)"],
+            ["FECHA:", fecha_str],
+            ["USUARIO (IP):", user_ip],
+            ["CANTIDAD:", f"{len(variantes)} variantes"],
+            [], [] # Espacios en blanco
+        ]
+        
+        return export_generic_excel("Respaldo Administrativo", headers, metadatos + data)
+
+    def exportar_respaldo_movimientos(self, db: Session, items: list[dict], request=None) -> BytesIO:
+        from app.core.excel_utils import export_generic_excel
+        from app.modules.movimiento_inventario.models import MovimientoInventario
+        
+        variantes = self._get_variantes_por_lote(db, items)
+        ids = [v.id for v in variantes]
+        
+        movimientos = db.query(MovimientoInventario).options(
+            joinedload(MovimientoInventario.producto).joinedload(Producto.codigo_producto)
+        ).filter(MovimientoInventario.producto_id.in_(ids)).order_by(MovimientoInventario.created_at.desc()).all()
+        
+        headers = [
+            "ID Movimiento", "Fecha y Hora", "Código Producto", "Variante ID", 
+            "Tipo Movimiento", "Origen", "Cantidad", "Stock Anterior", 
+            "Stock Nuevo", "Documento", "Observación", "Usuario"
+        ]
+        
+        data = []
+        for m in movimientos:
+            codigo = m.producto.codigo_producto.codigo if m.producto and m.producto.codigo_producto else "N/A"
+            data.append([
+                m.id,
+                m.created_at.strftime("%Y-%m-%d %H:%M:%S") if m.created_at else "N/A",
+                codigo,
+                m.producto_id,
+                m.tipo_movimiento.value if m.tipo_movimiento else "N/A",
+                m.origen,
+                m.cantidad,
+                m.stock_anterior,
+                m.stock_nuevo,
+                m.documento_relacionado or "N/A",
+                m.observacion or "",
+                m.usuario_id or "Sistema"
+            ])
+            
+        fecha_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+        user_ip = request.client.host if request else "Local"
+        
+        metadatos = [
+            ["SISTEMA:", "Inventarios Z"],
+            ["MOTIVO:", "Auditoría Operativa previa a Eliminación Definitiva"],
+            ["FECHA:", fecha_str],
+            ["USUARIO (IP):", user_ip],
+            ["CANTIDAD:", f"{len(movimientos)} movimientos exportados"],
+            [], []
+        ]
+        
+        return export_generic_excel("Auditoria Kardex", headers, metadatos + data)
 
     def bulk_action(self, db: Session, action: str, items: list[dict], request=None) -> dict:
         import time

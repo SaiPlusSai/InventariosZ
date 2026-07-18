@@ -663,3 +663,39 @@ def preview_hard_delete(
     db: Session = Depends(get_db),
 ):
     return service.preview_hard_delete(db, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items])
+
+@router.post(
+    '/hard-delete/exportar-productos',
+    status_code=status.HTTP_200_OK,
+)
+def exportar_respaldo_productos(
+    request: Request,
+    data: BulkActionRequest,
+    db: Session = Depends(get_db),
+):
+    import datetime
+    buffer = service.exportar_respaldo_productos(db, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items], request=request)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=Respaldo_Productos_{timestamp}.xlsx"}
+    )
+
+@router.post(
+    '/hard-delete/exportar-movimientos',
+    status_code=status.HTTP_200_OK,
+)
+def exportar_respaldo_movimientos(
+    request: Request,
+    data: BulkActionRequest,
+    db: Session = Depends(get_db),
+):
+    import datetime
+    buffer = service.exportar_respaldo_movimientos(db, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items], request=request)
+    timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M")
+    return StreamingResponse(
+        buffer,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename=Respaldo_Movimientos_{timestamp}.xlsx"}
+    )

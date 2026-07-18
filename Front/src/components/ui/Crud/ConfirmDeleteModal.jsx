@@ -3,19 +3,48 @@ import { AlertTriangle, Download, X } from 'lucide-react';
 import Button from '../Button';
 import productoService from '../../../services/productoService';
 
-export default function ConfirmDeleteModal({ isOpen, onClose, onConfirm, onExportExcel, previewData, isLoading }) {
+export default function ConfirmDeleteModal({ isOpen, onClose, onConfirm, onExportProductos, onExportMovimientos, previewData, isLoading }) {
   const [confirmText, setConfirmText] = useState('');
+  const [hasExportedProductos, setHasExportedProductos] = useState(false);
+  const [hasExportedMovimientos, setHasExportedMovimientos] = useState(false);
+  const [isExportingProductos, setIsExportingProductos] = useState(false);
+  const [isExportingMovimientos, setIsExportingMovimientos] = useState(false);
   
   // Reset when opened
   useEffect(() => {
     if (isOpen) {
       setConfirmText('');
+      setHasExportedProductos(false);
+      setHasExportedMovimientos(false);
+      setIsExportingProductos(false);
+      setIsExportingMovimientos(false);
     }
   }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const isConfirmEnabled = confirmText === 'ELIMINAR';
+  const allExportsDone = hasExportedProductos && hasExportedMovimientos;
+  const isConfirmEnabled = allExportsDone && confirmText === 'ELIMINAR';
+
+  const handleExportProductos = async () => {
+    setIsExportingProductos(true);
+    try {
+      const success = await onExportProductos();
+      if (success) setHasExportedProductos(true);
+    } finally {
+      setIsExportingProductos(false);
+    }
+  };
+
+  const handleExportMovimientos = async () => {
+    setIsExportingMovimientos(true);
+    try {
+      const success = await onExportMovimientos();
+      if (success) setHasExportedMovimientos(true);
+    } finally {
+      setIsExportingMovimientos(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
@@ -111,37 +140,85 @@ export default function ConfirmDeleteModal({ isOpen, onClose, onConfirm, onExpor
             </div>
           </div>
 
-          {/* Recommendation */}
-          <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 flex flex-col sm:flex-row gap-4 items-center justify-between">
+          {/* Recommendation & Mandatory Export */}
+          <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 flex flex-col gap-4">
             <div>
-              <h4 className="text-blue-800 font-bold flex items-center gap-1.5 mb-1">
-                💡 Recomendación
+              <h4 className="text-blue-800 font-bold flex items-center gap-1.5 mb-2">
+                🔒 Requisitos de Seguridad
               </h4>
               <p className="text-blue-700 text-sm">
-                Antes de eliminar definitivamente, se recomienda realizar una exportación en Excel para conservar un respaldo.
+                Como medida de auditoría, es obligatorio generar ambos respaldos antes de proceder con la eliminación.
               </p>
             </div>
-            <Button 
-              variant="secondary" 
-              onClick={onExportExcel}
-              className="flex-shrink-0 bg-white border-blue-200 text-blue-700 hover:bg-blue-100"
-            >
-              <Download size={16} className="mr-2" />
-              Exportar a Excel
-            </Button>
+            
+            <div className="flex flex-col gap-3">
+              {/* Product Export */}
+              <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-blue-100">
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${hasExportedProductos ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent'}`}>
+                    ✓
+                  </div>
+                  <span className={`font-medium ${hasExportedProductos ? 'text-gray-900' : 'text-gray-600'}`}>
+                    Respaldo administrativo del producto
+                  </span>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  onClick={handleExportProductos}
+                  disabled={hasExportedProductos || isExportingProductos}
+                  className={`flex-shrink-0 ${hasExportedProductos ? 'opacity-50' : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-100'}`}
+                >
+                  {isExportingProductos ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+                  ) : (
+                    <Download size={16} className="mr-2" />
+                  )}
+                  {hasExportedProductos ? 'Generado' : 'Generar'}
+                </Button>
+              </div>
+
+              {/* Movements Export */}
+              <div className="flex items-center justify-between bg-white p-3 rounded-lg border border-blue-100">
+                <div className="flex items-center gap-3">
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center border-2 ${hasExportedMovimientos ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent'}`}>
+                    ✓
+                  </div>
+                  <span className={`font-medium ${hasExportedMovimientos ? 'text-gray-900' : 'text-gray-600'}`}>
+                    Respaldo operativo de movimientos
+                  </span>
+                </div>
+                <Button 
+                  variant="secondary" 
+                  onClick={handleExportMovimientos}
+                  disabled={hasExportedMovimientos || isExportingMovimientos}
+                  className={`flex-shrink-0 ${hasExportedMovimientos ? 'opacity-50' : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-100'}`}
+                >
+                  {isExportingMovimientos ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
+                  ) : (
+                    <Download size={16} className="mr-2" />
+                  )}
+                  {hasExportedMovimientos ? 'Generado' : 'Generar'}
+                </Button>
+              </div>
+            </div>
           </div>
 
           {/* Text Confirmation */}
-          <div className="pt-2">
+          <div className={`pt-2 transition-opacity ${allExportsDone ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
             <label className="block text-sm font-semibold text-gray-800 mb-2">
-              Para continuar, escriba la palabra <span className="font-bold text-red-600 bg-red-50 px-1 py-0.5 rounded">ELIMINAR</span>:
+              <div className="flex items-center gap-2 mb-2">
+                 <div className={`w-6 h-6 rounded-full flex flex-shrink-0 items-center justify-center border-2 ${isConfirmEnabled ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent'}`}>✓</div>
+                 <span>Para continuar, escriba la palabra <span className="font-bold text-red-600 bg-red-50 px-1 py-0.5 rounded">ELIMINAR</span>:</span>
+              </div>
             </label>
             <input 
               type="text"
               value={confirmText}
               onChange={(e) => setConfirmText(e.target.value)}
               placeholder="ELIMINAR"
-              className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all font-mono text-center text-lg tracking-widest outline-none uppercase placeholder:text-gray-300 placeholder:font-sans placeholder:tracking-normal"
+              disabled={!allExportsDone}
+              className="w-full px-4 py-2.5 rounded-lg border-2 border-gray-200 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 transition-all font-mono text-center text-lg tracking-widest outline-none uppercase placeholder:text-gray-300 placeholder:font-sans placeholder:tracking-normal disabled:bg-gray-100"
             />
           </div>
 

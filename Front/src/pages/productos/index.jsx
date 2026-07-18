@@ -269,6 +269,201 @@ export default function Productos() {
       import('../../store/notificationStore').then(store => {
         store.useNotificationStore.getState().showNotification(
           'error',
+})
+      } catch (err) {
+        console.error("Error cargando catálogos", err)
+      }
+    }
+    fetchCatalogos()
+  }, [])
+
+  // Filtrado dinámico de catálogos basado en los productos actuales para evitar combinaciones sin resultados
+  const getAvailableOptions = () => {
+    // Si no hay productos cargados (ej. primera carga), devolver todos
+    if (!productos || productos.length === 0) return catalogos;
+    
+    const availableMarcas = new Set();
+    const availableTipos = new Set();
+    const availableMateriales = new Set();
+    const availableColores = new Set();
+    const availableTallas = new Set();
+
+    productos.forEach(p => {
+      if (p.marca?.nombre) availableMarcas.add(p.marca.nombre.toLowerCase());
+      if (p.tipo_calzado?.nombre) availableTipos.add(p.tipo_calzado.nombre.toLowerCase());
+      if (p.material?.nombre) availableMateriales.add(p.material.nombre.toLowerCase());
+      
+      p.colores?.forEach(c => {
+        if (c.color?.nombre) availableColores.add(c.color.nombre.toLowerCase());
+        c.variantes?.forEach(v => {
+          if (v.talla?.nombre) availableTallas.add(v.talla.nombre.toLowerCase());
+        });
+      });
+    });
+
+    return {
+      marcas: catalogos.marcas.filter(m => filters.marca || availableMarcas.has(m.nombre.toLowerCase())),
+      tipos: catalogos.tipos.filter(t => filters.tipo || availableTipos.has(t.nombre.toLowerCase())),
+      materiales: catalogos.materiales.filter(m => filters.material || availableMateriales.has(m.nombre.toLowerCase())),
+      colores: catalogos.colores.filter(c => filters.color || availableColores.has(c.nombre.toLowerCase())),
+      tallas: catalogos.tallas.filter(t => filters.talla || availableTallas.has(t.nombre.toLowerCase()))
+    };
+  };
+
+  const availableCatalogos = getAvailableOptions();
+
+  const updateFilters = (changes) => {
+    const newFilters = { ...filters, ...changes }
+    // Auto-limpiar IDs si cambiamos el texto explícitamente y no pasamos ID
+    if ('marca' in changes && !('marca_id' in changes)) newFilters.marca_id = ''
+    if ('tipo' in changes && !('tipo_calzado_id' in changes)) newFilters.tipo_calzado_id = ''
+    if ('material' in changes && !('material_id' in changes)) newFilters.material_id = ''
+    if ('color' in changes && !('color_id' in changes)) newFilters.color_id = ''
+    if ('talla' in changes && !('talla_id' in changes)) newFilters.talla_id = ''
+    
+    setFilters(newFilters)
+    loadProductos(cleanFilters(newFilters), isPapeleraMode)
+  }
+
+  const getActiveFilters = () => {
+    const active = []
+    if (filters.codigo) active.push({ label: 'Código', value: filters.codigo, onRemove: () => updateFilters({ codigo: '' }) })
+    
+    // Preferir nombre, si no usar el ID buscado
+    const marcaVal = filters.marca || (filters.marca_id ? catalogos.marcas.find(m => m.id == filters.marca_id)?.nombre : '')
+    if (marcaVal) active.push({ label: 'Marca', value: marcaVal, onRemove: () => updateFilters({ marca: '', marca_id: '' }) })
+    
+    const tipoVal = filters.tipo || (filters.tipo_calzado_id ? catalogos.tipos.find(m => m.id == filters.tipo_calzado_id)?.nombre : '')
+    if (tipoVal) active.push({ label: 'Tipo', value: tipoVal, onRemove: () => updateFilters({ tipo: '', tipo_calzado_id: '' }) })
+    
+    const matVal = filters.material || (filters.material_id ? catalogos.materiales.find(m => m.id == filters.material_id)?.nombre : '')
+    if (matVal) active.push({ label: 'Material', value: matVal, onRemove: () => updateFilters({ material: '', material_id: '' }) })
+    
+    const colVal = filters.color || (filters.color_id ? catalogos.colores.find(m => m.id == filters.color_id)?.nombre : '')
+    if (colVal) active.push({ label: 'Color', value: colVal, onRemove: () => updateFilters({ color: '', color_id: '' }) })
+    
+    const tallaVal = filters.talla || (filters.talla_id ? catalogos.tallas.find(m => m.id == filters.talla_id)?.nombre : '')
+    if (tallaVal) active.push({ label: 'Talla', value: tallaVal, onRemove: () => updateFilters({ talla: '', talla_id: '' }) })
+    
+    return active
+  }
+  
+  // Modals States
+  const [showNewWizard, setShowNewWizard] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
+  const [showDetalle, setShowDetalle] = useState(false)
+  const [itemToDelete, setItemToDelete] = useState(null)
+  
+  // Share States
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [itemToShare, setItemToShare] = useState(null)
+  
+  // Movimiento Modal States
+  const [movimientoModalOpen, setMovimientoModalOpen] = useState(false)
+  const [movimientoProductoId, setMovimientoProductoId] = useState(null)
+  const [movimientoStockActual, setMovimientoStockActual] = useState(0)
+  const [movimientoPolaridad, setMovimientoPolaridad] = useState(null)
+
+  const loadProductos = async (params = {}, papelera = isPapeleraMode) => {
+    try {
+      setLoading(true)
+      let data = []
+      if (papelera) {
+        const res = await productoService.getPapelera(params)
+        data = agruparProductosPlanos(res.data)
+      } else {
+        const res = await productoService.getCatalogo(params)
+        data = res.data
+      }
+      setProductos(data)
+    } catch (error) {
+      console.error('Error loading productos:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => { loadProductos(cleanFilters(filters), isPapeleraMode) }, [isPapeleraMode])
+
+  useEffect(() => {
+    const socket = new WebSocket(`${ENV.websocketUrl}/productos/ws`)
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data)
+      if (data.tipo === "stock_actualizado") actualizarStock(data.producto_id, data.stock_actual)
+    }
+    return () => socket.close()
+  }, [])
+
+  const handleVer = async (producto, colorInfo) => {
+    try {
+      setLoadingDetalle(true)
+      const varianteId = colorInfo.variantes[0]?.id
+      if (!varianteId) return
+
+      const res = await productoService.getDetalle(varianteId)
+      setProductoDetalle(res.data)
+      setShowDetalle(true)
+    } catch (error) {
+      console.error('Error loading producto:', error)
+    } finally {
+      setLoadingDetalle(false)
+    }
+  }
+
+  const handleEditar = async (producto, colorInfo) => {
+    const grupoId = producto.grupo_id || producto.producto_principal_id
+    await cargarProductoEditarCompleto(grupoId, colorInfo.color_id)
+    setShowNewWizard(true)
+  }
+
+  const handleIncrementarStock = (id, stock_actual) => {
+    setMovimientoProductoId(id)
+    setMovimientoStockActual(stock_actual)
+    setMovimientoPolaridad('ENTRADA')
+    setMovimientoModalOpen(true)
+  }
+
+  const handleDecrementarStock = (id, stock_actual) => {
+    setMovimientoProductoId(id)
+    setMovimientoStockActual(stock_actual)
+    setMovimientoPolaridad('SALIDA')
+    setMovimientoModalOpen(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!itemToDelete) return
+    try {
+        if (isPapeleraMode) {
+        await productoService.eliminarColorPermanente(itemToDelete.grupoId, itemToDelete.colorId)
+        toast.success('Producto eliminado permanentemente')
+        await loadProductos(cleanFilters(filters), true)
+        setItemToDelete(null)
+      } else {
+        await productoService.desactivarColor(itemToDelete.grupoId, itemToDelete.colorId)
+        toast.success('Producto enviado a la papelera')
+        await loadProductos(cleanFilters(filters), false)
+        setItemToDelete(null)
+      }
+    } catch (err) {
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
+          'Error',
+          'Error eliminando: ' + (err.response?.data?.detail || err.message)
+        )
+      })
+    }
+  }
+
+  const handleRecuperar = async (codigo_producto_id, color_id) => {
+    try {
+      await productoService.recuperarColor(codigo_producto_id, color_id)
+      toast.success('Producto recuperado correctamente')
+      await loadProductos(cleanFilters(filters), isPapeleraMode)
+    } catch (err) {
+      import('../../store/notificationStore').then(store => {
+        store.useNotificationStore.getState().showNotification(
+          'error',
           'Error',
           'Error al recuperar el producto'
         )
@@ -295,6 +490,50 @@ export default function Productos() {
       toast.dismiss();
       toast.error('Error al exportar a Excel');
       console.error(error);
+    }
+  }
+
+  const handleExportarRespaldoProductos = async () => {
+    try {
+      const itemsArray = Array.from(selectedItems.values());
+      const response = await productoService.exportarRespaldoProductos(itemsArray);
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Respaldo_Productos_${new Date().getTime()}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.success('Respaldo de productos descargado exitosamente');
+      return true;
+    } catch (error) {
+      toast.error('Error al generar el respaldo de productos. Intente de nuevo.');
+      console.error(error);
+      return false;
+    }
+  }
+
+  const handleExportarRespaldoMovimientos = async () => {
+    try {
+      const itemsArray = Array.from(selectedItems.values());
+      const response = await productoService.exportarRespaldoMovimientos(itemsArray);
+      
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Respaldo_Movimientos_${new Date().getTime()}.xlsx`);
+      document.body.appendChild(link);
+      link.click();
+      link.parentNode.removeChild(link);
+      
+      toast.success('Respaldo de movimientos descargado exitosamente');
+      return true;
+    } catch (error) {
+      toast.error('Error al generar el respaldo de movimientos. Intente de nuevo.');
+      console.error(error);
+      return false;
     }
   }
 
@@ -744,7 +983,8 @@ export default function Productos() {
           setDeleteModalOpen(false)
           executeBulkAction(pendingDeleteAction, Array.from(selectedItems.values()))
         }}
-        onExportExcel={handleExportarExcel}
+        onExportProductos={handleExportarRespaldoProductos}
+        onExportMovimientos={handleExportarRespaldoMovimientos}
         previewData={deletePreviewData}
         isLoading={isDeletePreviewLoading}
       />
