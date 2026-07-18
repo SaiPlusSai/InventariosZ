@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal } from '../../components/ui'
 import CrudToolbar from '../../components/ui/Crud/CrudToolbar'
@@ -76,13 +76,13 @@ export default function Productos() {
           tallas: resTallas.data
         })
       } catch (err) {
-        console.error("Error cargando catálogos", err)
+        console.error("Error cargando cat├ílogos", err)
       }
     }
     fetchCatalogos()
   }, [])
 
-  // Filtrado dinámico de catálogos basado en los productos actuales para evitar combinaciones sin resultados
+  // Filtrado din├ímico de cat├ílogos basado en los productos actuales para evitar combinaciones sin resultados
   const getAvailableOptions = () => {
     // Si no hay productos cargados (ej. primera carga), devolver todos
     if (!productos || productos.length === 0) return catalogos;
@@ -119,7 +119,7 @@ export default function Productos() {
 
   const updateFilters = (changes) => {
     const newFilters = { ...filters, ...changes }
-    // Auto-limpiar IDs si cambiamos el texto explícitamente y no pasamos ID
+    // Auto-limpiar IDs si cambiamos el texto expl├¡citamente y no pasamos ID
     if ('marca' in changes && !('marca_id' in changes)) newFilters.marca_id = ''
     if ('tipo' in changes && !('tipo_calzado_id' in changes)) newFilters.tipo_calzado_id = ''
     if ('material' in changes && !('material_id' in changes)) newFilters.material_id = ''
@@ -132,7 +132,7 @@ export default function Productos() {
 
   const getActiveFilters = () => {
     const active = []
-    if (filters.codigo) active.push({ label: 'Código', value: filters.codigo, onRemove: () => updateFilters({ codigo: '' }) })
+    if (filters.codigo) active.push({ label: 'C├│digo', value: filters.codigo, onRemove: () => updateFilters({ codigo: '' }) })
     
     // Preferir nombre, si no usar el ID buscado
     const marcaVal = filters.marca || (filters.marca_id ? catalogos.marcas.find(m => m.id == filters.marca_id)?.nombre : '')
@@ -298,50 +298,6 @@ export default function Productos() {
     }
   }
 
-  const handleExportarRespaldoProductos = async () => {
-    try {
-      const itemsArray = Array.from(selectedItems.values());
-      const response = await productoService.exportarRespaldoProductos(itemsArray);
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Respaldo_Productos_${new Date().getTime()}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      
-      toast.success('Respaldo de productos descargado exitosamente');
-      return true;
-    } catch (error) {
-      toast.error('Error al generar el respaldo de productos. Intente de nuevo.');
-      console.error(error);
-      return false;
-    }
-  }
-
-  const handleExportarRespaldoMovimientos = async () => {
-    try {
-      const itemsArray = Array.from(selectedItems.values());
-      const response = await productoService.exportarRespaldoMovimientos(itemsArray);
-      
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Respaldo_Movimientos_${new Date().getTime()}.xlsx`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      
-      toast.success('Respaldo de movimientos descargado exitosamente');
-      return true;
-    } catch (error) {
-      toast.error('Error al generar el respaldo de movimientos. Intente de nuevo.');
-      console.error(error);
-      return false;
-    }
-  }
-
   const handleExportarPdf = async () => {
     try {
       const loadingToast = toast.loading('Generando PDF...');
@@ -413,7 +369,7 @@ export default function Productos() {
       loadDeletePreview(itemsArray)
       return
     } else if (action === 'desactivar') {
-      if (!window.confirm(`¿Estás seguro de enviar ${itemsArray.length} colores a la papelera?`)) {
+      if (!window.confirm(`┬┐Est├ís seguro de enviar ${itemsArray.length} colores a la papelera?`)) {
         return
       }
     }
@@ -424,20 +380,20 @@ export default function Productos() {
   const executeBulkAction = async (action, itemsArray) => {
     let toastId;
     try {
-      toastId = toast.loading('Procesando operación masiva...')
+      toastId = toast.loading('Procesando operaci├│n masiva...')
       const res = await productoService.bulkAction(action, itemsArray)
       
       if (res.data.failed > 0) {
-        const errorDetail = res.data.errors?.[0]?.error || 'Error al ejecutar la operación.';
+        const errorDetail = res.data.errors?.[0]?.error || 'Error al ejecutar la operaci├│n.';
         toast.error(
           <div className="flex flex-col gap-1">
-            <span className="font-semibold">Operación Incompleta</span>
+            <span className="font-semibold">Operaci├│n Incompleta</span>
             <span className="text-sm opacity-90">{errorDetail}</span>
           </div>, 
           { id: toastId, duration: 6000 }
         )
       } else {
-        toast.success(res.data.message || 'Operación masiva completada con éxito', { id: toastId })
+        toast.success(res.data.message || 'Operaci├│n masiva completada con ├®xito', { id: toastId })
       }
 
       // Optimistic UI Update
@@ -453,15 +409,15 @@ export default function Productos() {
 
     } catch (err) {
       console.error(err)
-      toast.error('Error al ejecutar la operación masiva', { id: toastId })
+      toast.error('Error al ejecutar la operaci├│n masiva', { id: toastId })
     }
   }
 
   return (
     <div className="max-w-7xl mx-auto pb-12">
       <CrudToolbar
-        title={isPapeleraMode ? 'Papelera de Productos' : 'Catálogo Principal'}
-        description={isPapeleraMode ? 'Gestión de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
+        title={isPapeleraMode ? 'Papelera de Productos' : 'Cat├ílogo Principal'}
+        description={isPapeleraMode ? 'Gesti├│n de productos inactivos' : 'Explora y administra tu inventario por modelos y colores.'}
         primaryActions={[
           {
             label: isPapeleraMode ? "Volver a Activos" : "Ver Papelera",
@@ -507,7 +463,7 @@ export default function Productos() {
           }
         ] : []}
         searchConfig={{
-          placeholder: "Buscar por nombre o descripción...",
+          placeholder: "Buscar por nombre o descripci├│n...",
           shortPlaceholder: "Buscar...",
           value: globalSearch,
           onChange: setGlobalSearch
@@ -519,7 +475,7 @@ export default function Productos() {
           filters: (
             <>
               <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-gray-700">Código</label>
+                <label className="text-sm font-medium text-gray-700">C├│digo</label>
                 <input 
                   type="text" 
                   className="w-full px-3 py-1.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
@@ -621,8 +577,8 @@ export default function Productos() {
           return (
             <EmptyState 
               icon={Package}
-              title={isPapeleraMode ? "La papelera está vacía" : "No se encontraron productos"}
-              description={isPapeleraMode ? "No hay productos eliminados temporalmente." : "Intenta ajustar los filtros de búsqueda o crea uno nuevo."}
+              title={isPapeleraMode ? "La papelera est├í vac├¡a" : "No se encontraron productos"}
+              description={isPapeleraMode ? "No hay productos eliminados temporalmente." : "Intenta ajustar los filtros de b├║squeda o crea uno nuevo."}
               actionLabel={!isPapeleraMode ? "Nuevo Producto" : undefined}
               onAction={!isPapeleraMode ? () => {
                 resetWizard()
@@ -703,7 +659,7 @@ export default function Productos() {
         onClose={() => setItemToDelete(null)}
         onConfirm={confirmDelete}
         title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
-        message={`¿Estás seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'desactivar'} el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?${isPapeleraMode ? '\nEsta acción no se puede deshacer.' : ''}`}
+        message={`┬┐Est├ís seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'desactivar'} el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?${isPapeleraMode ? '\nEsta acci├│n no se puede deshacer.' : ''}`}
         confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Desactivar Producto'}
         variant="danger"
         dependencyConfig={{
@@ -729,7 +685,7 @@ export default function Productos() {
             const provider = ShareFactory.getProvider(providerId);
             
             await provider.share(payload);
-            toast.success('¡Compartido exitosamente!');
+            toast.success('┬íCompartido exitosamente!');
           } catch (error) {
             console.error('Error al compartir:', error);
             toast.error(error.message || 'Error al intentar compartir.');
@@ -788,8 +744,7 @@ export default function Productos() {
           setDeleteModalOpen(false)
           executeBulkAction(pendingDeleteAction, Array.from(selectedItems.values()))
         }}
-        onExportProductos={handleExportarRespaldoProductos}
-        onExportMovimientos={handleExportarRespaldoMovimientos}
+        onExportExcel={handleExportarExcel}
         previewData={deletePreviewData}
         isLoading={isDeletePreviewLoading}
       />
