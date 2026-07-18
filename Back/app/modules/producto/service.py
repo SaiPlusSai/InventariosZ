@@ -1594,6 +1594,32 @@ class ProductoService:
             
         except Exception as e:
             db.rollback()
+            import traceback
+            import datetime
+            import json
+            
+            error_details = {
+                "timestamp": str(datetime.datetime.now()),
+                "exception_type": type(e).__name__,
+                "exception_message": str(e),
+                "traceback": traceback.format_exc(),
+            }
+            
+            # If it's a SQLAlchemy error, try to extract statement and params
+            if hasattr(e, 'statement'):
+                error_details['sql_statement'] = getattr(e, 'statement', None)
+                error_details['sql_params'] = str(getattr(e, 'params', None))
+            if hasattr(e, 'orig'):
+                error_details['original_exception'] = str(getattr(e, 'orig', None))
+                if hasattr(e.orig, 'pgcode'):
+                    error_details['pgcode'] = e.orig.pgcode
+                
+            try:
+                with open("C:/Users/refgu/OneDrive/Documentos/GitHub/InventariosZ/audit_delete.log", "a", encoding="utf-8") as log_file:
+                    log_file.write(json.dumps(error_details, indent=2, ensure_ascii=False) + "\n\n")
+            except:
+                pass
+                
             return {
                 "successful": 0,
                 "failed": len(items),
