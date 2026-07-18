@@ -62,7 +62,6 @@ export const productoService = {
   previewHardDelete,
   exportarRespaldoProductos,
   exportarRespaldoMovimientos,
-  crear,
 
   filter: getAll,
 
