@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
-from fastapi import status, UploadFile, File
+from fastapi import status, UploadFile, File, Request
 from fastapi.responses import StreamingResponse
 
 from sqlalchemy.orm import Session
@@ -648,7 +648,18 @@ def update_por_color(
     status_code=status.HTTP_200_OK,
 )
 def bulk_action(
+    request: Request,
     data: BulkActionRequest,
     db: Session = Depends(get_db),
 ):
-    return service.bulk_action(db, data.action, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items])
+    return service.bulk_action(db, data.action, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items], request=request)
+
+@router.post(
+    '/hard-delete/preview',
+    status_code=status.HTTP_200_OK,
+)
+def preview_hard_delete(
+    data: BulkActionRequest,
+    db: Session = Depends(get_db),
+):
+    return service.preview_hard_delete(db, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items])

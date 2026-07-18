@@ -520,42 +520,59 @@ class ProductoRepository:
         self,
         db: Session,
         producto_id: int,
-    ):
+    ) -> int:
 
-        db.execute(
+        res = db.execute(
             delete(PrecioProducto)
             .where(
                 PrecioProducto.producto_id == producto_id
             )
         )
+        return res.rowcount
 
 
     def delete_imagenes(
         self,
         db: Session,
         producto_id: int,
-    ):
+    ) -> int:
 
-        db.execute(
+        res = db.execute(
             delete(ProductoImagen)
             .where(
                 ProductoImagen.producto_id == producto_id
             )
         )
+        return res.rowcount
 
 
     def delete_producto(
         self,
         db: Session,
         producto_id: int,
-    ):
+    ) -> int:
 
-        db.execute(
+        res = db.execute(
             delete(Producto)
             .where(
                 Producto.id == producto_id
             )
         )
+        return res.rowcount
+
+    def delete_movimientos(
+        self,
+        db: Session,
+        producto_id: int,
+    ) -> int:
+
+        res = db.execute(
+            delete(MovimientoInventario)
+            .where(
+                MovimientoInventario.producto_id == producto_id
+            )
+        )
+        return res.rowcount
 
 
     def delete_productos_codigo(

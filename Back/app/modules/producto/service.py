@@ -1442,7 +1442,7 @@ class ProductoService:
             db.commit()
         return {'msg': f'{len(variantes)} variantes recuperadas'}
 
-    def delete_color(self, db: Session, grupo_id: int, color_id: int, commit: bool = True, representante: Producto = None) -> None:
+    def delete_color(self, db: Session, grupo_id: int, color_id: int, commit: bool = True, representante: Producto = None) -> dict:
         if not representante:
             representante = self.repository.get_by_id_including_deleted(db, grupo_id)
         if not representante:
@@ -1459,14 +1459,24 @@ class ProductoService:
 
         if not variantes_inactivas:
             raise ProductoNoEncontradoException(PRODUCTO_NO_EXISTE)
+            
+        deleted_stats = {
+            "variantes": 0,
+            "movimientos": 0,
+            "precios": 0,
+            "imagenes": 0,
+        }
 
         for v in variantes_inactivas:
-            self.repository.delete_precios(db, v.id)
-            self.repository.delete_imagenes(db, v.id)
-            self.repository.delete_producto(db, v.id)
+            deleted_stats["movimientos"] += self.repository.delete_movimientos(db, v.id)
+            deleted_stats["precios"] += self.repository.delete_precios(db, v.id)
+            deleted_stats["imagenes"] += self.repository.delete_imagenes(db, v.id)
+            deleted_stats["variantes"] += self.repository.delete_producto(db, v.id)
             
         if commit:
             db.commit()
+            
+        return deleted_stats
 
     def update_por_color(
         self,
@@ -1550,10 +1560,71 @@ class ProductoService:
         db.commit()
         return {'msg': 'Producto actualizado correctamente'}
 
-    def bulk_action(self, db: Session, action: str, items: list[dict]) -> dict:
+    def preview_hard_delete(self, db: Session, items: list[dict]) -> dict:
+        total_productos = 0
+        total_imagenes = 0
+        total_precios = 0
+        total_movimientos = 0
+        
+        # Avoid circular dependencies by importing models here if necessary, or just query
+        from app.modules.producto.models import Producto
+        from app.modules.producto_imagen.models import ProductoImagen
+        from app.modules.precio_producto.models import PrecioProducto
+        from app.modules.movimiento_inventario.models import MovimientoInventario
+        
+        representantes_cache = {}
+        
+        for item in items:
+            grupo_id = item.get("grupo_id")
+            color_id = item.get("color_id")
+            
+            if grupo_id not in representantes_cache:
+                rep = self.repository.get_by_id_including_deleted(db, grupo_id)
+                if rep:
+                    representantes_cache[grupo_id] = rep
+                    
+            representante = representantes_cache.get(grupo_id)
+            if not representante:
+                continue
+                
+            variantes = db.query(Producto).filter(
+                Producto.codigo_producto_id == representante.codigo_producto_id,
+                Producto.tipo_calzado_id == representante.tipo_calzado_id,
+                Producto.material_id == representante.material_id,
+                Producto.descripcion == representante.descripcion,
+                Producto.color_id == color_id,
+                Producto.estado == False
+            ).all()
+            
+            total_productos += len(variantes)
+            
+            for v in variantes:
+                total_imagenes += db.query(ProductoImagen).filter(ProductoImagen.producto_id == v.id).count()
+                total_precios += db.query(PrecioProducto).filter(PrecioProducto.producto_id == v.id).count()
+                total_movimientos += db.query(MovimientoInventario).filter(MovimientoInventario.producto_id == v.id).count()
+                
+        return {
+            "productos": total_productos,
+            "imagenes": total_imagenes,
+            "precios": total_precios,
+            "movimientos": total_movimientos
+        }
+
+    def bulk_action(self, db: Session, action: str, items: list[dict], request=None) -> dict:
+        import time
+        import logging
+        start_time = time.time()
+        
         successful = 0
         failed = 0
         errors = []
+
+        total_deleted_stats = {
+            "variantes": 0,
+            "movimientos": 0,
+            "precios": 0,
+            "imagenes": 0,
+        }
 
         representantes_cache = {}
         for item in items:
@@ -1585,12 +1656,30 @@ class ProductoService:
                 elif action == "recuperar":
                     self.recuperar_color(db, grupo_id, color_id, commit=False, representante=rep_or_err)
                 elif action == "eliminar":
-                    self.delete_color(db, grupo_id, color_id, commit=False, representante=rep_or_err)
+                    stats = self.delete_color(db, grupo_id, color_id, commit=False, representante=rep_or_err)
+                    total_deleted_stats["variantes"] += stats["variantes"]
+                    total_deleted_stats["movimientos"] += stats["movimientos"]
+                    total_deleted_stats["precios"] += stats["precios"]
+                    total_deleted_stats["imagenes"] += stats["imagenes"]
                 else:
                     raise Exception(f"Acción '{action}' no soportada")
                 successful += 1
                 
             db.commit()
+            
+            if action == "eliminar":
+                exec_time = time.time() - start_time
+                client_ip = request.client.host if request and hasattr(request, 'client') and request.client else "Unknown IP"
+                user = getattr(request.state, "user", "Unknown User") if request and hasattr(request, 'state') else "Unknown User"
+                
+                logging.info(
+                    f"[HARD DELETE] Usuario: {user} | IP: {client_ip} | "
+                    f"Variantes eliminadas: {total_deleted_stats['variantes']} | "
+                    f"Movimientos purg.: {total_deleted_stats['movimientos']} | "
+                    f"Imágenes purg.: {total_deleted_stats['imagenes']} | "
+                    f"Precios purg.: {total_deleted_stats['precios']} | "
+                    f"Tiempo: {exec_time:.3f}s | Resultado: EXITOSO"
+                )
             
         except Exception as e:
             db.rollback()
@@ -1598,11 +1687,19 @@ class ProductoService:
             import datetime
             import json
             
+            exec_time = time.time() - start_time
+            client_ip = request.client.host if request and hasattr(request, 'client') and request.client else "Unknown IP"
+            user = getattr(request.state, "user", "Unknown User") if request and hasattr(request, 'state') else "Unknown User"
+            
             error_details = {
                 "timestamp": str(datetime.datetime.now()),
+                "user": str(user),
+                "ip": str(client_ip),
+                "execution_time_sec": exec_time,
                 "exception_type": type(e).__name__,
                 "exception_message": str(e),
                 "traceback": traceback.format_exc(),
+                "action": action
             }
             
             # If it's a SQLAlchemy error, try to extract statement and params
@@ -1614,16 +1711,12 @@ class ProductoService:
                 if hasattr(e.orig, 'pgcode'):
                     error_details['pgcode'] = e.orig.pgcode
                 
-            try:
-                with open("C:/Users/refgu/OneDrive/Documentos/GitHub/InventariosZ/audit_delete.log", "a", encoding="utf-8") as log_file:
-                    log_file.write(json.dumps(error_details, indent=2, ensure_ascii=False) + "\n\n")
-            except:
-                pass
+            logging.error(f"[HARD DELETE ERROR] Fallo crítico: {str(e)} \nDetalles: {json.dumps(error_details, ensure_ascii=False)}")
                 
             return {
                 "successful": 0,
                 "failed": len(items),
-                "errors": [{"error": f"Operación revertida (Atomicidad). Falló por: {str(e)}"}],
+                "errors": [{"error": str(e)}],
                 "message": "Operación masiva fallida y revertida."
             }
 

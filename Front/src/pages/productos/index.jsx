@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Card, Button, Input, ConfirmModal, EmptyState, ShareModal } from '../../components/ui'
 import CrudToolbar from '../../components/ui/Crud/CrudToolbar'
+import ConfirmDeleteModal from '../../components/ui/Crud/ConfirmDeleteModal'
 import { useProductoStore } from '../../store/productoStore'
 import { useWizardStore } from '../../store/wizardStore'
 import { productoService } from '../../services/productoService'
@@ -43,8 +44,15 @@ export default function Productos() {
   // UI States
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState(initialFilters)
+  const [localFilters, setLocalFilters] = useState({})
   const [isPapeleraMode, setIsPapeleraMode] = useState(false)
   const [globalSearch, setGlobalSearch] = useState('')
+
+  // Delete Modal State
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false)
+  const [deletePreviewData, setDeletePreviewData] = useState(null)
+  const [isDeletePreviewLoading, setIsDeletePreviewLoading] = useState(false)
+  const [pendingDeleteAction, setPendingDeleteAction] = useState(null)
   
   const [catalogos, setCatalogos] = useState({
     marcas: [], tipos: [], materiales: [], colores: [], tallas: []
@@ -336,36 +344,59 @@ export default function Productos() {
     selectAll(items)
   }
 
+  const loadDeletePreview = async (itemsArray) => {
+    try {
+      setIsDeletePreviewLoading(true)
+      const res = await productoService.previewHardDelete(itemsArray)
+      setDeletePreviewData(res.data)
+    } catch (err) {
+      console.error(err)
+      toast.error('Error al cargar la vista previa de dependencias')
+    } finally {
+      setIsDeletePreviewLoading(false)
+    }
+  }
+
   const handleBulkAction = async (action) => {
     if (selectedItems.size === 0) return
     
-    // Si la acción es destructiva, podemos usar ConfirmModal pero como aquí son genéricos,
-    // usaremos un window.confirm nativo temporalmente, o integrarlo con nuestro UI.
     const itemsArray = Array.from(selectedItems.values())
     
     if (action === 'eliminar') {
-      if (!window.confirm(`¿Estás seguro de eliminar permanentemente ${itemsArray.length} colores? Esta acción NO se puede deshacer.`)) {
-        return
-      }
+      setDeletePreviewData(null)
+      setPendingDeleteAction(action)
+      setDeleteModalOpen(true)
+      loadDeletePreview(itemsArray)
+      return
     } else if (action === 'desactivar') {
       if (!window.confirm(`¿Estás seguro de enviar ${itemsArray.length} colores a la papelera?`)) {
         return
       }
     }
 
+    executeBulkAction(action, itemsArray)
+  }
+
+  const executeBulkAction = async (action, itemsArray) => {
     let toastId;
     try {
       toastId = toast.loading('Procesando operación masiva...')
       const res = await productoService.bulkAction(action, itemsArray)
       
       if (res.data.failed > 0) {
-        toast.error(`Atención: ${res.data.successful} éxitos, ${res.data.failed} fallos.`, { id: toastId })
+        const errorDetail = res.data.errors?.[0]?.error || 'Error al ejecutar la operación.';
+        toast.error(
+          <div className="flex flex-col gap-1">
+            <span className="font-semibold">Operación Incompleta</span>
+            <span className="text-sm opacity-90">{errorDetail}</span>
+          </div>, 
+          { id: toastId, duration: 6000 }
+        )
       } else {
         toast.success(res.data.message || 'Operación masiva completada con éxito', { id: toastId })
       }
 
-      // Optimistic UI Update: Eliminar los seleccionados de la lista visible
-      // (Para desactivar y eliminar desaparecen de la vista actual, igual para recuperar desde papelera)
+      // Optimistic UI Update
       setProductos(productos.map(p => {
         const nuevosColores = p.colores.filter(c => {
           const key = `${p.grupo_id || p.producto_principal_id}-${c.color_id}`
@@ -705,6 +736,18 @@ export default function Productos() {
           }}
         />
       )}
+
+      <ConfirmDeleteModal 
+        isOpen={deleteModalOpen}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={() => {
+          setDeleteModalOpen(false)
+          executeBulkAction(pendingDeleteAction, Array.from(selectedItems.values()))
+        }}
+        onExportExcel={handleExportarExcel}
+        previewData={deletePreviewData}
+        isLoading={isDeletePreviewLoading}
+      />
     </div>
   )
 }

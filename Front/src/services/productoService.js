@@ -19,6 +19,9 @@ const updateColor = (grupoId, colorId, data) =>
 const bulkAction = (action, items) =>
   axiosInstance.post('/productos/bulk', { action, items })
 
+const previewHardDelete = (items) =>
+  axiosInstance.post('/productos/hard-delete/preview', { items })
+
 const getCatalogo = (params = {}) =>
   axiosInstance.get('/productos/catalogo', { params })
 
@@ -54,6 +57,7 @@ export const productoService = {
   eliminarColorPermanente,
   updateColor,
   bulkAction,
+  previewHardDelete,
 
   filter: getAll,
 
