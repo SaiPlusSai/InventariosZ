@@ -166,14 +166,16 @@ export default function ConfirmDeleteModal({ isOpen, onClose, onConfirm, onExpor
                   variant="secondary" 
                   onClick={handleExportProductos}
                   disabled={hasExportedProductos || isExportingProductos}
-                  className={`flex-shrink-0 ${hasExportedProductos ? 'opacity-50' : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-100'}`}
+                  className={`flex-shrink-0 min-w-[90px] h-[60px] p-0 ${hasExportedProductos ? 'opacity-50' : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-100'}`}
                 >
-                  {isExportingProductos ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
-                  ) : (
-                    <Download size={16} className="mr-2" />
-                  )}
-                  {hasExportedProductos ? 'Generado' : 'Generar'}
+                  <div className="flex flex-col items-center justify-center gap-1 w-full h-full text-center">
+                    {isExportingProductos ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                    ) : (
+                      <Download size={16} />
+                    )}
+                    <span className="text-xs font-medium leading-none">{hasExportedProductos ? 'Generado' : 'Generar'}</span>
+                  </div>
                 </Button>
               </div>
 
@@ -191,14 +193,16 @@ export default function ConfirmDeleteModal({ isOpen, onClose, onConfirm, onExpor
                   variant="secondary" 
                   onClick={handleExportMovimientos}
                   disabled={hasExportedMovimientos || isExportingMovimientos}
-                  className={`flex-shrink-0 ${hasExportedMovimientos ? 'opacity-50' : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-100'}`}
+                  className={`flex-shrink-0 min-w-[90px] h-[60px] p-0 ${hasExportedMovimientos ? 'opacity-50' : 'bg-white border-blue-200 text-blue-700 hover:bg-blue-100'}`}
                 >
-                  {isExportingMovimientos ? (
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700 mr-2"></div>
-                  ) : (
-                    <Download size={16} className="mr-2" />
-                  )}
-                  {hasExportedMovimientos ? 'Generado' : 'Generar'}
+                  <div className="flex flex-col items-center justify-center gap-1 w-full h-full text-center">
+                    {isExportingMovimientos ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
+                    ) : (
+                      <Download size={16} />
+                    )}
+                    <span className="text-xs font-medium leading-none">{hasExportedMovimientos ? 'Generado' : 'Generar'}</span>
+                  </div>
                 </Button>
               </div>
             </div>
