@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Query
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.modules.movimiento_inventario.schemas import MovimientoCreate, MovimientoResponse, MovimientoListadoResponse, MovimientoFiltro
