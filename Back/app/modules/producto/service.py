@@ -1810,7 +1810,7 @@ class ProductoService:
                 m.created_at.strftime("%Y-%m-%d %H:%M:%S") if m.created_at else "N/A",
                 codigo,
                 m.producto_id,
-                m.tipo_movimiento.value if m.tipo_movimiento else "N/A",
+                m.tipo_movimiento if m.tipo_movimiento else "N/A",
                 m.origen,
                 m.cantidad,
                 m.stock_anterior,
