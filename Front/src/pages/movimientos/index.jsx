@@ -48,19 +48,19 @@ export default function MovimientosPage() {
   const getPrimaryActions = () => [
     {
       label: 'Actualizar',
-      icon: <RefreshCw size={20} />,
+      icon: RefreshCw,
       onClick: handleRefresh,
       variant: 'secondary'
     },
     {
       label: 'Importar',
-      icon: <Upload size={20} />,
+      icon: Upload,
       onClick: handleImport,
       variant: 'secondary'
     },
     {
       label: 'Exportar',
-      icon: <Download size={20} />,
+      icon: Download,
       onClick: handleExport,
       variant: 'primary'
     }
