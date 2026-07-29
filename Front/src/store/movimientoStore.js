@@ -7,19 +7,32 @@ const useMovimientoStore = create((set, get) => ({
   loading: false,
   error: null,
   
-  // --- Sprint 1: Estructura base para Listado, Kardex y Dashboard ---
+  // --- Sprint 1 & 3: Estructura base para Listado, Kardex y Dashboard ---
   selectedRows: [],
   pagination: {
     page: 1,
     limit: 50
   },
+  sortConfig: {
+    key: 'fecha',
+    direction: 'desc'
+  },
   filters: {
     search: '',
+    codigo: '',
+    marca: '',
+    tipoCalzado: '',
+    material: '',
+    color: '',
+    talla: '',
     tipoMovimiento: null,
     origen: null,
     fechaInicio: null,
     fechaFin: null,
-    productoId: null
+    productoId: null,
+    cantidadMin: null,
+    cantidadMax: null,
+    observacion: ''
   },
 
   setFilters: (newFilters) => set((state) => ({
@@ -30,11 +43,20 @@ const useMovimientoStore = create((set, get) => ({
   clearFilters: () => set((state) => ({
     filters: {
       search: '',
+      codigo: '',
+      marca: '',
+      tipoCalzado: '',
+      material: '',
+      color: '',
+      talla: '',
       tipoMovimiento: null,
       origen: null,
       fechaInicio: null,
       fechaFin: null,
-      productoId: null
+      productoId: null,
+      cantidadMin: null,
+      cantidadMax: null,
+      observacion: ''
     },
     pagination: { ...state.pagination, page: 1 }
   })),
@@ -43,20 +65,36 @@ const useMovimientoStore = create((set, get) => ({
     pagination: { ...state.pagination, ...newPagination }
   })),
 
+  setSortConfig: (key, direction) => set((state) => ({
+    sortConfig: { key, direction },
+    pagination: { ...state.pagination, page: 1 }
+  })),
+
   setSelectedRows: (selectedRows) => set({ selectedRows }),
   clearSelectedRows: () => set({ selectedRows: [] }),
   // -----------------------------------------------------------------
   
   fetchMovimientos: async () => {
-    const { pagination, filters } = get();
+    const { pagination, filters, sortConfig } = get();
     set({ loading: true, error: null });
     try {
       const skip = (pagination.page - 1) * pagination.limit;
       const params = {
         skip,
         limit: pagination.limit,
-        // En futuros Sprints aquí se enviarán los filters
+        sort_by: sortConfig.key,
+        sort_order: sortConfig.direction,
       };
+
+      // Limpiar filtros nulos o vacíos antes de enviarlos
+      Object.keys(filters).forEach(key => {
+        if (filters[key] !== null && filters[key] !== '') {
+          // Convert camelCase to snake_case for backend
+          const snakeKey = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+          params[snakeKey] = filters[key];
+        }
+      });
+
       const response = await movimientoService.listar(params);
       set({ 
         movimientos: response.data,

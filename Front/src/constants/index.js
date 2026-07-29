@@ -35,6 +35,7 @@ export const ROUTES = {
   DASHBOARD: '/',
   PRODUCTOS: '/productos',
   MOVIMIENTOS: '/movimientos',
+  MOVIMIENTOS_DETALLE: '/movimientos/:id',
   MARCAS: '/marcas',
   MATERIALES: '/materiales',
   COLORES: '/colores',

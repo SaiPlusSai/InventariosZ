@@ -8,20 +8,31 @@ import { EmptyState } from '../../components/ui/EmptyState'
 import { ArrowRightLeft, Download, Upload, RefreshCw } from 'lucide-react'
 import MovimientoTable from './components/MovimientoTable'
 import MovimientoCard from './components/MovimientoCard'
+import ActiveFilters from './components/ActiveFilters'
+import MovimientoFilters from './components/MovimientoFilters'
 import useMovimientoStore from '../../store/movimientoStore'
 import { Loader2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 export default function MovimientosPage() {
-  const { movimientos, loading, fetchMovimientos } = useMovimientoStore()
+  const { movimientos, loading, fetchMovimientos, filters, setFilters, pagination, sortConfig } = useMovimientoStore()
   const [showFilters, setShowFilters] = useState(false)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    fetchMovimientos()
-  }, [fetchMovimientos])
+    const timer = setTimeout(() => {
+      fetchMovimientos()
+    }, 300) // Debounce global para search y filtros
 
-  // Handlers base sin implementación profunda para el Sprint 1
+    return () => clearTimeout(timer)
+  }, [filters, pagination.page, pagination.limit, sortConfig, fetchMovimientos])
+
   const handleSearch = (term) => {
-    // console.log('Buscar:', term)
+    setFilters({ search: term })
+  }
+
+  const handleVerDetalle = (movimiento) => {
+    navigate(`/movimientos/${movimiento.id}`)
   }
 
   const handleRefresh = () => {
@@ -66,21 +77,31 @@ export default function MovimientosPage() {
       
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">
         <CrudHeader>
-          <div className="flex items-center gap-3">
-            <SearchInput 
-              placeholder="Buscar por código, documento..." 
-              onSearch={handleSearch}
-            />
-            <FilterButton 
-              onToggle={() => setShowFilters(!showFilters)} 
-              showFilters={showFilters}
-            />
+          <div className="flex flex-col border-b border-gray-200/60 bg-white shadow-sm rounded-xl overflow-visible z-10 relative">
+          <div className="p-3 lg:p-4 flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+              <div className="w-full sm:w-auto">
+                <SearchInput 
+                  value={filters.search || ''}
+                  onSearch={handleSearch}
+                  placeholder="Buscar movimientos..."
+                />
+              </div>
+              <ResponsiveHeaderActions 
+                primaryActions={getPrimaryActions()} 
+                secondaryActions={[]} 
+              />
+            </div>
           </div>
-          
-          <ResponsiveHeaderActions actions={getPrimaryActions()} />
-        </CrudHeader>
 
-        {/* Filters Panel will go here in future Sprints */}
+          <MovimientoFilters 
+            showFilters={showFilters} 
+            onClose={() => setShowFilters(false)} 
+          />
+        </div>
+        
+        <ActiveFilters />
+        </CrudHeader>
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto">
@@ -99,13 +120,20 @@ export default function MovimientosPage() {
               <>
                 {/* Desktop View */}
                 <div className="hidden lg:block">
-                  <MovimientoTable movimientos={movimientos} />
+                  <MovimientoTable 
+                    movimientos={movimientos} 
+                    onVerDetalle={handleVerDetalle} 
+                  />
                 </div>
 
                 {/* Mobile/Tablet View */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
                   {movimientos.map(m => (
-                    <MovimientoCard key={m.id} movimiento={m} />
+                    <MovimientoCard 
+                      key={m.id} 
+                      movimiento={m} 
+                      onVerDetalle={handleVerDetalle}
+                    />
                   ))}
                 </div>
               </>

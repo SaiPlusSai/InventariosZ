@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, BackgroundTasks
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.modules.movimiento_inventario.schemas import MovimientoCreate, MovimientoResponse, MovimientoListadoResponse
+from app.modules.movimiento_inventario.schemas import MovimientoCreate, MovimientoResponse, MovimientoListadoResponse, MovimientoFiltro
 from app.modules.movimiento_inventario.service import movimiento_service
 
 router = APIRouter(prefix="/movimientos", tags=["Movimientos de Inventario"])
@@ -21,14 +21,15 @@ def registrar_movimiento(
 
 @router.get("/", response_model=MovimientoListadoResponse)
 def listar_movimientos(
-    skip: int = 0, 
-    limit: int = 50,
+    filtros: MovimientoFiltro = Depends(),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(50, ge=1, le=100),
     db: Session = Depends(get_db)
 ):
     """
-    Obtiene la lista general de movimientos del sistema.
+    Obtiene un listado paginado y filtrado de todos los movimientos.
     """
-    return movimiento_service.listar_movimientos(db=db, skip=skip, limit=limit)
+    return movimiento_service.listar_movimientos(db, filtros, skip=skip, limit=limit)
 
 @router.get("/producto/{producto_id}")
 def obtener_kardex(

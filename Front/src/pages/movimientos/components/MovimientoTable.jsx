@@ -1,25 +1,54 @@
 import React, { memo } from 'react'
-import { Eye } from 'lucide-react'
+import { Eye, ArrowUp, ArrowDown } from 'lucide-react'
 import { TIPO_MOVIMIENTO_BADGES, ORIGEN_MOVIMIENTO_BADGES } from '../../../constants/movimientos'
+import useMovimientoStore from '../../../store/movimientoStore'
+
+const SortIcon = ({ column, sortConfig }) => {
+  if (sortConfig.key !== column) return null;
+  return sortConfig.direction === 'asc' 
+    ? <ArrowUp size={14} className="inline ml-1 text-indigo-600" />
+    : <ArrowDown size={14} className="inline ml-1 text-indigo-600" />;
+}
 
 const MovimientoTable = memo(({ movimientos = [], onVerDetalle }) => {
+  const { sortConfig, setSortConfig } = useMovimientoStore()
+
+  const handleSort = (key) => {
+    let direction = 'asc'
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig(key, direction)
+  }
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse whitespace-nowrap">
           <thead>
             <tr className="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500">
-              <th className="px-4 py-3 font-medium">Fecha</th>
-              <th className="px-4 py-3 font-medium">Código</th>
+              <th className="px-4 py-3 font-medium cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('fecha')}>
+                Fecha <SortIcon column="fecha" sortConfig={sortConfig} />
+              </th>
+              <th className="px-4 py-3 font-medium cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('codigo')}>
+                Código <SortIcon column="codigo" sortConfig={sortConfig} />
+              </th>
               <th className="px-4 py-3 font-medium">Marca</th>
               <th className="px-4 py-3 font-medium">Tipo</th>
               <th className="px-4 py-3 font-medium">Color</th>
               <th className="px-4 py-3 font-medium">Talla</th>
-              <th className="px-4 py-3 font-medium">Movimiento</th>
+              <th className="px-4 py-3 font-medium cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('tipo_movimiento')}>
+                Movimiento <SortIcon column="tipo_movimiento" sortConfig={sortConfig} />
+              </th>
               <th className="px-4 py-3 font-medium">Origen</th>
-              <th className="px-4 py-3 font-medium text-right">Cant.</th>
-              <th className="px-4 py-3 font-medium text-right" title="Stock Anterior">Ant.</th>
-              <th className="px-4 py-3 font-medium text-right" title="Stock Después">Desp.</th>
+              <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('cantidad')}>
+                Cant. <SortIcon column="cantidad" sortConfig={sortConfig} />
+              </th>
+              <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('stock_anterior')} title="Stock Anterior">
+                Ant. <SortIcon column="stock_anterior" sortConfig={sortConfig} />
+              </th>
+              <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('stock_nuevo')} title="Stock Después">
+                Desp. <SortIcon column="stock_nuevo" sortConfig={sortConfig} />
+              </th>
               <th className="px-4 py-3 font-medium">Observación</th>
               <th className="px-4 py-3 font-medium text-center">Acciones</th>
             </tr>

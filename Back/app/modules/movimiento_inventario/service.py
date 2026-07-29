@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, lazyload
 from fastapi import HTTPException, status
 from app.modules.movimiento_inventario.models import MovimientoInventario
-from app.modules.movimiento_inventario.schemas import MovimientoCreate
+from app.modules.movimiento_inventario.schemas import MovimientoCreate, MovimientoFiltro
 from app.modules.movimiento_inventario.repository import movimiento_repository
 from app.modules.movimiento_inventario.constants import TipoMovimiento
 from app.modules.movimiento_inventario.validators import validar_coherencia_tipo_origen, validar_origen_observacion
@@ -116,13 +116,13 @@ class MovimientoInventarioService:
         
         return {"items": movimientos, "total": total}
 
-    def listar_movimientos(self, db: Session, skip: int = 0, limit: int = 50):
+    def listar_movimientos(self, db: Session, filtros: MovimientoFiltro, skip: int = 0, limit: int = 50):
         """
-        Obtiene la lista paginada de movimientos.
+        Obtiene la lista paginada de movimientos con filtros.
         Mapea el ORM a un DTO plano y limpio.
         """
-        movimientos_orm = movimiento_repository.listar_movimientos(db, skip, limit)
-        total = movimiento_repository.contar_movimientos_total(db)
+        movimientos_orm = movimiento_repository.listar_movimientos(db, filtros, skip, limit)
+        total = movimiento_repository.contar_movimientos_total(db, filtros)
         
         items = []
         for m in movimientos_orm:

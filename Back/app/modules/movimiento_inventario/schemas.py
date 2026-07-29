@@ -34,11 +34,32 @@ class MovimientoResponse(MovimientoBase):
     model_config = ConfigDict(from_attributes=True)
 
 class MovimientoFiltro(BaseModel):
+    # Relacionales
     producto_id: Optional[int] = None
+    codigo: Optional[str] = None
+    marca: Optional[str] = None
+    tipo_calzado: Optional[str] = None
+    material: Optional[str] = None
+    color: Optional[str] = None
+    talla: Optional[str] = None
+    
+    # Propios
     tipo_movimiento: Optional[TipoMovimiento] = None
     origen: Optional[OrigenMovimiento] = None
+    observacion: Optional[str] = None
+    
+    # Rangos
     fecha_inicio: Optional[datetime] = None
     fecha_fin: Optional[datetime] = None
+    cantidad_min: Optional[int] = None
+    cantidad_max: Optional[int] = None
+    
+    # Búsqueda global
+    search: Optional[str] = None
+    
+    # Ordenamiento
+    sort_by: Optional[str] = 'fecha'
+    sort_order: Optional[str] = 'desc'
 
 class MovimientoListadoResponse(BaseModel):
     items: List[MovimientoResponse]
