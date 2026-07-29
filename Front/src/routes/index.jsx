@@ -11,6 +11,7 @@ import Tallas from '../pages/tallas'
 import Tipos from '../pages/tipos'
 import CodigoProducto from '../pages/codigoProducto'
 import Productos from '../pages/productos'
+import Movimientos from '../pages/movimientos'
 
 export default function Routes() {
   return (
@@ -19,6 +20,7 @@ export default function Routes() {
       <Route element={<DashboardLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/productos" element={<Productos />} />
+        <Route path="/movimientos" element={<Movimientos />} />
         <Route path="/marcas" element={<Marcas />} />
         <Route path="/materiales" element={<Materiales />} />
         <Route path="/colores" element={<Colores />} />

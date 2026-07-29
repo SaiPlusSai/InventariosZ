@@ -12,7 +12,8 @@ import {
   Barcode,
   User,
   LogOut,
-  X
+  X,
+  ArrowRightLeft
 } from 'lucide-react'
 
 import { ROUTES } from '../../constants'
@@ -87,6 +88,19 @@ export default function Sidebar({ isOpen, setIsOpen }) {
         >
           <Package size={18} className="mr-3" />
           Productos
+        </Link>
+
+        {/* Movimientos */}
+        <Link
+          to={ROUTES.MOVIMIENTOS}
+          className={`flex items-center px-6 py-3 transition-colors ${
+            isActive(ROUTES.MOVIMIENTOS)
+              ? 'bg-primary-700 border-l-4 border-white'
+              : 'hover:bg-primary-700'
+          }`}
+        >
+          <ArrowRightLeft size={18} className="mr-3" />
+          Movimientos
         </Link>
 
         {/* Catálogos */}

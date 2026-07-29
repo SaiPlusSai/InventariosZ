@@ -13,6 +13,12 @@ class MovimientoInventarioRepository:
             .order_by(MovimientoInventario.created_at.desc())\
             .offset(skip).limit(limit).all()
 
+    def listar_movimientos(self, db: Session, skip: int = 0, limit: int = 50) -> list[MovimientoInventario]:
+        """
+        Obtiene una lista general de todos los movimientos. (Stub Sprint 1)
+        """
+        return []
+
     def count_kardex_by_producto(self, db: Session, producto_id: int) -> int:
         return db.query(MovimientoInventario).filter(MovimientoInventario.producto_id == producto_id).count()
 

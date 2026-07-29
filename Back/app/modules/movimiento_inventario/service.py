@@ -114,9 +114,12 @@ class MovimientoInventarioService:
         movimientos = movimiento_repository.get_kardex_by_producto(db, producto_id, skip, limit)
         total = movimiento_repository.count_kardex_by_producto(db, producto_id)
         
-        return {
-            "total": total,
-            "items": movimientos
-        }
+        return {"items": movimientos, "total": total}
+
+    def listar_movimientos(self, db: Session, skip: int = 0, limit: int = 50):
+        """
+        Obtiene la lista de movimientos para el listado general. (Stub Sprint 1)
+        """
+        return {"items": [], "total": 0}
 
 movimiento_service = MovimientoInventarioService()

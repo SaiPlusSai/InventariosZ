@@ -30,3 +30,7 @@ class MovimientoFiltro(BaseModel):
     origen: Optional[OrigenMovimiento] = None
     fecha_inicio: Optional[datetime] = None
     fecha_fin: Optional[datetime] = None
+
+class MovimientoListadoResponse(BaseModel):
+    items: List[MovimientoResponse]
+    total: int

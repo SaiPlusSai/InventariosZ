@@ -7,6 +7,46 @@ const useMovimientoStore = create((set, get) => ({
   loading: false,
   error: null,
   
+  // --- Sprint 1: Estructura base para Listado, Kardex y Dashboard ---
+  selectedRows: [],
+  pagination: {
+    page: 1,
+    limit: 50
+  },
+  filters: {
+    search: '',
+    tipoMovimiento: null,
+    origen: null,
+    fechaInicio: null,
+    fechaFin: null,
+    productoId: null
+  },
+
+  setFilters: (newFilters) => set((state) => ({
+    filters: { ...state.filters, ...newFilters },
+    pagination: { ...state.pagination, page: 1 }
+  })),
+
+  clearFilters: () => set((state) => ({
+    filters: {
+      search: '',
+      tipoMovimiento: null,
+      origen: null,
+      fechaInicio: null,
+      fechaFin: null,
+      productoId: null
+    },
+    pagination: { ...state.pagination, page: 1 }
+  })),
+
+  setPagination: (newPagination) => set((state) => ({
+    pagination: { ...state.pagination, ...newPagination }
+  })),
+
+  setSelectedRows: (selectedRows) => set({ selectedRows }),
+  clearSelectedRows: () => set({ selectedRows: [] }),
+  // -----------------------------------------------------------------
+  
   fetchKardex: async (productoId, skip = 0, limit = 100) => {
     set({ loading: true, error: null });
     try {
