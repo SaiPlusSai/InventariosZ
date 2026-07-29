@@ -1786,53 +1786,166 @@ class ProductoService:
         return buffer
 
     def exportar_respaldo_movimientos(self, db: Session, items: list[dict], request=None) -> BytesIO:
-        from app.core.excel_utils import export_generic_excel
+        from io import BytesIO
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
+        from datetime import datetime
         from app.modules.movimiento_inventario.models import MovimientoInventario
         
         variantes = self._get_variantes_por_lote(db, items)
         ids = [v.id for v in variantes]
+        # Mapa en memoria para evitar N+1 en datos extendidos sin modificar la consulta SQL original
+        variant_map = {v.id: v for v in variantes}
         
         movimientos = db.query(MovimientoInventario).options(
             joinedload(MovimientoInventario.producto).joinedload(Producto.codigo_producto)
         ).filter(MovimientoInventario.producto_id.in_(ids)).order_by(MovimientoInventario.created_at.desc()).all()
         
-        headers = [
-            "ID Movimiento", "Fecha y Hora", "Código Producto", "Variante ID", 
-            "Tipo Movimiento", "Origen", "Cantidad", "Stock Anterior", 
-            "Stock Nuevo", "Documento", "Observación", "Usuario"
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Auditoría Kardex"
+        
+        # Estilos visuales diferentes al respaldo administrativo
+        azul_oscuro = PatternFill(start_color="0F172A", end_color="0F172A", fill_type="solid")
+        fila_gris = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        fuente_titulo = Font(name="Calibri", size=15, bold=True, color="FFFFFF")
+        fuente_subtitulo = Font(name="Calibri", size=11, bold=True, color="FFFFFF")
+        fuente_encabezado = Font(name="Calibri", size=10, bold=True, color="FFFFFF")
+        fuente_label = Font(name="Calibri", size=10, bold=True, color="0F172A")
+        fuente_normal = Font(name="Calibri", size=10)
+        
+        alineacion_centro = Alignment(horizontal="center", vertical="center")
+        alineacion_izq = Alignment(horizontal="left", vertical="center")
+        alineacion_der = Alignment(horizontal="right", vertical="center")
+        
+        borde_suave = Border(
+            left=Side(style='thin', color='E2E8F0'), 
+            right=Side(style='thin', color='E2E8F0'), 
+            top=Side(style='thin', color='E2E8F0'), 
+            bottom=Side(style='thin', color='E2E8F0')
+        )
+        
+        # 1. Encabezado Propio
+        ws.merge_cells('A1:L1')
+        ws.merge_cells('A2:L2')
+        ws['A1'] = "RESPALDO OPERATIVO DE MOVIMIENTOS"
+        ws['A2'] = "(KARDEX DEL PRODUCTO)"
+        
+        for row in ws['A1:L2']:
+            for cell in row:
+                cell.fill = azul_oscuro
+                cell.alignment = alineacion_centro
+        ws['A1'].font = fuente_titulo
+        ws['A2'].font = fuente_subtitulo
+        
+        # 2. Información General
+        fecha_actual = datetime.now()
+        user_ip = request.client.host if request and hasattr(request, 'client') and request.client else "Local"
+        
+        info_general = [
+            ("Sistema:", "Inventarios Z"),
+            ("Fecha:", fecha_actual.strftime("%Y-%m-%d %H:%M:%S")),
+            ("Usuario / IP:", user_ip),
+            ("Cantidad de movimientos:", f"{len(movimientos)}"),
+            ("Productos involucrados:", f"{len(variantes)} variantes"),
+            ("Motivo:", "Auditoría Operativa previa a Eliminación Definitiva (Hard Delete)")
         ]
         
-        data = []
-        for m in movimientos:
-            codigo = m.producto.codigo_producto.codigo if m.producto and m.producto.codigo_producto else "N/A"
-            data.append([
+        row_num = 4
+        for label, valor in info_general:
+            ws.cell(row=row_num, column=1, value=label).font = fuente_label
+            ws.cell(row=row_num, column=2, value=valor).font = fuente_normal
+            row_num += 1
+            
+        # 3. Separación visual (Fila vacía)
+        row_num += 1
+        
+        # 4. Tabla de Movimientos (Encabezados)
+        headers = [
+            "ID Movimiento", "Fecha", "Código", "Descripción", "Color", "Talla", 
+            "Tipo", "Origen", "Cantidad", "Stock Antes", "Stock Después", "Observación"
+        ]
+        
+        header_row = row_num
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=header_row, column=col_num, value=header)
+            cell.font = fuente_encabezado
+            cell.fill = azul_oscuro
+            cell.alignment = alineacion_centro
+            cell.border = borde_suave
+            
+        row_num += 1
+        start_data_row = row_num
+        
+        # 5. Datos con filas alternadas
+        for i, m in enumerate(movimientos):
+            v = variant_map.get(m.producto_id)
+            codigo = v.codigo_producto.codigo if v and v.codigo_producto else "N/A"
+            descripcion = v.descripcion if v else "N/A"
+            color = v.color.nombre if v and v.color else "N/A"
+            talla = v.talla.nombre if v and v.talla else "N/A"
+            
+            data_row = [
                 m.id,
                 m.created_at.strftime("%Y-%m-%d %H:%M:%S") if m.created_at else "N/A",
                 codigo,
-                m.producto_id,
+                descripcion or "",
+                color,
+                talla,
                 m.tipo_movimiento if m.tipo_movimiento else "N/A",
                 m.origen,
                 m.cantidad,
                 m.stock_anterior,
                 m.stock_nuevo,
-                f"{m.documento_tipo} {m.documento_id}".strip() if m.documento_tipo or m.documento_id else "N/A",
-                m.observacion or "",
-                m.usuario_id or "Sistema"
-            ])
+                m.observacion or ""
+            ]
             
-        fecha_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-        user_ip = request.client.host if request else "Local"
+            is_even = i % 2 == 0
+            row_fill = fila_gris if is_even else PatternFill(fill_type=None)
+            
+            for col_num, val in enumerate(data_row, 1):
+                cell = ws.cell(row=row_num, column=col_num, value=val)
+                cell.font = fuente_normal
+                cell.border = borde_suave
+                if is_even:
+                    cell.fill = row_fill
+                
+                # Alineación y formatos específicos
+                if col_num in [1, 9, 10, 11]: # Numéricos (ID, Cantidades, Stocks)
+                    cell.alignment = alineacion_der
+                elif col_num in [2, 5, 6, 7, 8]: # Centrados (Fecha, Color, Talla, Tipo, Origen)
+                    cell.alignment = alineacion_centro
+                else: # Izquierda (Código, Desc, Observación)
+                    cell.alignment = alineacion_izq
+                    
+            row_num += 1
+            
+        # 6. Autoajuste y Congelado
+        ws.auto_filter.ref = f"A{header_row}:L{row_num - 1}"
+        ws.freeze_panes = f"A{header_row + 1}"
         
-        metadatos = [
-            ["SISTEMA:", "Inventarios Z"],
-            ["MOTIVO:", "Auditoría Operativa previa a Eliminación Definitiva"],
-            ["FECHA:", fecha_str],
-            ["USUARIO (IP):", user_ip],
-            ["CANTIDAD:", f"{len(movimientos)} movimientos exportados"],
-            [], []
-        ]
-        
-        return export_generic_excel("Auditoria Kardex", headers, metadatos + data)
+        for col_idx, col in enumerate(ws.columns, 1):
+            max_length = 0
+            column_letter = get_column_letter(col_idx)
+            for cell in col:
+                try:
+                    if cell.value:
+                        if cell.row <= header_row - 1:
+                            continue
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = max_length + 2
+            if adjusted_width > 40:
+                adjusted_width = 40
+            ws.column_dimensions[column_letter].width = max(adjusted_width, 12)
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
 
     def bulk_action(self, db: Session, action: str, items: list[dict], request=None) -> dict:
         import time
