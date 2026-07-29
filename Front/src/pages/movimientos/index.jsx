@@ -1,19 +1,17 @@
 import { useState, useEffect } from 'react'
 import CrudHeader from '../../components/ui/CrudHeader'
-import SearchInput from '../../components/ui/Crud/SearchInput'
-import FilterButton from '../../components/ui/Crud/FilterButton'
-import { EmptyState } from '../../components/ui/EmptyState'
 import { ArrowRightLeft, Download, RefreshCw } from 'lucide-react'
 import MovimientoTable from './components/MovimientoTable'
 import MovimientoCard from './components/MovimientoCard'
-import ActiveFilters from './components/ActiveFilters'
 import MovimientoFilters from './components/MovimientoFilters'
 import useMovimientoStore from '../../store/movimientoStore'
 import { Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
+import { EmptyState } from '../../components/ui/EmptyState'
+
 export default function MovimientosPage() {
-  const { movimientos, loading, fetchMovimientos, filters, setFilters, pagination, sortConfig } = useMovimientoStore()
+  const { movimientos, loading, fetchMovimientos, filters, setFilters, pagination, sortConfig, clearFilters } = useMovimientoStore()
   const [showFilters, setShowFilters] = useState(false)
   const navigate = useNavigate()
 
@@ -56,6 +54,38 @@ export default function MovimientosPage() {
     }
   ]
 
+  const getActiveFilters = () => {
+    const active = []
+    const keyMap = {
+      codigo: 'Código',
+      marca: 'Marca',
+      tipoCalzado: 'Tipo',
+      material: 'Material',
+      color: 'Color',
+      talla: 'Talla',
+      tipoMovimiento: 'Movimiento',
+      origen: 'Origen',
+      fechaInicio: 'Desde',
+      fechaFin: 'Hasta',
+    }
+    
+    Object.entries(filters).forEach(([key, value]) => {
+      if (key === 'search' || !value) return;
+      let displayValue = value;
+      if (key === 'fechaInicio' || key === 'fechaFin') {
+        try { displayValue = new Date(value).toLocaleDateString('es-ES') } catch (e) {}
+      } else if (key === 'origen') {
+        displayValue = value.replace('_', ' ')
+      }
+      active.push({ 
+        label: keyMap[key] || key, 
+        value: displayValue, 
+        onRemove: () => setFilters({ [key]: key.includes('fecha') || key === 'tipoMovimiento' || key === 'origen' ? null : '' }) 
+      })
+    })
+    return active
+  }
+
   const listaMovimientos = Array.isArray(movimientos) ? movimientos : [];
 
   return (
@@ -64,32 +94,20 @@ export default function MovimientosPage() {
         title="Movimientos de Inventario"
         description="Historial completo de entradas, salidas y ajustes."
         actions={getPrimaryActions()}
-        extraContent={
-          <div className="flex flex-col">
-            <div className="p-3 lg:p-4 flex flex-col gap-4 border-b border-gray-200/60 bg-white">
-              <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                <div className="w-full lg:w-1/2">
-                  <SearchInput 
-                    value={filters.search || ''}
-                    onSearch={handleSearch}
-                    placeholder="Buscar por código, producto, marca u observación..."
-                  />
-                </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
-                  <FilterButton 
-                    onToggle={() => setShowFilters(!showFilters)} 
-                    showFilters={showFilters}
-                  />
-                </div>
-              </div>
-            </div>
-            <MovimientoFilters 
-              showFilters={showFilters} 
-              onClose={() => setShowFilters(false)} 
-            />
-            <ActiveFilters />
-          </div>
-        }
+        searchConfig={{
+          placeholder: "Buscar por código, producto, marca u observación...",
+          value: filters.search || '',
+          onChange: handleSearch,
+          hideSearchButton: true
+        }}
+        filterConfig={{
+          showFilters,
+          onToggle: () => setShowFilters(!showFilters),
+          onClear: clearFilters,
+          onApply: () => setShowFilters(false),
+          activeFilters: getActiveFilters(),
+          filters: <MovimientoFilters />
+        }}
       />
 
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">

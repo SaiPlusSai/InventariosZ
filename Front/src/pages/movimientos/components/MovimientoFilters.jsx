@@ -5,8 +5,8 @@ import Input from '../../../components/ui/Input'
 import useMovimientoStore from '../../../store/movimientoStore'
 import { TIPO_MOVIMIENTO, ORIGEN_MOVIMIENTO } from '../../../constants/movimientos'
 
-export default function MovimientoFilters({ showFilters, onClose }) {
-  const { filters, setFilters, clearFilters } = useMovimientoStore()
+export default function MovimientoFilters() {
+  const { filters, setFilters } = useMovimientoStore()
   
   const [catalogos, setCatalogos] = useState({
     marcas: [], tipos: [], materiales: [], colores: [], tallas: [], codigos: []
@@ -43,14 +43,7 @@ export default function MovimientoFilters({ showFilters, onClose }) {
     setFilters({ [name]: value || null })
   }
 
-  // Prevenir que el submit refresque la página
-  const handleApply = (e) => {
-    if (e) e.preventDefault()
-    onClose()
-  }
-
-  // Los filtros se envían como children al FilterPanel
-  const filterInputs = (
+  return (
     <div className="col-span-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-3">
       {/* Fila 1: Código | Marca | Tipo | Color */}
       <div className="space-y-1">
@@ -138,27 +131,5 @@ export default function MovimientoFilters({ showFilters, onClose }) {
         <Input type="date" name="fechaFin" value={filters.fechaFin || ''} onChange={handleChange} className="text-sm h-[34px]" />
       </div>
     </div>
-  )
-
-  return (
-    <>
-      <div className="hidden lg:block">
-        <FilterPanelDesktop 
-          showFilters={showFilters} 
-          filters={filterInputs}
-          onClear={clearFilters}
-          onApply={handleApply}
-        />
-      </div>
-      <div className="block lg:hidden">
-        <FilterPanelMobile
-          isOpen={showFilters}
-          onClose={onClose}
-          filters={filterInputs}
-          onClear={clearFilters}
-          onApply={handleApply}
-        />
-      </div>
-    </>
   )
 }
