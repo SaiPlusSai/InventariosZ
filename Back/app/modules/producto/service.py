@@ -1623,24 +1623,98 @@ class ProductoService:
         }
 
     def exportar_respaldo_productos(self, db: Session, items: list[dict], request=None) -> BytesIO:
-        from app.core.excel_utils import export_generic_excel
+        from io import BytesIO
+        from openpyxl import Workbook
+        from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        from datetime import datetime
+        
         variantes = self._get_variantes_por_lote(db, items)
         
-        headers = [
-            "ID Físico", "Código", "Marca", "Tipo Calzado", "Material", "Color", 
-            "Talla", "Descripción", "Stock Actual", "Stock Mínimo", "Stock Máximo", 
-            "Precio Compra", "Precio Venta", "Imágenes Relacionadas", "Fecha Creación"
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Respaldo Administrativo"
+        
+        # Estilos corporativos
+        azul_corporativo = PatternFill(start_color="1E3A8A", end_color="1E3A8A", fill_type="solid")
+        azul_claro = PatternFill(start_color="EFF6FF", end_color="EFF6FF", fill_type="solid")
+        fuente_titulo = Font(name="Arial", size=16, bold=True, color="FFFFFF")
+        fuente_subtitulo = Font(name="Arial", size=12, bold=True, color="FFFFFF")
+        fuente_encabezado = Font(name="Arial", size=10, bold=True, color="FFFFFF")
+        fuente_bold_dark = Font(name="Arial", size=10, bold=True, color="1E3A8A")
+        fuente_normal = Font(name="Arial", size=10)
+        fuente_footer = Font(name="Arial", size=9, italic=True, color="6B7280")
+        
+        alineacion_centro = Alignment(horizontal="center", vertical="center")
+        alineacion_izq = Alignment(horizontal="left", vertical="center")
+        
+        borde_fino = Border(
+            left=Side(style='thin', color='D1D5DB'), 
+            right=Side(style='thin', color='D1D5DB'), 
+            top=Side(style='thin', color='D1D5DB'), 
+            bottom=Side(style='thin', color='D1D5DB')
+        )
+
+        # 1. Título principal
+        ws.merge_cells('A1:L1')
+        ws.merge_cells('A2:L2')
+        ws['A1'] = "RESPALDO ADMINISTRATIVO"
+        ws['A2'] = "Eliminación Definitiva de Productos"
+        
+        for row in ws['A1:L2']:
+            for cell in row:
+                cell.fill = azul_corporativo
+                cell.alignment = alineacion_centro
+        ws['A1'].font = fuente_titulo
+        ws['A2'].font = fuente_subtitulo
+        
+        # 2. Información General
+        fecha_actual = datetime.now()
+        user_ip = request.client.host if request and hasattr(request, 'client') and request.client else "Local"
+        
+        info_general = [
+            ("Fecha:", fecha_actual.strftime("%Y-%m-%d")),
+            ("Hora:", fecha_actual.strftime("%H:%M:%S")),
+            ("Usuario (IP):", user_ip),
+            ("Cantidad de productos:", f"{len(variantes)} registros"),
+            ("Motivo:", "Eliminación Definitiva (Hard Delete)")
         ]
         
-        data = []
+        row_num = 4
+        for label, valor in info_general:
+            ws.cell(row=row_num, column=1, value=label).font = fuente_bold_dark
+            ws.cell(row=row_num, column=2, value=valor).font = fuente_normal
+            row_num += 1
+            
+        # 3. Separador visual
+        row_num += 1
+        ws.merge_cells(f'A{row_num}:L{row_num}')
+        for cell in ws[f'A{row_num}:L{row_num}'][0]:
+            cell.fill = azul_claro
+        row_num += 2
+        
+        # 4. Tabla de productos (Encabezados)
+        headers = [
+            "ID Físico", "Código", "Marca", "Tipo Calzado", "Material", "Color", 
+            "Talla", "Descripción", "Stock Actual", "Stock Mínimo", "Stock Máximo", "Precio"
+        ]
+        
+        header_row = row_num
+        for col_num, header in enumerate(headers, 1):
+            cell = ws.cell(row=header_row, column=col_num, value=header)
+            cell.font = fuente_encabezado
+            cell.fill = azul_corporativo
+            cell.alignment = alineacion_centro
+            cell.border = borde_fino
+            
+        row_num += 1
+        start_data_row = row_num
+        
+        # Datos
         for v in variantes:
             precio_vigente = next((p for p in v.precios if p.estado), None)
-            precio_c = precio_vigente.precio_compra if precio_vigente else 0
-            precio_v = precio_vigente.precio_venta if precio_vigente else 0
+            precio = float(precio_vigente.precio_venta) if precio_vigente else 0.0
             
-            imagenes_names = ", ".join([img.nombre_archivo for img in v.imagenes]) if v.imagenes else "Ninguna"
-            
-            data.append([
+            data_row = [
                 v.id,
                 v.codigo_producto.codigo if v.codigo_producto else "N/A",
                 v.codigo_producto.marca.nombre if v.codigo_producto and v.codigo_producto.marca else "N/A",
@@ -1651,27 +1725,64 @@ class ProductoService:
                 v.descripcion or "",
                 v.stock_actual,
                 v.stock_minimo,
-                v.stock_maximo,
-                precio_c,
-                precio_v,
-                imagenes_names,
-                v.created_at.strftime("%Y-%m-%d %H:%M") if v.created_at else "N/A"
-            ])
+                v.stock_maximo if v.stock_maximo is not None else "N/A",
+                precio
+            ]
             
-        fecha_str = datetime.now().strftime("%Y-%m-%d %H:%M")
-        user_ip = request.client.host if request else "Local"
+            for col_num, val in enumerate(data_row, 1):
+                cell = ws.cell(row=row_num, column=col_num, value=val)
+                cell.font = fuente_normal
+                cell.border = borde_fino
+                if isinstance(val, (int, float)):
+                    cell.alignment = alineacion_centro
+                    if col_num == 12: # Columna de precio
+                        cell.number_format = '"$"#,##0.00'
+                else:
+                    cell.alignment = alineacion_izq
+                    
+            row_num += 1
+            
+        # Filtros y Congelar paneles
+        ws.auto_filter.ref = f"A{header_row}:L{row_num - 1}"
+        ws.freeze_panes = f"A{header_row + 1}"
         
-        # Inyectar metadatos arriba de la tabla principal
-        metadatos = [
-            ["SISTEMA:", "Inventarios Z"],
-            ["MOTIVO:", "Respaldo previo a Eliminación Definitiva (Hard Delete)"],
-            ["FECHA:", fecha_str],
-            ["USUARIO (IP):", user_ip],
-            ["CANTIDAD:", f"{len(variantes)} variantes"],
-            [], [] # Espacios en blanco
+        # 5. Pie del documento
+        row_num += 2
+        footers = [
+            "Documento generado automáticamente por Inventarios Z.",
+            "Uso exclusivo para auditoría.",
+            "Este respaldo corresponde a una eliminación definitiva."
         ]
-        
-        return export_generic_excel("Respaldo Administrativo", headers, metadatos + data)
+        for f_text in footers:
+            ws.merge_cells(f'A{row_num}:L{row_num}')
+            cell = ws.cell(row=row_num, column=1, value=f_text)
+            cell.font = fuente_footer
+            cell.alignment = alineacion_izq
+            row_num += 1
+            
+        # Autoajustar ancho de columnas
+        for col in ws.columns:
+            max_length = 0
+            column_letter = col[0].column_letter
+            for cell in col:
+                try:
+                    if cell.value:
+                        # Ignorar filas combinadas (títulos y footers) para el cálculo del ancho
+                        if cell.row <= 3 or cell.row >= start_data_row + len(variantes):
+                            continue
+                        if len(str(cell.value)) > max_length:
+                            max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = max_length + 2
+            if adjusted_width > 50:
+                adjusted_width = 50
+            ws.column_dimensions[column_letter].width = max(adjusted_width, 15)
+
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+        return buffer
 
     def exportar_respaldo_movimientos(self, db: Session, items: list[dict], request=None) -> BytesIO:
         from app.core.excel_utils import export_generic_excel
