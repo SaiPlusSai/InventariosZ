@@ -3,7 +3,7 @@ import CrudHeader from '../../components/ui/CrudHeader'
 import SearchInput from '../../components/ui/Crud/SearchInput'
 import FilterButton from '../../components/ui/Crud/FilterButton'
 import { EmptyState } from '../../components/ui/EmptyState'
-import { ArrowRightLeft, Download, Upload, RefreshCw } from 'lucide-react'
+import { ArrowRightLeft, Download, RefreshCw } from 'lucide-react'
 import MovimientoTable from './components/MovimientoTable'
 import MovimientoCard from './components/MovimientoCard'
 import ActiveFilters from './components/ActiveFilters'
@@ -41,21 +41,11 @@ export default function MovimientosPage() {
     // console.log('Exportar')
   }
 
-  const handleImport = () => {
-    // console.log('Importar')
-  }
-
   const getPrimaryActions = () => [
     {
       label: 'Actualizar',
       icon: RefreshCw,
       onClick: handleRefresh,
-      variant: 'secondary'
-    },
-    {
-      label: 'Importar',
-      icon: Upload,
-      onClick: handleImport,
       variant: 'secondary'
     },
     {
@@ -78,11 +68,11 @@ export default function MovimientosPage() {
           <div className="flex flex-col">
             <div className="p-3 lg:p-4 flex flex-col gap-4 border-b border-gray-200/60 bg-white">
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                <div className="w-full sm:w-auto">
+                <div className="w-full sm:w-[350px]">
                   <SearchInput 
                     value={filters.search || ''}
                     onSearch={handleSearch}
-                    placeholder="Buscar movimientos..."
+                    placeholder="Buscar por código, marca, producto, observación..."
                   />
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
