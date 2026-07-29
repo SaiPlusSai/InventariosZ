@@ -1815,7 +1815,7 @@ class ProductoService:
                 m.cantidad,
                 m.stock_anterior,
                 m.stock_nuevo,
-                m.documento_relacionado or "N/A",
+                f"{m.documento_tipo} {m.documento_id}".strip() if m.documento_tipo or m.documento_id else "N/A",
                 m.observacion or "",
                 m.usuario_id or "Sistema"
             ])
