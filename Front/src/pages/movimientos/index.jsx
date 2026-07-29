@@ -68,11 +68,11 @@ export default function MovimientosPage() {
           <div className="flex flex-col">
             <div className="p-3 lg:p-4 flex flex-col gap-4 border-b border-gray-200/60 bg-white">
               <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-                <div className="w-full sm:w-[350px]">
+                <div className="w-full lg:w-1/2">
                   <SearchInput 
                     value={filters.search || ''}
                     onSearch={handleSearch}
-                    placeholder="Buscar por código, marca, producto, observación..."
+                    placeholder="Buscar por código, producto, marca u observación..."
                   />
                 </div>
                 <div className="flex items-center gap-2 w-full sm:w-auto">
