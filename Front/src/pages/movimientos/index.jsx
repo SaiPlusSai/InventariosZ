@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react'
-import PageHeader from '../../components/ui/PageHeader'
 import CrudHeader from '../../components/ui/CrudHeader'
 import SearchInput from '../../components/ui/Crud/SearchInput'
 import FilterButton from '../../components/ui/Crud/FilterButton'
-import ResponsiveHeaderActions from '../../components/ui/Crud/ResponsiveHeaderActions'
 import { EmptyState } from '../../components/ui/EmptyState'
 import { ArrowRightLeft, Download, Upload, RefreshCw } from 'lucide-react'
 import MovimientoTable from './components/MovimientoTable'
@@ -72,39 +70,39 @@ export default function MovimientosPage() {
 
   return (
     <div className="flex flex-col h-[100dvh] bg-slate-50 relative">
-      <PageHeader 
-        title="Movimientos de Inventario" 
-        subtitle="Historial completo de entradas, salidas y ajustes."
-      />
-      
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">
-        <CrudHeader>
-          <div className="flex flex-col border-b border-gray-200/60 bg-white shadow-sm rounded-xl overflow-visible z-10 relative">
-          <div className="p-3 lg:p-4 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
-              <div className="w-full sm:w-auto">
-                <SearchInput 
-                  value={filters.search || ''}
-                  onSearch={handleSearch}
-                  placeholder="Buscar movimientos..."
-                />
+      <CrudHeader
+        title="Movimientos de Inventario"
+        description="Historial completo de entradas, salidas y ajustes."
+        actions={getPrimaryActions()}
+        extraContent={
+          <div className="flex flex-col">
+            <div className="p-3 lg:p-4 flex flex-col gap-4 border-b border-gray-200/60 bg-white">
+              <div className="flex flex-col sm:flex-row gap-3 justify-between items-start sm:items-center">
+                <div className="w-full sm:w-auto">
+                  <SearchInput 
+                    value={filters.search || ''}
+                    onSearch={handleSearch}
+                    placeholder="Buscar movimientos..."
+                  />
+                </div>
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <FilterButton 
+                    onToggle={() => setShowFilters(!showFilters)} 
+                    showFilters={showFilters}
+                  />
+                </div>
               </div>
-              <ResponsiveHeaderActions 
-                primaryActions={getPrimaryActions()} 
-                secondaryActions={[]} 
-              />
             </div>
+            <MovimientoFilters 
+              showFilters={showFilters} 
+              onClose={() => setShowFilters(false)} 
+            />
+            <ActiveFilters />
           </div>
+        }
+      />
 
-          <MovimientoFilters 
-            showFilters={showFilters} 
-            onClose={() => setShowFilters(false)} 
-          />
-        </div>
-        
-        <ActiveFilters />
-        </CrudHeader>
-
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto">
             {loading && listaMovimientos.length === 0 ? (

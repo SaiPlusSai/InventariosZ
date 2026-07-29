@@ -32,10 +32,6 @@ const MovimientoTable = memo(({ movimientos = [], onVerDetalle }) => {
               <th className="px-4 py-3 font-medium cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('codigo')}>
                 Código <SortIcon column="codigo" sortConfig={sortConfig} />
               </th>
-              <th className="px-4 py-3 font-medium">Marca</th>
-              <th className="px-4 py-3 font-medium">Tipo</th>
-              <th className="px-4 py-3 font-medium">Color</th>
-              <th className="px-4 py-3 font-medium">Talla</th>
               <th className="px-4 py-3 font-medium cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('tipo_movimiento')}>
                 Movimiento <SortIcon column="tipo_movimiento" sortConfig={sortConfig} />
               </th>
@@ -43,42 +39,57 @@ const MovimientoTable = memo(({ movimientos = [], onVerDetalle }) => {
               <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('cantidad')}>
                 Cant. <SortIcon column="cantidad" sortConfig={sortConfig} />
               </th>
-              <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('stock_anterior')} title="Stock Anterior">
-                Ant. <SortIcon column="stock_anterior" sortConfig={sortConfig} />
+              <th className="px-4 py-3 font-medium text-center">
+                Stock (A &rarr; N)
               </th>
-              <th className="px-4 py-3 font-medium text-right cursor-pointer hover:text-indigo-600 select-none transition-colors" onClick={() => handleSort('stock_nuevo')} title="Stock Después">
-                Desp. <SortIcon column="stock_nuevo" sortConfig={sortConfig} />
-              </th>
-              <th className="px-4 py-3 font-medium">Observación</th>
+              <th className="px-4 py-3 font-medium max-w-[200px]">Observación</th>
               <th className="px-4 py-3 font-medium text-center">Acciones</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {movimientos.map((m) => (
+            {movimientos.map((m) => {
+              const tipoBadge = TIPO_MOVIMIENTO_BADGES[m.tipoMovimiento] || 'bg-slate-100 text-slate-800 border-slate-200';
+              const origenBadge = ORIGEN_MOVIMIENTO_BADGES[m.origen] || 'bg-slate-100 text-slate-800 border-slate-200';
+              return (
               <tr key={m.id} className="hover:bg-slate-50 transition-colors group text-sm text-slate-700">
                 <td className="px-4 py-3 font-medium text-slate-900">
                   {new Date(m.fecha).toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' })}
                 </td>
-                <td className="px-4 py-3 font-medium text-indigo-600">{m.codigo}</td>
-                <td className="px-4 py-3">{m.marca}</td>
-                <td className="px-4 py-3 truncate max-w-[120px]" title={m.tipoCalzado}>{m.tipoCalzado}</td>
-                <td className="px-4 py-3">{m.color}</td>
-                <td className="px-4 py-3">{m.talla}</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2.5 py-1 text-[11px] font-semibold border rounded-full ${TIPO_MOVIMIENTO_BADGES[m.tipoMovimiento] || 'bg-slate-100 text-slate-800 border-slate-200'}`}>
+                  <div className="font-medium text-gray-900">{m.codigo || 'N/A'}</div>
+                  <div className="text-gray-500 text-xs truncate max-w-[150px]" title={m.productoNombre}>{m.productoNombre}</div>
+                </td>
+                <td className="px-4 py-3">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border ${tipoBadge}`}>
                     {m.tipoMovimiento}
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className={`px-2.5 py-1 text-[11px] font-semibold border rounded-full ${ORIGEN_MOVIMIENTO_BADGES[m.origen] || 'bg-slate-100 text-slate-800 border-slate-200'}`}>
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase border ${origenBadge}`}>
                     {m.origen?.replace('_', ' ')}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-slate-900">{m.cantidad}</td>
-                <td className="px-4 py-3 text-right text-slate-500">{m.stockAnterior}</td>
-                <td className="px-4 py-3 text-right font-medium text-slate-700">{m.stockNuevo}</td>
-                <td className="px-4 py-3 truncate max-w-[150px]" title={m.observacion}>
-                  {m.observacion || '-'}
+                <td className="px-4 py-3 text-right">
+                  <span className={`font-semibold ${
+                    m.tipoMovimiento === 'ENTRADA' ? 'text-emerald-600' :
+                    m.tipoMovimiento === 'SALIDA' ? 'text-rose-600' :
+                    'text-amber-600'
+                  }`}>
+                    {m.tipoMovimiento === 'ENTRADA' ? '+' : m.tipoMovimiento === 'SALIDA' ? '-' : ''}
+                    {m.cantidad}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-center">
+                  <div className="flex items-center justify-center gap-1.5 text-xs">
+                    <span className="text-slate-500">{m.stockAnterior}</span>
+                    <span className="text-slate-300">&rarr;</span>
+                    <span className="font-semibold text-slate-700">{m.stockNuevo}</span>
+                  </div>
+                </td>
+                <td className="px-4 py-3 text-gray-500 max-w-[200px]">
+                  <div className="truncate" title={m.observacion || '-'}>
+                    {m.observacion || '-'}
+                  </div>
                 </td>
                 <td className="px-4 py-3 text-center">
                   <button 
@@ -90,7 +101,8 @@ const MovimientoTable = memo(({ movimientos = [], onVerDetalle }) => {
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
           </tbody>
         </table>
       </div>
