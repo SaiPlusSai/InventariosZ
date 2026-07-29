@@ -29,10 +29,13 @@
 |   |       |-- ConfirmModal.jsx
 |   |       |-- Crud
 |   |       |   |-- ActionDropdown.jsx
+|   |       |   |-- ConfirmDeleteModal.jsx
 |   |       |   |-- CrudToolbar.jsx
 |   |       |   |-- FilterButton.jsx
-|   |       |   |-- FilterPanel.jsx
+|   |       |   |-- FilterPanelDesktop.jsx
+|   |       |   |-- FilterPanelMobile.jsx
 |   |       |   |-- PrimaryActions.jsx
+|   |       |   |-- ResponsiveHeaderActions.jsx
 |   |       |   `-- SearchInput.jsx
 |   |       |-- CrudHeader.jsx
 |   |       |-- EmptyState.jsx
@@ -42,6 +45,7 @@
 |   |       |-- GenericImportarModal.jsx
 |   |       |-- Input.jsx
 |   |       |-- NotificationModal.jsx
+|   |       |-- PageHeader.jsx
 |   |       |-- RecoveryModal.jsx
 |   |       |-- ShareModal.jsx
 |   |       |-- WarningModal.jsx
@@ -49,11 +53,13 @@
 |   |-- config
 |   |   `-- env.js
 |   |-- constants
-|   |   `-- index.js
+|   |   |-- index.js
+|   |   `-- movimientos.js
 |   |-- hooks
 |   |   |-- index.js
 |   |   |-- useAsync.js
 |   |   |-- useForm.js
+|   |   |-- useMediaQuery.jsx
 |   |   |-- useRecoveryManager.jsx
 |   |   `-- useWarningManager.jsx
 |   |-- index.css
@@ -74,6 +80,7 @@
 |   |   |-- materiales
 |   |   |   `-- index.jsx
 |   |   |-- productos
+|   |   |   |-- BulkActionBar.jsx
 |   |   |   |-- ImportarModal.jsx
 |   |   |   |-- ProductoCard.jsx
 |   |   |   |-- ProductoDetalle.jsx
@@ -120,6 +127,7 @@
 |   |   |-- tallaService.js
 |   |   `-- tipoCalzadoService.js
 |   |-- store
+|   |   |-- bulkSelectionStore.js
 |   |   |-- codigoProductoStore.js
 |   |   |-- colorStore.js
 |   |   |-- marcaStore.js
@@ -139,4 +147,4 @@
 |-- tailwind.config.js
 `-- vite.config.js
 
-34 directories, 105 files
+34 directories, 113 files
