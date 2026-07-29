@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { movimientoService } from '../services/movimientoService';
+import { adapterMovimientoListado } from '../utils/adapters/movimientoAdapter';
 
 const useMovimientoStore = create((set, get) => ({
   movimientos: [],
@@ -96,10 +97,20 @@ const useMovimientoStore = create((set, get) => ({
       });
 
       const response = await movimientoService.listar(params);
+      
+      const payload = response.data || {};
+      const items = Array.isArray(payload.items) ? payload.items : [];
+      
       set({ 
-        movimientos: response.data,
-        totalMovimientos: response.total,
-        pagination: { ...pagination, total: response.total },
+        movimientos: adapterMovimientoListado(items),
+        totalMovimientos: payload.total || 0,
+        pagination: { 
+          ...pagination, 
+          page: payload.page || pagination.page,
+          limit: payload.limit || pagination.limit,
+          total: payload.total || 0,
+          pages: payload.pages || 1
+        },
         loading: false 
       });
     } catch (error) {
