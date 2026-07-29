@@ -684,6 +684,9 @@ class BulkItem(BaseModel):
     grupo_id: int
     color_id: int
 
+class HardDeletePreviewRequest(BaseModel):
+    items: list[BulkItem]
+
 class BulkActionRequest(BaseModel):
     action: str
     items: list[BulkItem]

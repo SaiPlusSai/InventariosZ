@@ -26,6 +26,7 @@ from app.modules.producto.schemas import (
     ConfirmarImportacionRequest,
     BulkActionRequest,
     BulkActionResponse,
+    HardDeletePreviewRequest,
 )
 
 from app.modules.producto.service import ProductoService
@@ -659,7 +660,7 @@ def bulk_action(
     status_code=status.HTTP_200_OK,
 )
 def preview_hard_delete(
-    data: BulkActionRequest,
+    data: HardDeletePreviewRequest,
     db: Session = Depends(get_db),
 ):
     return service.preview_hard_delete(db, [{"grupo_id": item.grupo_id, "color_id": item.color_id} for item in data.items])
@@ -670,7 +671,7 @@ def preview_hard_delete(
 )
 def exportar_respaldo_productos(
     request: Request,
-    data: BulkActionRequest,
+    data: HardDeletePreviewRequest,
     db: Session = Depends(get_db),
 ):
     import datetime
@@ -688,7 +689,7 @@ def exportar_respaldo_productos(
 )
 def exportar_respaldo_movimientos(
     request: Request,
-    data: BulkActionRequest,
+    data: HardDeletePreviewRequest,
     db: Session = Depends(get_db),
 ):
     import datetime
