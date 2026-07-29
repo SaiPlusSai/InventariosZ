@@ -89,7 +89,7 @@ export default function MovimientosPage() {
   const listaMovimientos = Array.isArray(movimientos) ? movimientos : [];
 
   return (
-    <div className="flex flex-col h-[100dvh] bg-slate-50 relative">
+    <div className="max-w-7xl mx-auto pb-12">
       <CrudHeader
         title="Movimientos de Inventario"
         description="Historial completo de entradas, salidas y ajustes."
@@ -110,15 +110,13 @@ export default function MovimientosPage() {
         }}
       />
 
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative z-10">
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
-          <div className="max-w-7xl mx-auto">
-            {loading && listaMovimientos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-64 text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin mb-4" />
-                <p>Cargando movimientos...</p>
-              </div>
-            ) : listaMovimientos.length === 0 ? (
+      <div className="mt-4 sm:mt-6">
+        {loading && listaMovimientos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+            <Loader2 className="w-8 h-8 animate-spin mb-4" />
+            <p>Cargando movimientos...</p>
+          </div>
+        ) : listaMovimientos.length === 0 ? (
               <EmptyState
                 icon={ArrowRightLeft}
                 title="No existen movimientos registrados."
@@ -135,19 +133,17 @@ export default function MovimientosPage() {
                 </div>
 
                 {/* Mobile/Tablet View */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
-                  {listaMovimientos.map(m => (
-                    <MovimientoCard 
-                      key={m.id} 
-                      movimiento={m} 
-                      onVerDetalle={handleVerDetalle}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+              {listaMovimientos.map(m => (
+                <MovimientoCard 
+                  key={m.id} 
+                  movimiento={m} 
+                  onVerDetalle={handleVerDetalle}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
