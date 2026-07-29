@@ -238,23 +238,16 @@ export default function Productos() {
   const confirmDelete = async () => {
     if (!itemToDelete) return
     try {
-        if (isPapeleraMode) {
-        await productoService.eliminarColorPermanente(itemToDelete.grupoId, itemToDelete.colorId)
-        toast.success('Producto eliminado permanentemente')
-        await loadProductos(cleanFilters(filters), true)
-        setItemToDelete(null)
-      } else {
-        await productoService.desactivarColor(itemToDelete.grupoId, itemToDelete.colorId)
-        toast.success('Producto enviado a la papelera')
-        await loadProductos(cleanFilters(filters), false)
-        setItemToDelete(null)
-      }
+      await productoService.desactivarColor(itemToDelete.grupoId, itemToDelete.colorId)
+      toast.success('Producto enviado a la papelera')
+      await loadProductos(cleanFilters(filters), false)
+      setItemToDelete(null)
     } catch (err) {
       import('../../store/notificationStore').then(store => {
         store.useNotificationStore.getState().showNotification(
           'error',
           'Error',
-          'Error eliminando: ' + (err.response?.data?.detail || err.message)
+          'Error al desactivar: ' + (err.response?.data?.detail || err.message)
         )
       })
     }
@@ -680,12 +673,30 @@ export default function Productos() {
                       setItemToShare({ producto, colorInfo })
                       setShowShareModal(true)
                     }}
-                    onEliminar={() => setItemToDelete({
-                      grupoId: producto.grupo_id || producto.producto_principal_id, 
-                      colorId: colorInfo.color_id, 
-                      nombre: producto.descripcion || producto.codigo,
-                      colorNombre: colorInfo.color.nombre
-                    })}
+                    onEliminar={() => {
+                      if (isPapeleraMode) {
+                        const groupId = producto.grupo_id || producto.producto_principal_id
+                        const colorId = colorInfo.color_id
+                        const key = `${groupId}-${colorId}`
+                        
+                        clearSelection()
+                        const newSelection = new Map()
+                        newSelection.set(key, { grupoId: groupId, colorId: colorId })
+                        setSelectedItems(newSelection)
+                        
+                        setDeletePreviewData(null)
+                        setPendingDeleteAction('eliminar')
+                        setDeleteModalOpen(true)
+                        loadDeletePreview([{ grupoId: groupId, colorId: colorId }])
+                      } else {
+                        setItemToDelete({
+                          grupoId: producto.grupo_id || producto.producto_principal_id, 
+                          colorId: colorInfo.color_id, 
+                          nombre: producto.descripcion || producto.codigo,
+                          colorNombre: colorInfo.color.nombre
+                        })
+                      }
+                    }}
                     onRecuperar={() => handleRecuperar(producto.grupo_id || producto.producto_principal_id, colorInfo.color_id)}
                     onIncrementar={handleIncrementarStock}
                     onDecrementar={handleDecrementarStock}
@@ -702,15 +713,10 @@ export default function Productos() {
         isOpen={!!itemToDelete}
         onClose={() => setItemToDelete(null)}
         onConfirm={confirmDelete}
-        title={isPapeleraMode ? 'Eliminar Permanentemente' : 'Desactivar Producto'}
-        message={`¿Estás seguro de ${isPapeleraMode ? 'eliminar permanentemente' : 'desactivar'} el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?${isPapeleraMode ? '\nEsta acción no se puede deshacer.' : ''}`}
-        confirmText={isPapeleraMode ? 'Eliminar Definitivamente' : 'Desactivar Producto'}
+        title='Desactivar Producto'
+        message={`¿Estás seguro de desactivar el producto "${itemToDelete?.nombre}" (Color ${itemToDelete?.colorNombre}), incluyendo todas sus tallas?`}
+        confirmText='Desactivar Producto'
         variant="danger"
-        dependencyConfig={{
-          service: productoService,
-          itemId: itemToDelete?.colorId, 
-          isPhysicalDelete: isPapeleraMode
-        }}
       />
 
       <ShareModal
