@@ -47,6 +47,36 @@ const useMovimientoStore = create((set, get) => ({
   clearSelectedRows: () => set({ selectedRows: [] }),
   // -----------------------------------------------------------------
   
+  fetchMovimientos: async () => {
+    const { pagination, filters } = get();
+    set({ loading: true, error: null });
+    try {
+      const skip = (pagination.page - 1) * pagination.limit;
+      const params = {
+        skip,
+        limit: pagination.limit,
+        // En futuros Sprints aquí se enviarán los filters
+      };
+      const response = await movimientoService.listar(params);
+      set({ 
+        movimientos: response.data,
+        totalMovimientos: response.total,
+        pagination: { ...pagination, total: response.total },
+        loading: false 
+      });
+    } catch (error) {
+      set({ 
+        error: error.response?.data?.detail || 'Error al cargar los movimientos', 
+        loading: false 
+      });
+    }
+  },
+
+  refreshMovimientos: async () => {
+    set((state) => ({ pagination: { ...state.pagination, page: 1 } }));
+    await get().fetchMovimientos();
+  },
+
   fetchKardex: async (productoId, skip = 0, limit = 100) => {
     set({ loading: true, error: null });
     try {

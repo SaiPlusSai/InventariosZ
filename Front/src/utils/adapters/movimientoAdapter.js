@@ -20,7 +20,12 @@ export const adapterMovimientoListado = (data) => {
     fecha: item.created_at,
     // Datos extendidos que el backend podría enviar
     codigo: item.codigo || 'N/A',
-    productoNombre: item.producto_nombre || 'N/A'
+    productoNombre: item.producto_nombre || 'N/A',
+    marca: item.marca || 'N/A',
+    tipoCalzado: item.tipo_calzado || 'N/A',
+    material: item.material || 'N/A',
+    color: item.color || 'N/A',
+    talla: item.talla || 'N/A'
   }))
 }
 

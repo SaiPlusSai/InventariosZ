@@ -118,8 +118,51 @@ class MovimientoInventarioService:
 
     def listar_movimientos(self, db: Session, skip: int = 0, limit: int = 50):
         """
-        Obtiene la lista de movimientos para el listado general. (Stub Sprint 1)
+        Obtiene la lista paginada de movimientos.
+        Mapea el ORM a un DTO plano y limpio.
         """
-        return {"items": [], "total": 0}
+        movimientos_orm = movimiento_repository.listar_movimientos(db, skip, limit)
+        total = movimiento_repository.contar_movimientos_total(db)
+        
+        items = []
+        for m in movimientos_orm:
+            # Seguro contra nulos si por alguna razón la BD perdió integridad (aunque no debería)
+            prod = m.producto
+            cod = prod.codigo_producto if prod else None
+            
+            items.append({
+                "id": m.id,
+                "producto_id": m.producto_id,
+                "tipo_movimiento": m.tipo_movimiento,
+                "origen": m.origen,
+                "cantidad": m.cantidad,
+                "stock_anterior": m.stock_anterior,
+                "stock_nuevo": m.stock_nuevo,
+                "documento_tipo": m.documento_tipo,
+                "documento_id": m.documento_id,
+                "usuario_id": m.usuario_id,
+                "observacion": m.observacion,
+                "created_at": m.created_at,
+                
+                # Datos extendidos (Flattened)
+                "codigo": cod.codigo if cod else None,
+                "producto_nombre": prod.descripcion if prod else None,
+                "marca": cod.marca.nombre if cod and cod.marca else None,
+                "tipo_calzado": prod.tipo_calzado.nombre if prod and prod.tipo_calzado else None,
+                "material": prod.material.nombre if prod and prod.material else None,
+                "color": prod.color.nombre if prod and prod.color else None,
+                "talla": prod.talla.nombre if prod and prod.talla else None
+            })
+            
+        page = (skip // limit) + 1 if limit > 0 else 1
+        pages = (total // limit) + (1 if total % limit > 0 else 0) if limit > 0 else 1
+
+        return {
+            "items": items,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": pages
+        }
 
 movimiento_service = MovimientoInventarioService()

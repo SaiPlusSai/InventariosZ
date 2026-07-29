@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PageHeader from '../../components/ui/PageHeader'
 import CrudHeader from '../../components/ui/CrudHeader'
 import SearchInput from '../../components/ui/Crud/SearchInput'
@@ -9,10 +9,15 @@ import { ArrowRightLeft, Download, Upload, RefreshCw } from 'lucide-react'
 import MovimientoTable from './components/MovimientoTable'
 import MovimientoCard from './components/MovimientoCard'
 import useMovimientoStore from '../../store/movimientoStore'
+import { Loader2 } from 'lucide-react'
 
 export default function MovimientosPage() {
-  const { movimientos, loading } = useMovimientoStore()
+  const { movimientos, loading, fetchMovimientos } = useMovimientoStore()
   const [showFilters, setShowFilters] = useState(false)
+
+  useEffect(() => {
+    fetchMovimientos()
+  }, [fetchMovimientos])
 
   // Handlers base sin implementación profunda para el Sprint 1
   const handleSearch = (term) => {
@@ -79,7 +84,12 @@ export default function MovimientosPage() {
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 custom-scrollbar">
           <div className="max-w-7xl mx-auto">
-            {movimientos.length === 0 && !loading ? (
+            {loading && movimientos.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-64 text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                <p>Cargando movimientos...</p>
+              </div>
+            ) : movimientos.length === 0 ? (
               <EmptyState
                 icon={ArrowRightLeft}
                 title="No existen movimientos registrados."
@@ -89,13 +99,14 @@ export default function MovimientosPage() {
               <>
                 {/* Desktop View */}
                 <div className="hidden lg:block">
-                  <MovimientoTable />
+                  <MovimientoTable movimientos={movimientos} />
                 </div>
 
                 {/* Mobile/Tablet View */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
-                  <MovimientoCard />
-                  <MovimientoCard />
+                  {movimientos.map(m => (
+                    <MovimientoCard key={m.id} movimiento={m} />
+                  ))}
                 </div>
               </>
             )}

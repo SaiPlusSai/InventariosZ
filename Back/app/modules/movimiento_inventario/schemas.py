@@ -21,6 +21,15 @@ class MovimientoResponse(MovimientoBase):
     stock_anterior: int
     stock_nuevo: int
     created_at: datetime
+    
+    # Datos extendidos para el listado profesional
+    codigo: Optional[str] = Field(None, description="Código del producto")
+    producto_nombre: Optional[str] = Field(None, description="Descripción corta del producto")
+    marca: Optional[str] = None
+    tipo_calzado: Optional[str] = None
+    material: Optional[str] = None
+    color: Optional[str] = None
+    talla: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -34,3 +43,6 @@ class MovimientoFiltro(BaseModel):
 class MovimientoListadoResponse(BaseModel):
     items: List[MovimientoResponse]
     total: int
+    page: int = 1
+    limit: int = 50
+    pages: int = 1
