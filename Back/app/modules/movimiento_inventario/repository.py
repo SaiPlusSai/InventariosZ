@@ -32,8 +32,15 @@ class MovimientoInventarioRepository:
         # Como usamos joinedload, los inner tables están disponibles en memoria, pero para SQLAlchemy WHERE 
         # necesitamos join explícito si no usamos contains_eager. 
         # La forma más segura es hacer un join explícito para filtrado.
-        query = query.join(MovimientoInventario.producto).join(Producto.codigo_producto)
-        query = query.outerjoin(Marca, Producto.marca_id == Marca.id).outerjoin(TipoCalzado, Producto.tipo_calzado_id == TipoCalzado.id).outerjoin(Material, Producto.material_id == Material.id).outerjoin(Color, Producto.color_id == Color.id).outerjoin(Talla, Producto.talla_id == Talla.id)
+        # Usamos las relaciones explícitas definidas en los modelos SQLAlchemy.
+        # Esto previene errores de "attribute not found" y respeta estrictamente la arquitectura.
+        query = query.join(MovimientoInventario.producto)
+        query = query.outerjoin(Producto.codigo_producto)
+        query = query.outerjoin(CodigoProducto.marca)
+        query = query.outerjoin(Producto.tipo_calzado)
+        query = query.outerjoin(Producto.material)
+        query = query.outerjoin(Producto.color)
+        query = query.outerjoin(Producto.talla)
 
         if filtros.producto_id:
             query = query.filter(MovimientoInventario.producto_id == filtros.producto_id)
