@@ -677,17 +677,14 @@ export default function Productos() {
                       if (isPapeleraMode) {
                         const groupId = producto.grupo_id || producto.producto_principal_id
                         const colorId = colorInfo.color_id
-                        const key = `${groupId}-${colorId}`
                         
                         clearSelection()
-                        const newSelection = new Map()
-                        newSelection.set(key, { grupoId: groupId, colorId: colorId })
-                        setSelectedItems(newSelection)
+                        toggleItem(groupId, colorId)
                         
                         setDeletePreviewData(null)
                         setPendingDeleteAction('eliminar')
                         setDeleteModalOpen(true)
-                        loadDeletePreview([{ grupoId: groupId, colorId: colorId }])
+                        loadDeletePreview([{ grupo_id: groupId, color_id: colorId }])
                       } else {
                         setItemToDelete({
                           grupoId: producto.grupo_id || producto.producto_principal_id, 
