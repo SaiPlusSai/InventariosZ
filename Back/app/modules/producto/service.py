@@ -1626,6 +1626,7 @@ class ProductoService:
         from io import BytesIO
         from openpyxl import Workbook
         from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+        from openpyxl.utils import get_column_letter
         from datetime import datetime
         
         variantes = self._get_variantes_por_lote(db, items)
@@ -1761,9 +1762,9 @@ class ProductoService:
             row_num += 1
             
         # Autoajustar ancho de columnas
-        for col in ws.columns:
+        for col_idx, col in enumerate(ws.columns, 1):
             max_length = 0
-            column_letter = col[0].column_letter
+            column_letter = get_column_letter(col_idx)
             for cell in col:
                 try:
                     if cell.value:
